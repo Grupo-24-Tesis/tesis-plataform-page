@@ -1,0 +1,13 @@
+<div style="display:flex;min-height:100vh;">
+  <aside style="width:220px;background:#111827;color:#fff;padding:16px;">
+    <h2>FaceCluster</h2>
+    <nav style="display:flex;flex-direction:column;gap:8px;">
+      <a routerLink="/upload" style="color:#d1d5db;">Subir video</a>
+      <a routerLink="/results" style="color:#d1d5db;">Resultados</a>
+    </nav>
+  </aside>
+
+  <main style="flex:1;padding:24px;background:#f9fafb;">
+    <router-outlet></router-outlet>
+  </main>
+</div>

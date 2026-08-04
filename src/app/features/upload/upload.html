@@ -1,0 +1,16 @@
+
+<h1>Subir video</h1>
+
+<div class="card">
+  <input type="file" accept="video/*" (change)="onFileSelected($event)" />
+
+  <p *ngIf="selectedFile">
+    <strong>Archivo:</strong> {{ selectedFile.name }}
+  </p>
+
+  <p *ngIf="error" class="error">{{ error }}</p>
+
+  <button (click)="processMock()" [disabled]="!selectedFile || loading">
+    {{ loading ? 'Procesando...' : 'Procesar (mock)' }}
+  </button>
+</div>
