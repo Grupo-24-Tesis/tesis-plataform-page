@@ -12,6 +12,6 @@ export interface PersonCluster {
 
 export interface ProcessingResult {
   videoName: string;
-  processedAt: string; // ISO
+  processedAt: string; 
   clusters: PersonCluster[];
 }
