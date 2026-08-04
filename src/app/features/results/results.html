@@ -1,0 +1,25 @@
+<h1>Resultados</h1>
+
+<div *ngIf="!result" class="card">
+  <p>No hay resultados para mostrar todavía.</p>
+</div>
+
+<div *ngIf="result" class="card">
+  <p><strong>Video:</strong> {{ result.videoName }}</p>
+  <p><strong>Procesado:</strong> {{ result.processedAt }}</p>
+
+  <div *ngFor="let cluster of result.clusters" class="cluster">
+    <h3>{{ cluster.clusterId }}</h3>
+    <ul>
+      <li *ngFor="let app of cluster.appearances">
+        {{ app.timestamp }} - {{ app.cameraId }} ({{ app.faceId }})
+      </li>
+    </ul>
+  </div>
+
+  <button (click)="saveMock()">
+  Guardar resultado (mock)
+</button>
+
+  <p class="msg">{{ message }}</p>
+</div>
