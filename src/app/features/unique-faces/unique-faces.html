@@ -1,0 +1,14 @@
+<h2>Caras únicas</h2>
+    <div class="grid">
+      <div class="card" *ngFor="let item of grouped" (click)="selected = item">
+        <strong>{{ item.faceId }}</strong>
+        <p>{{ item.appearances.length }} apariciones</p>
+      </div>
+    </div>
+
+    <section *ngIf="selected" class="detail">
+      <h3>Detalle: {{ selected?.faceId}}</h3>
+      <ul>
+        <li *ngFor="let a of selected.appearances">{{ a.cameraId }} · {{ a.timestamp }}</li>
+      </ul>
+    </section>

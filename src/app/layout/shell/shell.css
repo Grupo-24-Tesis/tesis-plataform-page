@@ -1,0 +1,25 @@
+:host { display: block; height: 100%; }
+.app-shell { min-height: 100vh; background: #0b1220; color: #dbe7ff; }
+.topbar {
+  height: 56px; display: flex; align-items: center; gap: 12px;
+  padding: 0 16px; border-bottom: 1px solid #1d2a44; background: #0f172a;
+}
+.hamburger {
+  border: 1px solid #2b3a5a; background: #13203a; color: #dbe7ff;
+  padding: 6px 10px; border-radius: 8px; cursor: pointer;
+}
+.drawer {
+  position: fixed; top: 56px; left: -260px; width: 240px; height: calc(100vh - 56px);
+  background: #101a30; border-right: 1px solid #1d2a44; transition: left .2s ease; z-index: 20;
+}
+.drawer.open { left: 0; }
+.drawer nav { display: flex; flex-direction: column; padding: 12px; gap: 8px; }
+.drawer a {
+  text-decoration: none; color: #b9c8ea; padding: 10px 12px; border-radius: 8px;
+}
+.drawer a.active, .drawer a:hover { background: #1a2a4d; color: #fff; }
+
+.overlay {
+  position: fixed; inset: 56px 0 0 0; background: rgba(0,0,0,.35); z-index: 10;
+}
+.content { padding: 16px; }
