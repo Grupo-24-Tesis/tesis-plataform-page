@@ -1,6 +1,6 @@
 export interface Guard {
   id: string;
   name: string;
-  shift: 'mañana' | 'tarde' | 'noche';
+  shift: string;
   schedule: string;
 }

@@ -1,24 +1,59 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { MockDataService } from '../../core/services/mock-data.service';
-import { FaceAppearance } from '../../core/models/face.model';
+import { ApiService, FaceAppearance } from '../../core/services/api.service';
+
 @Component({
   selector: 'app-unique-faces',
-  imports: [[CommonModule]],
+  standalone: true,
+  imports: [CommonModule],
   templateUrl: './unique-faces.html',
   styleUrl: './unique-faces.css',
 })
-export class UniqueFaces {
-  selected: { faceId: string; appearances: FaceAppearance[] } | null = null;
+export class UniqueFaces implements OnInit {
+  appearances = signal<FaceAppearance[]>([]);
 
-  constructor(public data: MockDataService) {}
+  selected = signal<{
+    faceId: string;
+    appearances: FaceAppearance[];
+  } | null>(null);
 
-  get grouped() {
+  grouped = computed(() => {
     const map = new Map<string, FaceAppearance[]>();
-    for (const a of this.data.appearances) {
-      if (!map.has(a.faceId)) map.set(a.faceId, []);
+
+    for (const a of this.appearances()) {
+      if (!map.has(a.faceId)) {
+        map.set(a.faceId, []);
+      }
+
       map.get(a.faceId)!.push(a);
     }
-    return Array.from(map.entries()).map(([faceId, appearances]) => ({ faceId, appearances }));
+
+    return Array.from(map.entries()).map(
+      ([faceId, appearances]) => ({
+        faceId,
+        appearances
+      })
+    );
+  });
+
+  constructor(private api: ApiService) {}
+
+  ngOnInit(): void {
+    this.api.getFaceAppearances().subscribe({
+      next: (data) => {
+        console.log('FACE APPEARANCES API =>', data);
+        this.appearances.set(data);
+      },
+      error: (err) => {
+        console.error('Error loading face appearances', err);
+      }
+    });
+  }
+
+  selectFace(item: {
+    faceId: string;
+    appearances: FaceAppearance[];
+  }) {
+    this.selected.set(item);
   }
 }

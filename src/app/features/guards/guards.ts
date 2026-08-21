@@ -1,18 +1,20 @@
-import { Component,OnInit } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import { MockDataService } from '../../core/services/mock-data.service';
 import { ApiService, Guard } from '../../core/services/api.service';
 import { SessionService } from '../../core/services/session.service';
 
 @Component({
   selector: 'app-guards',
-  imports: [[CommonModule]],
+  standalone: true,
+  imports: [CommonModule],
   templateUrl: './guards.html',
   styleUrl: './guards.css',
 })
 export class Guards implements OnInit {
-  guards: Guard[] = [];
+  guards = signal<Guard[]>([]);
+  loading = true;
+  errorMsg = '';
 
   constructor(
     private api: ApiService,
@@ -22,13 +24,22 @@ export class Guards implements OnInit {
 
   ngOnInit(): void {
     this.api.getGuards().subscribe({
-      next: data => this.guards = data,
-      error: err => console.error('Error loading guards', err)
+      next: (data) => {
+        console.log('GUARDS API =>', data);
+
+        this.guards.set(data);
+        this.loading = false;
+      },
+      error: (err) => {
+        console.error(err);
+        this.errorMsg = 'No se pudieron cargar vigilantes';
+        this.loading = false;
+      }
     });
   }
 
-  select(guard: Guard) {
-    this.session.setActiveGuard(guard.id!);
+  select(id: string) {
+    this.session.setActiveGuard(id);
     this.router.navigateByUrl('/monitor');
   }
 }

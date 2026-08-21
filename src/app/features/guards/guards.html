@@ -1,11 +1,18 @@
 <section class="wrap">
-      <div class="panel">
-        <h2>¿Quién entra a revisar?</h2>
-        <div class="list">
-          <button class="card" *ngFor="let g of guards" (click)="select(g)">
-            <strong>{{ g.name }}</strong>
-            <small>Turno {{ g.shift }} · {{ g.schedule }}</small>
-          </button>
-        </div>
-      </div>
-    </section>
+  <div class="panel">
+    <h2>¿Quién entra a revisar?</h2>
+
+    <p>Vigilantes encontrados: {{ guards().length }}</p>
+
+    <div class="list">
+      <button
+        class="card"
+        *ngFor="let g of guards()"
+        (click)="select(g.id!)"
+      >
+        <strong>{{ g.name }}</strong>
+        <small>Turno {{ g.shift }} · {{ g.schedule }}</small>
+      </button>
+    </div>
+  </div>
+</section>

@@ -1,2 +1,8 @@
 <h2>Marcados (sospechosos)</h2>
-<p>Base inicial: aquí se listarán personas guardadas como sospechosas.</p>
+
+<div class="list">
+  <article *ngFor="let m of marked()" class="item">
+    <strong>{{ m.faceId }}</strong>
+    <p>{{ m.reason }}</p>
+  </article>
+</div>
