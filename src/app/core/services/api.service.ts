@@ -4,7 +4,7 @@ import { HttpClient } from '@angular/common/http';
 export interface Guard { id?: string; name: string; shift: string; schedule: string; }
 export interface Camera { id: string; name: string; active: boolean; }
 export interface FaceAppearance { id?: string; faceId: string; timestamp: string; cameraId: string; frameUrl?: string; }
-export interface ReportItem { id?: string; title: string; status: string; priority: string; description: string; }
+export interface ReportItem { id: string; title: string; status: string; priority: string; description: string; }
 export interface MarkedPerson { id?: string; faceId: string; reason: string; }
 
 @Injectable({ providedIn: 'root' })
@@ -26,4 +26,11 @@ export class ApiService {
 
   getMarked() { return this.http.get<MarkedPerson[]>(`${this.base}/marked`); }
   createMarked(payload: MarkedPerson) { return this.http.post<MarkedPerson>(`${this.base}/marked`, payload); }
+
+  updateReportStatus(id: string, status: ReportItem['status']) {
+  return this.http.put<ReportItem>(
+    `${this.base}/reports/${id}/status`,
+    { status }
+  );
+}
 }

@@ -1,11 +1,137 @@
 <h2>Reportes</h2>
 
+<button class="new-report-btn" (click)="openModal()">
+  + Nuevo reporte
+</button>
+
 <div class="list">
+
   <article *ngFor="let r of reports()" class="item">
+
     <strong>{{ r.title }}</strong>
+
     <p>{{ r.description }}</p>
+
     <small>
-      {{ r.id }} · {{ r.status }} · prioridad {{ r.priority }}
+      {{ r.id }} · prioridad {{ r.priority }}
     </small>
+
+    <div class="status-container">
+
+      <label>Estado:</label>
+
+      <select
+        [value]="r.status"
+        (change)="updateStatus(r, $event)"
+      >
+        <option value="investigacion">
+          Investigación
+        </option>
+
+        <option value="solucionado">
+          Solucionado
+        </option>
+      </select>
+
+    </div>
+
   </article>
+
+</div>
+
+
+<!-- POPUP -->
+
+<div
+  class="modal-backdrop"
+  *ngIf="showModal"
+  (click)="closeModal()"
+>
+
+  <div
+    class="modal"
+    (click)="$event.stopPropagation()"
+  >
+
+    <h3>Nuevo reporte</h3>
+
+    <label>
+      Título
+    </label>
+
+    <input
+      type="text"
+      [(ngModel)]="newReport.title"
+      placeholder="Título del reporte"
+    >
+
+
+    <label>
+      Descripción
+    </label>
+
+    <textarea
+      [(ngModel)]="newReport.description"
+      placeholder="Descripción del reporte"
+    ></textarea>
+
+
+    <label>
+      Prioridad
+    </label>
+
+    <select [(ngModel)]="newReport.priority">
+
+      <option value="alta">
+        Alta
+      </option>
+
+      <option value="media">
+        Media
+      </option>
+
+      <option value="baja">
+        Baja
+      </option>
+
+    </select>
+
+
+    <label>
+      Estado inicial
+    </label>
+
+    <select [(ngModel)]="newReport.status">
+
+      <option value="investigacion">
+        Investigación
+      </option>
+
+      <option value="solucionado">
+        Solucionado
+      </option>
+
+    </select>
+
+
+    <div class="modal-actions">
+
+      <button
+        type="button"
+        (click)="closeModal()"
+      >
+        Cancelar
+      </button>
+
+      <button
+        type="button"
+        (click)="createReport()"
+      >
+        Crear reporte
+      </button>
+
+    </div>
+
+  </div>
+
 </div>
