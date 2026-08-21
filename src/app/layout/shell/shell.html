@@ -1,0 +1,22 @@
+<div class="app-shell">
+  <header class="topbar">
+    <button class="hamburger" (click)="toggleMenu()">☰</button>
+    <h1>Sistema de vigilancia</h1>
+  </header>
+
+  <aside class="drawer" [class.open]="menuOpen">
+    <nav>
+      
+      <a routerLink="/monitor" routerLinkActive="active" (click)="closeMenu()">Monitor</a>
+      <a routerLink="/unique-faces" routerLinkActive="active" (click)="closeMenu()">Caras únicas</a>
+      <a routerLink="/reports" routerLinkActive="active" (click)="closeMenu()">Reportes</a>
+      <a routerLink="/marked" routerLinkActive="active" (click)="closeMenu()">Marcados</a>
+    </nav>
+  </aside>
+
+  <div class="overlay" *ngIf="menuOpen" (click)="closeMenu()"></div>
+
+  <main class="content">
+    <router-outlet />
+  </main>
+</div>

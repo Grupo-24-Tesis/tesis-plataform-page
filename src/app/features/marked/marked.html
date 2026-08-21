@@ -1,0 +1,8 @@
+<h2>Marcados (sospechosos)</h2>
+
+<div class="list">
+  <article *ngFor="let m of marked()" class="item">
+    <strong>{{ m.faceId }}</strong>
+    <p>{{ m.reason }}</p>
+  </article>
+</div>

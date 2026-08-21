@@ -1,0 +1,11 @@
+<h2>Monitor por cámara</h2>
+
+<div class="cams">
+  <div class="cam" *ngFor="let c of cameras()">
+    <h3>{{ c.id }} - {{ c.name }}</h3>
+
+    <p>{{ c.active ? 'Activa' : 'Inactiva' }}</p>
+
+    <button>Subir video</button>
+  </div>
+</div>

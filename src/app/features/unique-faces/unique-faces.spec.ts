@@ -1,18 +1,17 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { Layout } from './layout';
+import { UniqueFaces } from './unique-faces';
 
-describe('Layout', () => {
-  let component: Layout;
-  let fixture: ComponentFixture<Layout>;
+describe('UniqueFaces', () => {
+  let component: UniqueFaces;
+  let fixture: ComponentFixture<UniqueFaces>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [Layout]
-    })
-    .compileComponents();
+      imports: [UniqueFaces],
+    }).compileComponents();
 
-    fixture = TestBed.createComponent(Layout);
+    fixture = TestBed.createComponent(UniqueFaces);
     component = fixture.componentInstance;
     await fixture.whenStable();
   });

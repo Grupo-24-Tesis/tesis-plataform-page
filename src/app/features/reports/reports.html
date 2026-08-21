@@ -1,0 +1,11 @@
+<h2>Reportes</h2>
+
+<div class="list">
+  <article *ngFor="let r of reports()" class="item">
+    <strong>{{ r.title }}</strong>
+    <p>{{ r.description }}</p>
+    <small>
+      {{ r.id }} · {{ r.status }} · prioridad {{ r.priority }}
+    </small>
+  </article>
+</div>
