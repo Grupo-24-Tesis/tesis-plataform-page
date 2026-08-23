@@ -1,3 +1,48 @@
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}
 .card{padding:12px;border:1px solid #2a3b5f;border-radius:10px;background:#111b31;cursor:pointer}
 .detail{margin-top:16px;padding:12px;border:1px solid #2a3b5f;border-radius:10px}
+.face-image-container {
+  width: 100%;
+  height: 220px;
+  overflow: hidden;
+  border-radius: 10px;
+}
+
+.face-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.appearances {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.appearance {
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 10px;
+  background: white;
+}
+
+.appearance-image-container {
+  width: 100%;
+  height: 160px;
+  overflow: hidden;
+  border-radius: 8px;
+}
+
+.appearance-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.appearance p {
+  margin: 8px 0 0;
+  font-size: 14px;
+}
