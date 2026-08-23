@@ -1,2 +1,459 @@
-.list{display:grid;gap:10px;margin-top:12px}
-.item{padding:12px;border:1px solid #2a3b5f;border-radius:10px;background:#111b31}
+/* ========================= */
+/* BOTÓN NUEVO REPORTE */
+/* ========================= */
+
+.new-report-btn {
+  margin-bottom: 20px;
+
+  padding: 10px 18px;
+
+  border: none;
+  border-radius: 8px;
+
+  background: #2563eb;
+  color: white;
+
+  font-size: 14px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s,
+    transform 0.2s;
+}
+
+.new-report-btn:hover {
+  background: #1d4ed8;
+
+  transform: translateY(-1px);
+}
+
+
+/* ========================= */
+/* LISTA */
+/* ========================= */
+
+.list {
+  display: grid;
+
+  gap: 14px;
+
+  margin-top: 12px;
+}
+
+
+/* ========================= */
+/* REPORTE */
+/* ========================= */
+
+.item {
+  display: flex;
+
+  justify-content: space-between;
+  align-items: center;
+
+  gap: 20px;
+
+  padding: 16px;
+
+  border: 1px solid #334155;
+
+  border-radius: 10px;
+
+  background: #1e293b;
+
+  color: white;
+
+  transition:
+    border-color 0.2s,
+    transform 0.2s;
+}
+
+.item:hover {
+  border-color: #3b82f6;
+
+  transform: translateY(-1px);
+}
+
+
+/* ========================= */
+/* INFORMACIÓN */
+/* ========================= */
+
+.report-info {
+  flex: 1;
+
+  min-width: 0;
+}
+
+.report-title {
+  display: block;
+
+  margin-bottom: 6px;
+
+  font-size: 16px;
+}
+
+.description {
+  margin: 0 0 8px;
+
+  color: #cbd5e1;
+
+  line-height: 1.5;
+}
+
+.priority {
+  color: #94a3b8;
+
+  font-size: 13px;
+}
+
+
+/* ========================= */
+/* PRIORIDADES */
+/* ========================= */
+
+.priority-alta {
+  color: #f87171;
+
+  font-weight: 600;
+}
+
+.priority-media {
+  color: #fbbf24;
+
+  font-weight: 600;
+}
+
+.priority-baja {
+  color: #4ade80;
+
+  font-weight: 600;
+}
+
+
+/* ========================= */
+/* ESTADO */
+/* ========================= */
+
+.status-container {
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 6px;
+
+  min-width: 170px;
+}
+
+.status-container label {
+  color: #94a3b8;
+
+  font-size: 13px;
+
+  font-weight: 600;
+}
+
+.status-container select {
+  padding: 9px 10px;
+
+  border: 1px solid #475569;
+
+  border-radius: 8px;
+
+  outline: none;
+
+  background: #0f172a;
+
+  color: white;
+
+  cursor: pointer;
+
+  font-family: inherit;
+
+  transition: border-color 0.2s;
+}
+
+.status-container select:focus {
+  border-color: #3b82f6;
+}
+
+
+/* ========================= */
+/* FONDO DEL MODAL */
+/* ========================= */
+
+.modal-overlay {
+  position: fixed;
+
+  inset: 0;
+
+  z-index: 1000;
+
+  display: flex;
+
+  justify-content: center;
+  align-items: center;
+
+  padding: 20px;
+
+  background: rgba(2, 6, 23, 0.75);
+}
+
+
+/* ========================= */
+/* MODAL */
+/* ========================= */
+
+.modal {
+  width: min(600px, 100%);
+
+  max-height: 90vh;
+
+  overflow-y: auto;
+
+  box-sizing: border-box;
+
+  padding: 24px;
+
+  background: #0f172a;
+
+  color: white;
+
+  border: 1px solid #334155;
+
+  border-radius: 14px;
+
+  box-shadow:
+    0 20px 50px rgba(0, 0, 0, 0.45);
+}
+
+
+/* ========================= */
+/* ENCABEZADO */
+/* ========================= */
+
+.modal-header {
+  display: flex;
+
+  justify-content: space-between;
+  align-items: center;
+
+  margin-bottom: 20px;
+}
+
+.modal-header h3 {
+  margin: 0;
+
+  font-size: 20px;
+}
+
+
+/* ========================= */
+/* BOTÓN CERRAR */
+/* ========================= */
+
+.close-button {
+  width: 36px;
+  height: 36px;
+
+  padding: 0;
+
+  border: none;
+
+  border-radius: 8px;
+
+  background: transparent;
+
+  color: #cbd5e1;
+
+  font-size: 30px;
+
+  line-height: 30px;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s,
+    color 0.2s;
+}
+
+.close-button:hover {
+  background: #1e293b;
+
+  color: white;
+}
+
+
+/* ========================= */
+/* CAMPOS */
+/* ========================= */
+
+.field {
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 6px;
+
+  margin-bottom: 16px;
+}
+
+.field label {
+  color: #e2e8f0;
+
+  font-size: 14px;
+
+  font-weight: 600;
+}
+
+
+/* ========================= */
+/* INPUTS */
+/* ========================= */
+
+.field input,
+.field textarea,
+.field select {
+  width: 100%;
+
+  box-sizing: border-box;
+
+  padding: 11px;
+
+  border: 1px solid #475569;
+
+  border-radius: 8px;
+
+  outline: none;
+
+  background: #1e293b;
+
+  color: white;
+
+  font-family: inherit;
+
+  font-size: 14px;
+
+  transition: border-color 0.2s;
+}
+
+.field input::placeholder,
+.field textarea::placeholder {
+  color: #64748b;
+}
+
+.field input:focus,
+.field textarea:focus,
+.field select:focus {
+  border-color: #3b82f6;
+}
+
+.field textarea {
+  resize: vertical;
+
+  min-height: 100px;
+}
+
+
+/* ========================= */
+/* BOTONES */
+/* ========================= */
+
+.modal-actions {
+  display: flex;
+
+  justify-content: flex-end;
+
+  gap: 10px;
+
+  margin-top: 22px;
+}
+
+.modal-actions button {
+  padding: 10px 16px;
+
+  border: none;
+
+  border-radius: 8px;
+
+  font-size: 14px;
+
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s,
+    transform 0.2s;
+}
+
+
+/* ========================= */
+/* CANCELAR */
+/* ========================= */
+
+.cancel-button {
+  background: #334155;
+
+  color: #e2e8f0;
+}
+
+.cancel-button:hover {
+  background: #475569;
+
+  transform: translateY(-1px);
+}
+
+
+/* ========================= */
+/* CREAR */
+/* ========================= */
+
+.confirm-button {
+  background: #2563eb;
+
+  color: white;
+}
+
+.confirm-button:hover {
+  background: #1d4ed8;
+
+  transform: translateY(-1px);
+}
+
+
+/* ========================= */
+/* RESPONSIVE */
+/* ========================= */
+
+@media (max-width: 650px) {
+
+  .item {
+    flex-direction: column;
+
+    align-items: stretch;
+  }
+
+  .status-container {
+    width: 100%;
+
+    min-width: 0;
+  }
+
+  .modal {
+    padding: 18px;
+
+    max-height: 92vh;
+  }
+
+  .modal-actions {
+    flex-direction: column;
+  }
+
+  .modal-actions button {
+    width: 100%;
+  }
+
+}

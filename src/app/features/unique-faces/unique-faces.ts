@@ -50,10 +50,11 @@ export class UniqueFaces implements OnInit {
     });
   }
 
-  selectFace(item: {
-    faceId: string;
-    appearances: FaceAppearance[];
-  }) {
+  selectFace(item: { faceId: string; appearances: FaceAppearance[] }) {
+  if (this.selected()?.faceId === item.faceId) {
+    this.selected.set(null);
+  } else {
     this.selected.set(item);
   }
+}
 }

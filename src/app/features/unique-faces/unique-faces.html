@@ -6,17 +6,36 @@
     *ngFor="let item of grouped()"
     (click)="selectFace(item)"
   >
-    <strong>{{ item.faceId }}</strong>
+    <div class="face-image-container">
+      <img
+        class="face-image"
+        [src]="item.appearances[0].frameUrl"
+        [alt]="item.faceId"
+      />
+    </div>
+
+    
     <p>{{ item.appearances.length }} apariciones</p>
   </div>
 </div>
 
 <section *ngIf="selected()" class="detail">
-  <h3>Detalle: {{ selected()!.faceId }}</h3>
+  <h3>Diferentes apariciones de la persona seleccionada </h3>
 
-  <ul>
-    <li *ngFor="let a of selected()!.appearances">
-      {{ a.cameraId }} · {{ a.timestamp }}
-    </li>
-  </ul>
+  <div class="appearances">
+    <div
+      class="appearance"
+      *ngFor="let a of selected()!.appearances"
+    >
+      <div class="appearance-image-container">
+        <img
+          class="appearance-image"
+          [src]="a.frameUrl"
+          [alt]="selected()!.faceId"
+        />
+      </div>
+
+      <p>{{ a.cameraId }} · {{ a.timestamp }}</p>
+    </div>
+  </div>
 </section>

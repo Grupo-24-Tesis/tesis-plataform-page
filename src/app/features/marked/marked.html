@@ -1,8 +1,174 @@
 <h2>Marcados (sospechosos)</h2>
 
+<button
+  class="add-button"
+  type="button"
+  (click)="openModal()"
+>
+  + Agregar persona marcada
+</button>
+
+
+<!-- ========================= -->
+<!-- LISTA DE MARCADOS -->
+<!-- ========================= -->
+
 <div class="list">
-  <article *ngFor="let m of marked()" class="item">
-    <strong>{{ m.faceId }}</strong>
-    <p>{{ m.reason }}</p>
+
+  <article
+    *ngFor="let m of marked()"
+    class="item"
+  >
+
+    <div class="marked-image-container">
+
+      <img
+        class="marked-image"
+        *ngIf="getPersonImage(m.faceId) as image"
+        [src]="image"
+        [alt]="m.faceId"
+      />
+
+    </div>
+
+    <div class="marked-info">
+
+      <p class="reason">
+        {{ m.reason }}
+      </p>
+
+      <button
+        type="button"
+        class="delete-button"
+        (click)="deleteMarked(m)"
+      >
+        Eliminar marcado
+      </button>
+
+    </div>
+
   </article>
+
+</div>
+
+<!-- ========================= -->
+<!-- MODAL AGREGAR MARCADO -->
+<!-- ========================= -->
+
+<div
+  class="modal-overlay"
+  *ngIf="showModal()"
+  (click)="closeModal()"
+>
+
+  <div
+    class="modal"
+    (click)="$event.stopPropagation()"
+  >
+
+    <!-- ENCABEZADO -->
+
+    <div class="modal-header">
+
+      <h3>Agregar persona marcada</h3>
+
+      <button
+        type="button"
+        class="close-button"
+        (click)="closeModal()"
+      >
+        ×
+      </button>
+
+    </div>
+
+
+    <!-- SELECCIÓN DE PERSONA -->
+
+    <p class="modal-description">
+      Seleccione la persona que desea marcar:
+    </p>
+
+
+    <div class="people-grid">
+
+      <div
+        class="person-option"
+        *ngFor="let person of people()"
+
+        [class.selected]="
+          selectedPerson()?.faceId === person.faceId
+        "
+
+        (click)="selectPerson(person)"
+      >
+
+        <div class="person-image-container">
+
+          <img
+            class="person-image"
+            [src]="person.appearance.frameUrl"
+            [alt]="person.faceId"
+          >
+
+        </div>
+
+       
+      </div>
+
+    </div>
+
+
+    <!-- PERSONA SELECCIONADA -->
+
+    <div
+      class="selected-info"
+      *ngIf="selectedPerson()"
+    >
+
+    </div>
+
+
+    <!-- RAZÓN -->
+
+    <div class="reason-container">
+
+      <label for="reason">
+        Razón del marcado
+      </label>
+
+      <textarea
+        id="reason"
+        [(ngModel)]="reason"
+        placeholder="Escriba la razón por la que esta persona está marcada..."
+        rows="4"
+      ></textarea>
+
+    </div>
+
+
+    <!-- BOTONES -->
+
+    <div class="modal-actions">
+
+      <button
+        type="button"
+        class="cancel-button"
+        (click)="closeModal()"
+      >
+        Cancelar
+      </button>
+
+      <button
+        type="button"
+        class="confirm-button"
+        (click)="createMarked()"
+      >
+        Marcar persona
+      </button>
+
+    </div>
+
+  </div>
+
 </div>

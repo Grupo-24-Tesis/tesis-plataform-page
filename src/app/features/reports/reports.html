@@ -1,29 +1,58 @@
 <h2>Reportes</h2>
 
-<button class="new-report-btn" (click)="openModal()">
+<button
+  class="new-report-btn"
+  type="button"
+  (click)="openModal()"
+>
   + Nuevo reporte
 </button>
 
+
+<!-- ========================= -->
+<!-- LISTA DE REPORTES -->
+<!-- ========================= -->
+
 <div class="list">
 
-  <article *ngFor="let r of reports()" class="item">
+  <article
+    *ngFor="let r of reports()"
+    class="item"
+  >
 
-    <strong>{{ r.title }}</strong>
+    <div class="report-info">
 
-    <p>{{ r.description }}</p>
+      <strong class="report-title">
+        {{ r.title }}
+      </strong>
 
-    <small>
-      {{ r.id }} · prioridad {{ r.priority }}
-    </small>
+      <p class="description">
+        {{ r.description }}
+      </p>
+
+      <small class="priority">
+        Prioridad:
+        <span [class]="'priority-' + r.priority">
+          {{ r.priority }}
+        </span>
+      </small>
+
+    </div>
+
+
+    <!-- ESTADO -->
 
     <div class="status-container">
 
-      <label>Estado:</label>
+      <label>
+        Estado
+      </label>
 
       <select
         [value]="r.status"
         (change)="updateStatus(r, $event)"
       >
+
         <option value="investigacion">
           Investigación
         </option>
@@ -31,6 +60,7 @@
         <option value="solucionado">
           Solucionado
         </option>
+
       </select>
 
     </div>
@@ -40,10 +70,12 @@
 </div>
 
 
-<!-- POPUP -->
+<!-- ========================= -->
+<!-- MODAL NUEVO REPORTE -->
+<!-- ========================= -->
 
 <div
-  class="modal-backdrop"
+  class="modal-overlay"
   *ngIf="showModal"
   (click)="closeModal()"
 >
@@ -53,71 +85,124 @@
     (click)="$event.stopPropagation()"
   >
 
-    <h3>Nuevo reporte</h3>
+    <!-- ENCABEZADO -->
 
-    <label>
-      Título
-    </label>
+    <div class="modal-header">
 
-    <input
-      type="text"
-      [(ngModel)]="newReport.title"
-      placeholder="Título del reporte"
-    >
+      <h3>
+        Nuevo reporte
+      </h3>
 
+      <button
+        type="button"
+        class="close-button"
+        (click)="closeModal()"
+      >
+        ×
+      </button>
 
-    <label>
-      Descripción
-    </label>
-
-    <textarea
-      [(ngModel)]="newReport.description"
-      placeholder="Descripción del reporte"
-    ></textarea>
+    </div>
 
 
-    <label>
-      Prioridad
-    </label>
+    <!-- TÍTULO -->
 
-    <select [(ngModel)]="newReport.priority">
+    <div class="field">
 
-      <option value="alta">
-        Alta
-      </option>
+      <label for="title">
+        Título
+      </label>
 
-      <option value="media">
-        Media
-      </option>
+      <input
+        id="title"
+        type="text"
+        [(ngModel)]="newReport.title"
+        placeholder="Título del reporte"
+      >
 
-      <option value="baja">
-        Baja
-      </option>
-
-    </select>
+    </div>
 
 
-    <label>
-      Estado inicial
-    </label>
+    <!-- DESCRIPCIÓN -->
 
-    <select [(ngModel)]="newReport.status">
+    <div class="field">
 
-      <option value="investigacion">
-        Investigación
-      </option>
+      <label for="description">
+        Descripción
+      </label>
 
-      <option value="solucionado">
-        Solucionado
-      </option>
+      <textarea
+        id="description"
+        [(ngModel)]="newReport.description"
+        placeholder="Descripción del reporte"
+        rows="4"
+      ></textarea>
 
-    </select>
+    </div>
 
+
+    <!-- PRIORIDAD -->
+
+    <div class="field">
+
+      <label for="priority">
+        Prioridad
+      </label>
+
+      <select
+        id="priority"
+        [(ngModel)]="newReport.priority"
+      >
+
+        <option value="alta">
+          Alta
+        </option>
+
+        <option value="media">
+          Media
+        </option>
+
+        <option value="baja">
+          Baja
+        </option>
+
+      </select>
+
+    </div>
+
+
+    <!-- ESTADO -->
+
+    <div class="field">
+
+      <label for="status">
+        Estado inicial
+      </label>
+
+      <select
+        id="status"
+        [(ngModel)]="newReport.status"
+      >
+
+        <option value="investigacion">
+          Investigación
+        </option>
+
+        <option value="solucionado">
+          Solucionado
+        </option>
+
+      </select>
+
+    </div>
+
+
+    <!-- BOTONES -->
 
     <div class="modal-actions">
 
       <button
         type="button"
+        class="cancel-button"
         (click)="closeModal()"
       >
         Cancelar
@@ -125,6 +210,7 @@
 
       <button
         type="button"
+        class="confirm-button"
         (click)="createReport()"
       >
         Crear reporte
