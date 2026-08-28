@@ -1,3 +1,4 @@
+
 <h2>Reportes</h2>
 
 <button
@@ -20,22 +21,120 @@
     class="item"
   >
 
+    <!-- INFORMACIÓN PRINCIPAL -->
+
     <div class="report-info">
 
-      <strong class="report-title">
-        {{ r.title }}
-      </strong>
+      <div class="report-header">
 
-      <p class="description">
-        {{ r.description }}
-      </p>
+        <strong class="report-title">
+          {{ r.title }}
+        </strong>
 
-      <small class="priority">
-        Prioridad:
-        <span [class]="'priority-' + r.priority">
+        <span
+          class="priority-badge"
+          [class]="'priority-' + r.priority"
+        >
           {{ r.priority }}
         </span>
-      </small>
+
+      </div>
+
+
+      
+<div class="report-case-id">
+  ID del caso: <strong>{{ r.id }}</strong>
+</div>
+
+<p class="description">
+  {{ r.description }}
+</p>
+
+      <!-- FECHA DEL INCIDENTE -->
+
+      <div class="report-detail">
+
+        <span class="detail-label">
+          Fecha del incidente:
+        </span>
+
+        <span>
+          {{ r.incidentDate | date:'dd/MM/yyyy HH:mm' }}
+        </span>
+
+      </div>
+
+
+      <!-- PERSONAS INVOLUCRADAS -->
+
+      <div
+        class="involved-section"
+        *ngIf="r.faceIds?.length"
+      >
+
+        <span class="detail-label">
+          Personas involucradas:
+        </span>
+
+
+        <div class="involved-people">
+
+          <div
+            class="involved-person"
+            *ngFor="let faceId of r.faceIds"
+          >
+
+            <img
+              class="involved-image"
+              [src]="getPersonImage(faceId)"
+              [alt]="faceId"
+            >
+
+            
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- INFORMACIÓN DE RESOLUCIÓN -->
+
+      <div
+        class="resolution-info"
+        *ngIf="r.status === 'solucionado'"
+      >
+
+        <div class="report-detail">
+
+          <span class="detail-label">
+            Fecha de resolución:
+          </span>
+
+          <span>
+            {{ r.resolvedAt | date:'dd/MM/yyyy HH:mm' }}
+          </span>
+
+        </div>
+
+
+        <div
+          class="resolution-description"
+          *ngIf="r.resolutionDescription"
+        >
+
+          <span class="detail-label">
+            Solución:
+          </span>
+
+          <p>
+            {{ r.resolutionDescription }}
+          </p>
+
+        </div>
+
+      </div>
 
     </div>
 
@@ -68,6 +167,8 @@
   </article>
 
 </div>
+
+
 
 
 <!-- ========================= -->
@@ -140,6 +241,23 @@
     </div>
 
 
+    <!-- FECHA DEL INCIDENTE -->
+
+    <div class="field">
+
+      <label for="incidentDate">
+        Fecha y hora del incidente
+      </label>
+
+      <input
+        id="incidentDate"
+        type="datetime-local"
+        [(ngModel)]="newReport.incidentDate"
+      >
+
+    </div>
+
+
     <!-- PRIORIDAD -->
 
     <div class="field">
@@ -196,6 +314,77 @@
     </div>
 
 
+    <!-- ========================= -->
+    <!-- PERSONAS INVOLUCRADAS -->
+    <!-- ========================= -->
+
+    <div class="people-section">
+
+      <label class="people-title">
+        Personas involucradas
+      </label>
+
+      <p class="people-description">
+        Seleccione una o varias personas relacionadas con el incidente.
+      </p>
+
+
+      <div class="people-grid">
+
+        <div
+          class="person-option"
+          *ngFor="let person of uniquePeople"
+          [class.selected]="isFaceSelected(person.faceId)"
+          (click)="toggleFace(person.faceId)"
+        >
+
+          <div class="person-image-container">
+
+            <img
+              class="person-image"
+              [src]="person.appearance.frameUrl"
+              [alt]="person.faceId"
+            >
+
+            <!-- CHECK DE SELECCIÓN -->
+
+            <div
+              class="selection-check"
+              *ngIf="isFaceSelected(person.faceId)"
+            >
+              ✓
+            </div>
+
+          </div>
+
+
+         
+
+        </div>
+
+      </div>
+
+
+      <!-- INFORMACIÓN DE SELECCIÓN -->
+
+      <div
+        class="selected-info"
+        *ngIf="newReport.faceIds.length > 0"
+      >
+
+        <span>
+          Personas seleccionadas:
+        </span>
+
+        <strong>
+          {{ newReport.faceIds.length }}
+        </strong>
+
+      </div>
+
+    </div>
+
+
     <!-- BOTONES -->
 
     <div class="modal-actions">
@@ -214,6 +403,113 @@
         (click)="createReport()"
       >
         Crear reporte
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
+<!-- ========================= -->
+<!-- POPUP RESOLVER REPORTE -->
+<!-- ========================= -->
+
+<div
+  class="modal-overlay"
+  *ngIf="resolutionModal"
+  (click)="closeResolutionModal()"
+>
+
+  <div
+    class="modal"
+    (click)="$event.stopPropagation()"
+  >
+
+    <!-- ENCABEZADO -->
+
+    <div class="modal-header">
+
+      <h3>
+        Resolver reporte
+      </h3>
+
+      <button
+        type="button"
+        class="close-button"
+        (click)="closeResolutionModal()"
+      >
+        ×
+      </button>
+
+    </div>
+
+
+    <!-- REPORTE -->
+
+    <p class="modal-description">
+
+      Está resolviendo:
+
+      <strong>
+        {{ selectedReport?.title }}
+      </strong>
+
+    </p>
+
+
+    <!-- FECHA DE RESOLUCIÓN -->
+
+    <div class="field">
+
+      <label for="resolvedAt">
+        Fecha y hora de resolución
+      </label>
+
+      <input
+        id="resolvedAt"
+        type="datetime-local"
+        [(ngModel)]="resolutionData.resolvedAt"
+      >
+
+    </div>
+
+
+    <!-- DESCRIPCIÓN -->
+
+    <div class="field">
+
+      <label for="resolutionDescription">
+        ¿Cómo se solucionó?
+      </label>
+
+      <textarea
+        id="resolutionDescription"
+        [(ngModel)]="resolutionData.resolutionDescription"
+        placeholder="Describa cómo se solucionó el incidente..."
+        rows="5"
+      ></textarea>
+
+    </div>
+
+
+    <!-- BOTONES -->
+
+    <div class="modal-actions">
+
+      <button
+        type="button"
+        class="cancel-button"
+        (click)="closeResolutionModal()"
+      >
+        Cancelar
+      </button>
+
+      <button
+        type="button"
+        class="confirm-button"
+        (click)="confirmResolution()"
+      >
+        Resolver reporte
       </button>
 
     </div>

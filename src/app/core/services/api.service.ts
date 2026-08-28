@@ -1,10 +1,11 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { ReportItem } from '../models/report.model';
 
 export interface Guard { id?: string; name: string; shift: string; schedule: string; }
 export interface Camera { id: string; name: string; active: boolean; }
 export interface FaceAppearance { id?: string; faceId: string; timestamp: string; cameraId: string; frameUrl?: string; }
-export interface ReportItem { id: string; title: string; status: string; priority: string; description: string; }
+
 export interface MarkedPerson { id?: string; faceId: string; reason: string; }
 
 @Injectable({ providedIn: 'root' })
@@ -29,10 +30,19 @@ export class ApiService {
   getReports() { return this.http.get<ReportItem[]>(`${this.base}/reports`); }
   createReport(payload: ReportItem) { return this.http.post<ReportItem>(`${this.base}/reports`, payload); }
 
- updateReportStatus(id: string, status: ReportItem['status']) {
+ updateReportStatus(
+  id: string,
+  status: ReportItem['status'],
+  resolvedAt?: string,
+  resolutionDescription?: string
+) {
   return this.http.put<ReportItem>(
     `${this.base}/reports/${id}/status`,
-    { status }
+    {
+      status,
+      resolvedAt,
+      resolutionDescription
+    }
   );
 }
 

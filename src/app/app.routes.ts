@@ -1,6 +1,12 @@
 import { Routes } from '@angular/router';
 
 export const routes: Routes = [
+  // Ruta inicial
+  {
+    path: '',
+    redirectTo: '/guards',
+    pathMatch: 'full'
+  },
   // Selección de vigilante
   {
     path: 'guards',
@@ -37,12 +43,7 @@ export const routes: Routes = [
     ]
   },
 
-  // Ruta inicial
-  {
-    path: '',
-    redirectTo: 'guards',
-    pathMatch: 'full'
-  },
+  
 
   // Cualquier ruta desconocida
   {

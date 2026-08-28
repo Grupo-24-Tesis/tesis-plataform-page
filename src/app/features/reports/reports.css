@@ -1,3 +1,4 @@
+
 /* ========================= */
 /* BOTÓN NUEVO REPORTE */
 /* ========================= */
@@ -31,13 +32,15 @@
 
 
 /* ========================= */
-/* LISTA */
+/* LISTA DE REPORTES */
 /* ========================= */
 
 .list {
-  display: grid;
+  display: flex;
 
-  gap: 14px;
+  flex-direction: column;
+
+  gap: 12px;
 
   margin-top: 12px;
 }
@@ -51,15 +54,15 @@
   display: flex;
 
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
 
-  gap: 20px;
+  gap: 25px;
 
-  padding: 16px;
+  padding: 18px;
 
   border: 1px solid #334155;
 
-  border-radius: 10px;
+  border-radius: 12px;
 
   background: #1e293b;
 
@@ -67,13 +70,17 @@
 
   transition:
     border-color 0.2s,
-    transform 0.2s;
+    transform 0.2s,
+    box-shadow 0.2s;
 }
 
 .item:hover {
-  border-color: #3b82f6;
+  border-color: #475569;
 
   transform: translateY(-1px);
+
+  box-shadow:
+    0 5px 15px rgba(0, 0, 0, 0.2);
 }
 
 
@@ -87,49 +94,199 @@
   min-width: 0;
 }
 
-.report-title {
-  display: block;
 
-  margin-bottom: 6px;
+/* ========================= */
+/* ENCABEZADO DEL REPORTE */
+/* ========================= */
 
-  font-size: 16px;
+.report-header {
+  display: flex;
+
+  align-items: center;
+
+  gap: 10px;
+
+  margin-bottom: 7px;
 }
 
+.report-title {
+  font-size: 17px;
+
+  color: white;
+}
+
+/* ========================= */
+/* ID DEL CASO */
+/* ========================= */
+
+.report-case-id {
+  margin-bottom: 8px;
+
+  font-size: 12px;
+
+  color: #64748b;
+}
+
+.report-case-id strong {
+  color: #94a3b8;
+
+  font-weight: 500;
+
+  font-family: monospace;
+}
+
+/* ========================= */
+/* PRIORIDAD */
+/* ========================= */
+
+.priority-badge {
+  padding: 3px 8px;
+
+  border-radius: 6px;
+
+  font-size: 11px;
+
+  font-weight: 700;
+
+  text-transform: uppercase;
+}
+
+.priority-alta {
+  background: rgba(248, 113, 113, 0.15);
+
+  color: #f87171;
+}
+
+.priority-media {
+  background: rgba(250, 204, 21, 0.15);
+
+  color: #facc15;
+}
+
+.priority-baja {
+  background: rgba(74, 222, 128, 0.15);
+
+  color: #4ade80;
+}
+
+
+/* ========================= */
+/* DESCRIPCIÓN */
+/* ========================= */
+
 .description {
-  margin: 0 0 8px;
+  margin: 0 0 12px;
 
   color: #cbd5e1;
 
   line-height: 1.5;
 }
 
-.priority {
-  color: #94a3b8;
+
+/* ========================= */
+/* DETALLES */
+/* ========================= */
+
+.report-detail {
+  display: flex;
+
+  align-items: center;
+
+  gap: 7px;
+
+  margin-top: 7px;
 
   font-size: 13px;
+
+  color: #cbd5e1;
+}
+
+.detail-label {
+  color: #94a3b8;
+
+  font-weight: 600;
 }
 
 
 /* ========================= */
-/* PRIORIDADES */
+/* PERSONAS INVOLUCRADAS */
 /* ========================= */
 
-.priority-alta {
-  color: #f87171;
-
-  font-weight: 600;
+.involved-section {
+  margin-top: 15px;
 }
 
-.priority-media {
-  color: #fbbf24;
+.involved-people {
+  display: flex;
 
-  font-weight: 600;
+  flex-wrap: wrap;
+
+  gap: 10px;
+
+  margin-top: 8px;
 }
 
-.priority-baja {
-  color: #4ade80;
+.involved-person {
+  display: flex;
 
-  font-weight: 600;
+  align-items: center;
+
+  gap: 7px;
+
+  padding: 5px 8px 5px 5px;
+
+  border: 1px solid #475569;
+
+  border-radius: 8px;
+
+  background: #0f172a;
+
+  color: #cbd5e1;
+
+  font-size: 12px;
+}
+
+.involved-image {
+  width: 70px;
+
+  height: 70px;
+
+  object-fit: cover;
+
+  border-radius: 6px;
+
+  display: block;
+}
+
+
+/* ========================= */
+/* INFORMACIÓN DE RESOLUCIÓN */
+/* ========================= */
+
+.resolution-info {
+  margin-top: 15px;
+
+  padding: 10px 12px;
+
+  border-left: 3px solid #22c55e;
+
+  border-radius: 6px;
+
+  background: rgba(34, 197, 94, 0.08);
+}
+
+.resolution-description {
+  margin-top: 8px;
+
+  font-size: 13px;
+
+  color: #cbd5e1;
+}
+
+.resolution-description p {
+  margin: 4px 0 0;
+
+  line-height: 1.4;
 }
 
 
@@ -142,25 +299,25 @@
 
   flex-direction: column;
 
-  gap: 6px;
+  gap: 5px;
 
-  min-width: 170px;
+  min-width: 150px;
+
+  flex-shrink: 0;
 }
 
 .status-container label {
-  color: #94a3b8;
-
   font-size: 13px;
 
-  font-weight: 600;
+  color: #94a3b8;
 }
 
 .status-container select {
-  padding: 9px 10px;
+  padding: 8px 10px;
 
   border: 1px solid #475569;
 
-  border-radius: 8px;
+  border-radius: 7px;
 
   outline: none;
 
@@ -169,16 +326,11 @@
   color: white;
 
   cursor: pointer;
-
-  font-family: inherit;
-
-  transition: border-color 0.2s;
 }
 
 .status-container select:focus {
   border-color: #3b82f6;
 }
-
 
 /* ========================= */
 /* FONDO DEL MODAL */
@@ -189,7 +341,7 @@
 
   inset: 0;
 
-  z-index: 1000;
+  background: rgba(2, 6, 23, 0.75);
 
   display: flex;
 
@@ -198,7 +350,7 @@
 
   padding: 20px;
 
-  background: rgba(2, 6, 23, 0.75);
+  z-index: 1000;
 }
 
 
@@ -207,9 +359,9 @@
 /* ========================= */
 
 .modal {
-  width: min(600px, 100%);
+  width: min(850px, 100%);
 
-  max-height: 90vh;
+  max-height: 92vh;
 
   overflow-y: auto;
 
@@ -240,7 +392,7 @@
   justify-content: space-between;
   align-items: center;
 
-  margin-bottom: 20px;
+  margin-bottom: 18px;
 }
 
 .modal-header h3 {
@@ -248,11 +400,6 @@
 
   font-size: 20px;
 }
-
-
-/* ========================= */
-/* BOTÓN CERRAR */
-/* ========================= */
 
 .close-button {
   width: 36px;
@@ -301,17 +448,12 @@
 }
 
 .field label {
-  color: #e2e8f0;
-
   font-size: 14px;
 
   font-weight: 600;
+
+  color: #e2e8f0;
 }
-
-
-/* ========================= */
-/* INPUTS */
-/* ========================= */
 
 .field input,
 .field textarea,
@@ -320,7 +462,7 @@
 
   box-sizing: border-box;
 
-  padding: 11px;
+  padding: 10px 11px;
 
   border: 1px solid #475569;
 
@@ -352,13 +494,216 @@
 
 .field textarea {
   resize: vertical;
-
-  min-height: 100px;
 }
 
 
 /* ========================= */
-/* BOTONES */
+/* PERSONAS */
+/* ========================= */
+
+.people-section {
+  margin-top: 8px;
+
+  margin-bottom: 18px;
+}
+
+.people-title {
+  display: block;
+
+  margin-bottom: 4px;
+
+  font-size: 14px;
+
+  font-weight: 600;
+
+  color: #e2e8f0;
+}
+
+.people-description {
+  margin: 0 0 14px;
+
+  color: #94a3b8;
+
+  font-size: 13px;
+}
+
+
+/* ========================= */
+/* GRID DE PERSONAS */
+/* ========================= */
+
+.people-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(auto-fill, minmax(140px, 1fr));
+
+  gap: 15px;
+
+  margin-bottom: 15px;
+}
+
+
+/* ========================= */
+/* TARJETA DE PERSONA */
+/* ========================= */
+
+.person-option {
+  position: relative;
+
+  box-sizing: border-box;
+
+  padding: 8px;
+
+  border: 2px solid #334155;
+
+  border-radius: 10px;
+
+  background: #1e293b;
+
+  color: white;
+
+  text-align: center;
+
+  cursor: pointer;
+
+  transition:
+    border-color 0.2s,
+    background 0.2s,
+    transform 0.2s,
+    box-shadow 0.2s;
+}
+
+.person-option:hover {
+  border-color: #60a5fa;
+
+  transform: translateY(-2px);
+}
+
+
+/* ========================= */
+/* PERSONA SELECCIONADA */
+/* ========================= */
+
+.person-option.selected {
+  border-color: #3b82f6;
+
+  background: #1e3a8a;
+
+  box-shadow:
+    0 0 0 1px #3b82f6,
+    0 4px 15px rgba(37, 99, 235, 0.25);
+}
+
+
+/* ========================= */
+/* CONTENEDOR DE IMAGEN */
+/* ========================= */
+
+.person-image-container {
+  position: relative;
+
+  width: 100%;
+
+  height: 140px;
+
+  overflow: hidden;
+
+  margin-bottom: 8px;
+
+  border-radius: 8px;
+
+  background: #0f172a;
+}
+
+
+/* ========================= */
+/* IMAGEN */
+/* ========================= */
+
+.person-image {
+  width: 100%;
+
+  height: 100%;
+
+  display: block;
+
+  object-fit: cover;
+}
+
+
+/* ========================= */
+/* CHECK DE SELECCIÓN */
+/* ========================= */
+
+.selection-check {
+  position: absolute;
+
+  top: 7px;
+
+  right: 7px;
+
+  width: 26px;
+
+  height: 26px;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  background: #2563eb;
+
+  color: white;
+
+  font-size: 16px;
+
+  font-weight: bold;
+
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+
+/* ========================= */
+/* INFORMACIÓN DE SELECCIÓN */
+/* ========================= */
+
+.selected-info {
+  display: flex;
+
+  align-items: center;
+
+  gap: 8px;
+
+  padding: 10px 12px;
+
+  border-radius: 8px;
+
+  background: #1e3a8a;
+
+  border: 1px solid #3b82f6;
+
+  color: #dbeafe;
+}
+
+.selected-info span {
+  font-size: 13px;
+
+  color: #93c5fd;
+}
+
+.selected-info strong {
+  color: white;
+
+  font-size: 14px;
+}
+
+
+/* ========================= */
+/* BOTONES DEL MODAL */
 /* ========================= */
 
 .modal-actions {
@@ -368,7 +713,7 @@
 
   gap: 10px;
 
-  margin-top: 22px;
+  margin-top: 20px;
 }
 
 .modal-actions button {
@@ -408,7 +753,7 @@
 
 
 /* ========================= */
-/* CREAR */
+/* CONFIRMAR */
 /* ========================= */
 
 .confirm-button {
@@ -425,10 +770,33 @@
 
 
 /* ========================= */
+/* SCROLL DEL MODAL */
+/* ========================= */
+
+.modal::-webkit-scrollbar {
+  width: 8px;
+}
+
+.modal::-webkit-scrollbar-track {
+  background: #0f172a;
+}
+
+.modal::-webkit-scrollbar-thumb {
+  background: #334155;
+
+  border-radius: 10px;
+}
+
+.modal::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}
+
+
+/* ========================= */
 /* RESPONSIVE */
 /* ========================= */
 
-@media (max-width: 650px) {
+@media (max-width: 700px) {
 
   .item {
     flex-direction: column;
@@ -438,14 +806,31 @@
 
   .status-container {
     width: 100%;
+  }
 
-    min-width: 0;
+  .report-header {
+    flex-wrap: wrap;
+  }
+
+  .involved-people {
+    max-height: 150px;
+
+    overflow-y: auto;
   }
 
   .modal {
     padding: 18px;
 
-    max-height: 92vh;
+    max-height: 94vh;
+  }
+
+  .people-grid {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+
+  .person-image-container {
+    height: 120px;
   }
 
   .modal-actions {
