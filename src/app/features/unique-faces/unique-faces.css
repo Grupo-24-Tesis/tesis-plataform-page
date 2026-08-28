@@ -1,48 +1,386 @@
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}
-.card{padding:12px;border:1px solid #2a3b5f;border-radius:10px;background:#111b31;cursor:pointer}
-.detail{margin-top:16px;padding:12px;border:1px solid #2a3b5f;border-radius:10px}
+
+/* ========================= */
+/* GRID DE CARAS */
+/* ========================= */
+
+.grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(auto-fill, minmax(210px, 1fr));
+
+  gap: 18px;
+
+  margin-top: 18px;
+}
+
+
+/* ========================= */
+/* TARJETA DE CARA */
+/* ========================= */
+
+.card {
+  overflow: hidden;
+
+  border: 1px solid #334155;
+
+  border-radius: 14px;
+
+  background: #1e293b;
+
+  color: white;
+
+  cursor: pointer;
+
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-3px);
+
+  border-color: #3b82f6;
+
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+
+/* ========================= */
+/* IMAGEN PRINCIPAL */
+/* ========================= */
+
 .face-image-container {
   width: 100%;
-  height: 220px;
+
+  height: 230px;
+
   overflow: hidden;
-  border-radius: 10px;
+
+  background: #0f172a;
 }
 
 .face-image {
   width: 100%;
+
   height: 100%;
-  object-fit: cover;
+
   display: block;
-}
-.appearances {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 16px;
-  margin-top: 20px;
+
+  object-fit: cover;
+
+  transition: transform 0.3s ease;
 }
 
-.appearance {
-  border: 1px solid #ddd;
-  border-radius: 10px;
-  padding: 10px;
-  background: white;
+.card:hover .face-image {
+  transform: scale(1.03);
 }
+
+
+/* ========================= */
+/* INFORMACIÓN DE LA CARA */
+/* ========================= */
+
+.face-info {
+  padding: 15px;
+}
+
+.face-info strong {
+  display: block;
+
+  margin-bottom: 9px;
+
+  font-size: 16px;
+
+  color: white;
+
+  overflow: hidden;
+
+  text-overflow: ellipsis;
+
+  white-space: nowrap;
+}
+
+.face-info p {
+  margin: 6px 0;
+
+  color: #cbd5e1;
+
+  font-size: 13px;
+}
+
+
+/* ========================= */
+/* ESTADO SOSPECHOSO */
+/* ========================= */
+
+.suspect {
+  margin-top: 10px !important;
+
+  padding-top: 9px;
+
+  border-top: 1px solid #334155;
+
+  font-weight: 600;
+}
+
+.suspect.is-suspect {
+  color: #f87171;
+}
+
+.suspect:not(.is-suspect) {
+  color: #4ade80;
+}
+
+
+/* ========================= */
+/* DETALLE */
+/* ========================= */
+
+.detail {
+  margin-top: 24px;
+
+  padding: 20px;
+
+  border: 1px solid #334155;
+
+  border-radius: 14px;
+
+  background: #0f172a;
+
+  color: white;
+
+  box-shadow:
+    0 8px 25px rgba(0, 0, 0, 0.2);
+}
+
+
+/* ========================= */
+/* ENCABEZADO DEL DETALLE */
+/* ========================= */
+
+.detail-header {
+  display: flex;
+
+  justify-content: space-between;
+
+  align-items: flex-start;
+
+  gap: 20px;
+
+  margin-bottom: 20px;
+
+  padding-bottom: 16px;
+
+  border-bottom: 1px solid #334155;
+}
+
+.detail-header h3 {
+  margin: 0 0 7px;
+
+  font-size: 19px;
+
+  color: white;
+}
+
+.detail-header p {
+  margin: 0;
+
+  color: #94a3b8;
+
+  font-size: 13px;
+}
+
+
+/* ========================= */
+/* ESTADO DEL DETALLE */
+/* ========================= */
+
+.detail-suspect {
+  flex-shrink: 0;
+
+  padding: 7px 11px;
+
+  border-radius: 8px;
+
+  background: #1e293b;
+
+  border: 1px solid #334155;
+
+  color: #4ade80;
+
+  font-size: 13px;
+
+  white-space: nowrap;
+}
+
+.detail-suspect.is-suspect {
+  color: #f87171;
+
+  border-color: #7f1d1d;
+
+  background: #450a0a;
+}
+
+
+/* ========================= */
+/* GRID DE APARICIONES */
+/* ========================= */
+
+.appearances {
+  display: grid;
+
+  grid-template-columns:
+    repeat(auto-fill, minmax(190px, 1fr));
+
+  gap: 16px;
+}
+
+
+/* ========================= */
+/* TARJETA DE APARICIÓN */
+/* ========================= */
+
+.appearance {
+  overflow: hidden;
+
+  border: 1px solid #334155;
+
+  border-radius: 11px;
+
+  background: #1e293b;
+
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.appearance:hover {
+  transform: translateY(-2px);
+
+  border-color: #475569;
+
+  box-shadow:
+    0 6px 16px rgba(0, 0, 0, 0.25);
+}
+
+
+/* ========================= */
+/* IMAGEN DE APARICIÓN */
+/* ========================= */
 
 .appearance-image-container {
   width: 100%;
-  height: 160px;
+
+  height: 190px;
+
   overflow: hidden;
-  border-radius: 8px;
+
+  background: #0f172a;
 }
 
 .appearance-image {
   width: 100%;
+
   height: 100%;
-  object-fit: cover;
+
   display: block;
+
+  object-fit: cover;
 }
 
-.appearance p {
-  margin: 8px 0 0;
+
+/* ========================= */
+/* INFORMACIÓN APARICIÓN */
+/* ========================= */
+
+.appearance-info {
+  padding: 12px 13px;
+}
+
+.appearance-info strong {
+  display: block;
+
+  margin-bottom: 8px;
+
+  color: white;
+
   font-size: 14px;
+}
+
+.appearance-info p {
+  margin: 5px 0;
+
+  color: #94a3b8;
+
+  font-size: 12px;
+
+  line-height: 1.4;
+}
+
+
+/* ========================= */
+/* RESPONSIVE */
+/* ========================= */
+
+@media (max-width: 700px) {
+
+  .grid {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+
+    gap: 12px;
+  }
+
+  .face-image-container {
+    height: 190px;
+  }
+
+  .face-info {
+    padding: 12px;
+  }
+
+  .detail {
+    padding: 15px;
+  }
+
+  .detail-header {
+    flex-direction: column;
+
+    gap: 12px;
+  }
+
+  .appearances {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+
+    gap: 12px;
+  }
+
+  .appearance-image-container {
+    height: 160px;
+  }
+}
+
+
+@media (max-width: 450px) {
+
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .face-image-container {
+    height: 240px;
+  }
+
+  .appearances {
+    grid-template-columns: 1fr;
+  }
+
+  .appearance-image-container {
+    height: 220px;
+  }
 }

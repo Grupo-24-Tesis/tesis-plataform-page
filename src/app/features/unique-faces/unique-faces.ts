@@ -1,6 +1,7 @@
 import { Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ApiService, FaceAppearance } from '../../core/services/api.service';
+import { ApiService } from '../../core/services/api.service';
+import { UniqueFace } from '../../core/models/UniqueFace';
 
 @Component({
   selector: 'app-unique-faces',
@@ -10,51 +11,48 @@ import { ApiService, FaceAppearance } from '../../core/services/api.service';
   styleUrl: './unique-faces.css',
 })
 export class UniqueFaces implements OnInit {
-  appearances = signal<FaceAppearance[]>([]);
 
-  selected = signal<{
-    faceId: string;
-    appearances: FaceAppearance[];
-  } | null>(null);
+  faces = signal<UniqueFace[]>([]);
 
-  grouped = computed(() => {
-    const map = new Map<string, FaceAppearance[]>();
-
-    for (const a of this.appearances()) {
-      if (!map.has(a.faceId)) {
-        map.set(a.faceId, []);
-      }
-
-      map.get(a.faceId)!.push(a);
-    }
-
-    return Array.from(map.entries()).map(
-      ([faceId, appearances]) => ({
-        faceId,
-        appearances
-      })
-    );
-  });
+  selected = signal<UniqueFace | null>(null);
 
   constructor(private api: ApiService) {}
 
   ngOnInit(): void {
-    this.api.getFaceAppearances().subscribe({
+
+    this.api.getUniqueFaces().subscribe({
+
       next: (data) => {
-        console.log('FACE APPEARANCES API =>', data);
-        this.appearances.set(data);
+
+        console.log('UNIQUE FACES API =>', data);
+
+        this.faces.set(data);
+
       },
+
       error: (err) => {
-        console.error('Error loading face appearances', err);
+
+        console.error(
+          'Error loading unique faces',
+          err
+        );
+
       }
+
     });
   }
 
-  selectFace(item: { faceId: string; appearances: FaceAppearance[] }) {
-  if (this.selected()?.faceId === item.faceId) {
-    this.selected.set(null);
-  } else {
-    this.selected.set(item);
+  selectFace(face: UniqueFace): void {
+
+    if (this.selected()?.faceId === face.faceId) {
+
+      this.selected.set(null);
+
+    } else {
+
+      this.selected.set(face);
+
+    }
+
   }
-}
 }

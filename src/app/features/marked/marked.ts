@@ -4,9 +4,9 @@ import { FormsModule } from '@angular/forms';
 import {
   ApiService,
   MarkedPerson,
-  FaceAppearance
+  
 } from '../../core/services/api.service';
-
+import { FaceAppearance } from '../../core/models/face.model';
 interface Person {
   faceId: string;
   appearance: FaceAppearance;

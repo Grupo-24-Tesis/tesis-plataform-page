@@ -1,41 +1,124 @@
 <h2>Caras únicas</h2>
 
 <div class="grid">
+
   <div
     class="card"
-    *ngFor="let item of grouped()"
-    (click)="selectFace(item)"
+    *ngFor="let face of faces()"
+    (click)="selectFace(face)"
   >
+
     <div class="face-image-container">
+
       <img
         class="face-image"
-        [src]="item.appearances[0].frameUrl"
-        [alt]="item.faceId"
-      />
+        [src]="face.appearances[0].frameUrl"
+        [alt]="face.faceId"
+      >
+
     </div>
 
-    
-    <p>{{ item.appearances.length }} apariciones</p>
+
+    <div class="face-info">
+
+      
+
+      <p>
+        {{ face.appearances.length }} apariciones
+      </p>
+
+      <p>
+        Reportes: {{ face.reportCount }}
+      </p>
+
+      <p
+        class="suspect"
+        [class.is-suspect]="face.suspect"
+      >
+        {{ face.suspect ? 'Sospechoso' : 'No sospechoso' }}
+      </p>
+
+    </div>
+
   </div>
+
 </div>
 
-<section *ngIf="selected()" class="detail">
-  <h3>Diferentes apariciones de la persona seleccionada </h3>
+
+<!-- ========================= -->
+<!-- DETALLE -->
+<!-- ========================= -->
+
+<section
+  *ngIf="selected()"
+  class="detail"
+>
+
+  <div class="detail-header">
+
+    <div>
+
+      <h3>
+        Apariciones:
+      </h3>
+
+      <p>
+        {{ selected()!.appearances.length }} apariciones encontradas
+        · {{ selected()!.reportCount }} reportes relacionados
+      </p>
+
+    </div>
+
+    <strong
+      class="detail-suspect"
+      [class.is-suspect]="selected()!.suspect"
+    >
+      {{ selected()!.suspect
+        ? 'Sospechoso'
+        : 'No sospechoso'
+      }}
+    </strong>
+
+  </div>
+
 
   <div class="appearances">
+
     <div
       class="appearance"
       *ngFor="let a of selected()!.appearances"
     >
+
       <div class="appearance-image-container">
+
         <img
           class="appearance-image"
           [src]="a.frameUrl"
           [alt]="selected()!.faceId"
-        />
+        >
+
       </div>
 
-      <p>{{ a.cameraId }} · {{ a.timestamp }}</p>
+
+      <div class="appearance-info">
+
+        <strong>
+          {{ a.cameraId }}
+        </strong>
+
+        <p>
+          Tiempo: {{ a.timestamp }}
+        </p>
+
+        <p>
+          Capturada:
+          {{ a.capturedAt | date:'dd/MM/yyyy HH:mm' }}
+        </p>
+
+      </div>
+
     </div>
+
   </div>
+
 </section>

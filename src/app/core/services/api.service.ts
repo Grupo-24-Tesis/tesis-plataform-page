@@ -1,10 +1,12 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { ReportItem } from '../models/report.model';
 
+import { ReportItem } from '../models/report.model';
+import {FaceAppearance} from '../models/face.model';
+import { UniqueFace } from '../models/UniqueFace';
 export interface Guard { id?: string; name: string; shift: string; schedule: string; }
 export interface Camera { id: string; name: string; active: boolean; }
-export interface FaceAppearance { id?: string; faceId: string; timestamp: string; cameraId: string; frameUrl?: string; }
+
 
 export interface MarkedPerson { id?: string; faceId: string; reason: string; }
 
@@ -21,10 +23,24 @@ export class ApiService {
 
 
   // Estas son las apis de apariciones de caras
-  getFaceAppearances() { return this.http.get<FaceAppearance[]>(`${this.base}/face-appearances`); }
-  createFaceAppearance(payload: FaceAppearance) {
-    return this.http.post<FaceAppearance>(`${this.base}/face-appearances`, payload);
-  }
+ getFaceAppearances() {
+  return this.http.get<FaceAppearance[]>(
+    `${this.base}/face-appearances`
+  );
+}
+
+createFaceAppearance(payload: FaceAppearance) {
+  return this.http.post<FaceAppearance>(
+    `${this.base}/face-appearances`,
+    payload
+  );
+}
+
+getUniqueFaces() {
+  return this.http.get<UniqueFace[]>(
+    `${this.base}/face-appearances/unique`
+  );
+}
 
   // Estas son las apis de reportes
   getReports() { return this.http.get<ReportItem[]>(`${this.base}/reports`); }

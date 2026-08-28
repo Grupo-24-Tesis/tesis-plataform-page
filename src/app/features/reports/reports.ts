@@ -2,8 +2,10 @@ import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
-import { ApiService, FaceAppearance} from '../../core/services/api.service';
+import { ApiService} from '../../core/services/api.service';
 import { ReportItem } from '../../core/models/report.model';
+
+import { FaceAppearance } from '../../core/models/face.model';
 
 @Component({
   selector: 'app-reports',
@@ -116,8 +118,7 @@ resolutionData = {
 
   const newStatus = select.value as ReportItem['status'];
 
-  // Si quiere solucionar el reporte,
-  // primero mostramos el popup
+  
   if (newStatus === 'solucionado') {
 
     this.selectedReport = report;
@@ -129,14 +130,12 @@ resolutionData = {
 
     this.resolutionModal = true;
 
-    // Volvemos visualmente al estado anterior
+    
     select.value = report.status;
 
     return;
   }
 
-  // Si vuelve a investigación,
-  // hacemos el PUT directamente
   this.api.updateReportStatus(
     report.id,
     newStatus
