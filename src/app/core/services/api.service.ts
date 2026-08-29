@@ -44,6 +44,40 @@ getUniqueFaces() {
 
   // Estas son las apis de reportes
   getReports() { return this.http.get<ReportItem[]>(`${this.base}/reports`); }
+  getFilteredReports(
+  status?: string,
+  date?: string,
+  startDate?: string,
+  endDate?: string,
+  dateType?: string
+) {
+  let params: any = {};
+
+  if (status) {
+    params.status = status;
+  }
+
+  if (date) {
+    params.date = date;
+  }
+
+  if (startDate) {
+    params.startDate = startDate;
+  }
+
+  if (endDate) {
+    params.endDate = endDate;
+  }
+
+  if (dateType) {
+    params.dateType = dateType;
+  }
+
+  return this.http.get<ReportItem[]>(
+    `${this.base}/reports/filter`,
+    { params }
+  );
+}
   createReport(payload: ReportItem) { return this.http.post<ReportItem>(`${this.base}/reports`, payload); }
 
  updateReportStatus(

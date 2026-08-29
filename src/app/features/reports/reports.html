@@ -1,13 +1,230 @@
 
-<h2>Reportes</h2>
+<!-- ========================= -->
+<!-- FILTROS -->
+<!-- ========================= -->
 
-<button
-  class="new-report-btn"
-  type="button"
-  (click)="openModal()"
->
-  + Nuevo reporte
-</button>
+<div class="filters">
+
+  <!-- ESTADO -->
+
+  <div class="filter-group">
+
+    <label for="statusFilter">
+      Estado
+    </label>
+
+    <select
+      id="statusFilter"
+      [(ngModel)]="statusFilter"
+    >
+
+      <option value="">
+        Todos
+      </option>
+
+      <option value="investigacion">
+        Investigación
+      </option>
+
+      <option value="solucionado">
+        Solucionado
+      </option>
+
+    </select>
+
+  </div>
+
+
+  <!-- TIPO DE FECHA -->
+
+  <div class="filter-group">
+
+    <label for="dateType">
+      Filtrar fecha por
+    </label>
+
+    <select
+      id="dateType"
+      [(ngModel)]="dateType"
+    >
+
+      <option value="incidente">
+        Fecha del incidente
+      </option>
+
+      <option value="resolucion">
+        Fecha de resolución
+      </option>
+
+    </select>
+
+  </div>
+
+
+  <!-- TIPO DE FILTRO -->
+
+  <div class="filter-group">
+
+    <label for="dateFilter">
+      Tipo de filtro
+    </label>
+
+    <select
+      id="dateFilter"
+      [(ngModel)]="dateFilter"
+    >
+
+      <option value="">
+        Sin filtro de fecha
+      </option>
+
+      <option value="dia">
+        Día
+      </option>
+
+      <option value="mes">
+        Mes
+      </option>
+
+      <option value="ano">
+        Año
+      </option>
+
+      <option value="rango">
+        Rango
+      </option>
+
+    </select>
+
+  </div>
+
+
+  <!-- DÍA -->
+
+  <div
+    class="filter-group"
+    *ngIf="dateFilter === 'dia'"
+  >
+
+    <label for="selectedDate">
+      Seleccionar día
+    </label>
+
+    <input
+      id="selectedDate"
+      type="date"
+      [(ngModel)]="selectedDate"
+    >
+
+  </div>
+
+
+  <!-- MES -->
+
+  <div
+    class="filter-group"
+    *ngIf="dateFilter === 'mes'"
+  >
+
+    <label for="selectedMonth">
+      Seleccionar mes
+    </label>
+
+    <input
+      id="selectedMonth"
+      type="month"
+      [(ngModel)]="selectedMonth"
+    >
+
+  </div>
+
+
+  <!-- AÑO -->
+
+  <div
+    class="filter-group"
+    *ngIf="dateFilter === 'ano'"
+  >
+
+    <label for="selectedYear">
+      Seleccionar año
+    </label>
+
+    <input
+      id="selectedYear"
+      type="number"
+      [(ngModel)]="selectedYear"
+      placeholder="2026"
+      min="2000"
+      max="2100"
+    >
+
+  </div>
+
+
+  <!-- RANGO -->
+
+  <ng-container
+    *ngIf="dateFilter === 'rango'"
+  >
+
+    <div class="filter-group">
+
+      <label for="startDate">
+        Desde
+      </label>
+
+      <input
+        id="startDate"
+        type="date"
+        [(ngModel)]="startDate"
+      >
+
+    </div>
+
+
+    <div class="filter-group">
+
+      <label for="endDate">
+        Hasta
+      </label>
+
+      <input
+        id="endDate"
+        type="date"
+        [(ngModel)]="endDate"
+      >
+
+    </div>
+
+  </ng-container>
+
+
+  <!-- BOTONES -->
+
+  <div class="filter-actions">
+
+    <button
+      type="button"
+      class="apply-filter-btn"
+      (click)="applyFilters()"
+    >
+      Filtrar
+    </button>
+
+    <button
+      type="button"
+      class="clear-filter-btn"
+      (click)="clearFilters()"
+    >
+      Limpiar
+    </button>
+
+  </div>
+
+</div>
+
+
 
 
 <!-- ========================= -->
