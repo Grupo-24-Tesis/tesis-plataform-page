@@ -1,60 +1,160 @@
-import { Component, OnInit, signal, computed } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ApiService, FaceAppearance } from '../../core/services/api.service';
+import { FormsModule } from '@angular/forms';
+
+import { ApiService } from '../../core/services/api.service';
+import { UniqueFace } from '../../core/models/UniqueFace';
 
 @Component({
   selector: 'app-unique-faces',
   standalone: true,
-  imports: [CommonModule],
+  imports: [
+    CommonModule,
+    FormsModule
+  ],
   templateUrl: './unique-faces.html',
   styleUrl: './unique-faces.css',
 })
 export class UniqueFaces implements OnInit {
-  appearances = signal<FaceAppearance[]>([]);
 
-  selected = signal<{
-    faceId: string;
-    appearances: FaceAppearance[];
-  } | null>(null);
+  // ==========================================
+  // DATOS
+  // ==========================================
 
-  grouped = computed(() => {
-    const map = new Map<string, FaceAppearance[]>();
+  faces = signal<UniqueFace[]>([]);
 
-    for (const a of this.appearances()) {
-      if (!map.has(a.faceId)) {
-        map.set(a.faceId, []);
-      }
+  selected = signal<UniqueFace | null>(null);
 
-      map.get(a.faceId)!.push(a);
-    }
 
-    return Array.from(map.entries()).map(
-      ([faceId, appearances]) => ({
-        faceId,
-        appearances
-      })
-    );
-  });
+  // ==========================================
+  // FILTROS
+  // ==========================================
+
+  startDate: string = '';
+
+  endDate: string = '';
+
+  hasReports: string = '';
+
+  suspect: string = '';
+
 
   constructor(private api: ApiService) {}
 
+
+  // ==========================================
+  // INICIO
+  // ==========================================
+
   ngOnInit(): void {
-    this.api.getFaceAppearances().subscribe({
-      next: (data) => {
-        console.log('FACE APPEARANCES API =>', data);
-        this.appearances.set(data);
-      },
-      error: (err) => {
-        console.error('Error loading face appearances', err);
-      }
-    });
+
+    this.loadFaces();
+
   }
 
-  selectFace(item: { faceId: string; appearances: FaceAppearance[] }) {
-  if (this.selected()?.faceId === item.faceId) {
-    this.selected.set(null);
-  } else {
-    this.selected.set(item);
+
+  // ==========================================
+  // CARGAR CARAS
+  // ==========================================
+
+  loadFaces(): void {
+
+    const reportsFilter =
+      this.hasReports === ''
+        ? undefined
+        : this.hasReports === 'true';
+
+
+    const suspectFilter =
+      this.suspect === ''
+        ? undefined
+        : this.suspect === 'true';
+
+
+    this.api.getUniqueFaces(
+      this.startDate || undefined,
+      this.endDate || undefined,
+      reportsFilter,
+      suspectFilter
+    ).subscribe({
+
+      next: (data) => {
+
+        console.log(
+          'UNIQUE FACES API =>',
+          data
+        );
+
+        this.faces.set(data);
+
+      },
+
+      error: (err) => {
+
+        console.error(
+          'Error loading unique faces',
+          err
+        );
+
+      }
+
+    });
+
   }
-}
+
+
+  // ==========================================
+  // APLICAR FILTROS
+  // ==========================================
+
+  applyFilters(): void {
+
+    this.selected.set(null);
+
+    this.loadFaces();
+
+  }
+
+
+  // ==========================================
+  // LIMPIAR FILTROS
+  // ==========================================
+
+  clearFilters(): void {
+
+    this.startDate = '';
+
+    this.endDate = '';
+
+    this.hasReports = '';
+
+    this.suspect = '';
+
+    this.selected.set(null);
+
+    this.loadFaces();
+
+  }
+
+
+  // ==========================================
+  // SELECCIONAR CARA
+  // ==========================================
+
+  selectFace(face: UniqueFace): void {
+
+    if (
+      this.selected()?.faceId === face.faceId
+    ) {
+
+      this.selected.set(null);
+
+    } else {
+
+      this.selected.set(face);
+
+    }
+
+  }
+
 }
