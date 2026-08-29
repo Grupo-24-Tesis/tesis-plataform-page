@@ -1,5 +1,78 @@
 <h2>Caras únicas</h2>
 
+<!-- ========================= -->
+<!-- FILTROS -->
+<!-- ========================= -->
+
+<section class="filters">
+
+  <div class="filter-field">
+    <label for="startDate">Desde</label>
+    <input
+      id="startDate"
+      type="date"
+      [(ngModel)]="startDate"
+    >
+  </div>
+
+  <div class="filter-field">
+    <label for="endDate">Hasta</label>
+    <input
+      id="endDate"
+      type="date"
+      [(ngModel)]="endDate"
+    >
+  </div>
+
+  <div class="filter-field">
+    <label for="hasReports">Reportes</label>
+    <select
+      id="hasReports"
+      [(ngModel)]="hasReports"
+    >
+      <option value="">Todos</option>
+      <option value="true">Con reportes</option>
+      <option value="false">Sin reportes</option>
+    </select>
+  </div>
+
+  <div class="filter-field">
+    <label for="suspect">Estado</label>
+    <select
+      id="suspect"
+      [(ngModel)]="suspect"
+    >
+      <option value="">Todos</option>
+      <option value="true">Sospechoso</option>
+      <option value="false">No sospechoso</option>
+    </select>
+  </div>
+
+  <div class="filter-actions">
+    <button
+      type="button"
+      class="btn btn-primary"
+      (click)="applyFilters()"
+    >
+      Aplicar
+    </button>
+
+    <button
+      type="button"
+      class="btn btn-secondary"
+      (click)="clearFilters()"
+    >
+      Limpiar
+    </button>
+  </div>
+
+</section>
+
+
+<!-- ========================= -->
+<!-- GRID DE CARAS -->
+<!-- ========================= -->
+
 <div class="grid">
 
   <div
@@ -21,8 +94,6 @@
 
     <div class="face-info">
 
-      
-
       <p>
         {{ face.appearances.length }} apariciones
       </p>
@@ -41,6 +112,13 @@
     </div>
 
   </div>
+
+  <p
+    *ngIf="faces().length === 0"
+    class="empty-state"
+  >
+    No se encontraron caras con los filtros aplicados.
+  </p>
 
 </div>
 

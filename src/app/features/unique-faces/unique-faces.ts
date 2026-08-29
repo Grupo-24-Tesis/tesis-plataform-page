@@ -1,30 +1,89 @@
-import { Component, OnInit, signal, computed } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+
 import { ApiService } from '../../core/services/api.service';
 import { UniqueFace } from '../../core/models/UniqueFace';
 
 @Component({
   selector: 'app-unique-faces',
   standalone: true,
-  imports: [CommonModule],
+  imports: [
+    CommonModule,
+    FormsModule
+  ],
   templateUrl: './unique-faces.html',
   styleUrl: './unique-faces.css',
 })
 export class UniqueFaces implements OnInit {
 
+  // ==========================================
+  // DATOS
+  // ==========================================
+
   faces = signal<UniqueFace[]>([]);
 
   selected = signal<UniqueFace | null>(null);
 
+
+  // ==========================================
+  // FILTROS
+  // ==========================================
+
+  startDate: string = '';
+
+  endDate: string = '';
+
+  hasReports: string = '';
+
+  suspect: string = '';
+
+
   constructor(private api: ApiService) {}
+
+
+  // ==========================================
+  // INICIO
+  // ==========================================
 
   ngOnInit(): void {
 
-    this.api.getUniqueFaces().subscribe({
+    this.loadFaces();
+
+  }
+
+
+  // ==========================================
+  // CARGAR CARAS
+  // ==========================================
+
+  loadFaces(): void {
+
+    const reportsFilter =
+      this.hasReports === ''
+        ? undefined
+        : this.hasReports === 'true';
+
+
+    const suspectFilter =
+      this.suspect === ''
+        ? undefined
+        : this.suspect === 'true';
+
+
+    this.api.getUniqueFaces(
+      this.startDate || undefined,
+      this.endDate || undefined,
+      reportsFilter,
+      suspectFilter
+    ).subscribe({
 
       next: (data) => {
 
-        console.log('UNIQUE FACES API =>', data);
+        console.log(
+          'UNIQUE FACES API =>',
+          data
+        );
 
         this.faces.set(data);
 
@@ -40,11 +99,53 @@ export class UniqueFaces implements OnInit {
       }
 
     });
+
   }
+
+
+  // ==========================================
+  // APLICAR FILTROS
+  // ==========================================
+
+  applyFilters(): void {
+
+    this.selected.set(null);
+
+    this.loadFaces();
+
+  }
+
+
+  // ==========================================
+  // LIMPIAR FILTROS
+  // ==========================================
+
+  clearFilters(): void {
+
+    this.startDate = '';
+
+    this.endDate = '';
+
+    this.hasReports = '';
+
+    this.suspect = '';
+
+    this.selected.set(null);
+
+    this.loadFaces();
+
+  }
+
+
+  // ==========================================
+  // SELECCIONAR CARA
+  // ==========================================
 
   selectFace(face: UniqueFace): void {
 
-    if (this.selected()?.faceId === face.faceId) {
+    if (
+      this.selected()?.faceId === face.faceId
+    ) {
 
       this.selected.set(null);
 
@@ -55,4 +156,5 @@ export class UniqueFaces implements OnInit {
     }
 
   }
+
 }

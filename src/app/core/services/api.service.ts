@@ -36,9 +36,34 @@ createFaceAppearance(payload: FaceAppearance) {
   );
 }
 
-getUniqueFaces() {
+getUniqueFaces(
+  startDate?: string,
+  endDate?: string,
+  hasReports?: boolean,
+  suspect?: boolean
+) {
+
+  let params: any = {};
+
+  if (startDate) {
+    params.startDate = startDate;
+  }
+
+  if (endDate) {
+    params.endDate = endDate;
+  }
+
+  if (hasReports !== undefined) {
+    params.hasReports = hasReports;
+  }
+
+  if (suspect !== undefined) {
+    params.suspect = suspect;
+  }
+
   return this.http.get<UniqueFace[]>(
-    `${this.base}/face-appearances/unique`
+    `${this.base}/face-appearances/unique`,
+    { params }
   );
 }
 
