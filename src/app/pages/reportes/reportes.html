@@ -1,0 +1,609 @@
+<section class="reportes">
+  <header class="encabezado">
+    <div class="resumen">
+      <h1>REPORTES</h1>
+
+      <span>
+        {{ totalInvestigacion() }} en investigación ·
+        {{ totalSolucionados() }} solucionados
+      </span>
+    </div>
+
+    <button
+      type="button"
+      class="boton principal"
+      (click)="abrirNuevoReporte()"
+    >
+      + NUEVO REPORTE
+    </button>
+  </header>
+
+  <nav class="filtros" aria-label="Filtros de reportes">
+    <button
+      type="button"
+      [class.activo]="filtro() === 'todos'"
+      (click)="filtro.set('todos')"
+    >
+      TODOS ({{ datos.reportes().length }})
+    </button>
+
+    <button
+      type="button"
+      [class.activo]="filtro() === 'investigacion'"
+      (click)="filtro.set('investigacion')"
+    >
+      EN INVESTIGACIÓN ({{ totalInvestigacion() }})
+    </button>
+
+    <button
+      type="button"
+      [class.activo]="filtro() === 'solucionado'"
+      (click)="filtro.set('solucionado')"
+    >
+      SOLUCIONADOS ({{ totalSolucionados() }})
+    </button>
+  </nav>
+
+  <p class="aviso" role="status">
+    {{ aviso() }}
+  </p>
+
+  <div class="distribucion">
+    <main class="listado">
+      @for (
+        reporte of reportesFiltrados();
+        track reporte.id
+      ) {
+        <button
+          type="button"
+          class="tarjeta"
+          [class.seleccionada]="
+            seleccionadoId() === reporte.id
+          "
+          (click)="seleccionar(reporte.id)"
+        >
+          <div class="etiquetas">
+            <span
+              class="estado"
+              [class.solucionado]="
+                reporte.estado === 'solucionado'
+              "
+            >
+              {{
+                reporte.estado === 'investigacion'
+                  ? '● EN INVESTIGACIÓN'
+                  : '✓ SOLUCIONADO'
+              }}
+            </span>
+
+            <span
+              class="prioridad"
+              [class.alta]="
+                reporte.prioridad === 'alta'
+              "
+              [class.baja]="
+                reporte.prioridad === 'baja'
+              "
+            >
+              {{ reporte.prioridad.toUpperCase() }}
+            </span>
+          </div>
+
+          <div class="identificador">
+            <span>{{ reporte.id }}</span>
+            <span>{{ reporte.fecha }}</span>
+          </div>
+
+          <h2>{{ reporte.titulo }}</h2>
+
+          <p>{{ reporte.descripcion }}</p>
+
+          <footer>
+            <span class="camaras">
+              @for (
+                camara of reporte.camaras;
+                track camara
+              ) {
+                <span>{{ camara }}</span>
+              }
+            </span>
+
+            <span>
+              {{ reporte.gruposVinculados.length }}
+
+              {{
+                reporte.gruposVinculados.length === 1
+                  ? 'grupo vinculado'
+                  : 'grupos vinculados'
+              }}
+
+              · {{ reporte.creadoPor }}
+            </span>
+          </footer>
+        </button>
+      } @empty {
+        <section class="vacio">
+          <h2>No hay reportes en esta categoría</h2>
+
+          <p>
+            Selecciona otro filtro o crea un reporte
+            nuevo.
+          </p>
+        </section>
+      }
+    </main>
+
+    @if (seleccionado(); as reporte) {
+      <aside
+        class="detalle"
+        aria-labelledby="titulo-detalle-reporte"
+      >
+        <header class="cabecera-detalle">
+          <div>
+            <p>DETALLE</p>
+            <strong>{{ reporte.id }}</strong>
+          </div>
+
+          <button
+            type="button"
+            class="cerrar"
+            aria-label="Cerrar detalle"
+            (click)="seleccionadoId.set(null)"
+          >
+            ×
+          </button>
+        </header>
+
+        <div class="cuerpo-detalle">
+          <section>
+            <h3>TÍTULO</h3>
+
+            <h2 id="titulo-detalle-reporte">
+              {{ reporte.titulo }}
+            </h2>
+          </section>
+
+          <section>
+            <h3>DESCRIPCIÓN</h3>
+
+            <p>{{ reporte.descripcion }}</p>
+          </section>
+
+          <div class="datos">
+            <section>
+              <h3>ESTADO</h3>
+
+              <p>
+                {{
+                  reporte.estado === 'investigacion'
+                    ? 'En investigación'
+                    : 'Solucionado'
+                }}
+              </p>
+            </section>
+
+            <section>
+              <h3>PRIORIDAD</h3>
+
+              <p
+                [class.texto-alta]="
+                  reporte.prioridad === 'alta'
+                "
+              >
+                {{ reporte.prioridad | titlecase }}
+              </p>
+            </section>
+
+            <section>
+              <h3>CREADO POR</h3>
+              <p>{{ reporte.creadoPor }}</p>
+            </section>
+
+            <section>
+              <h3>FECHA</h3>
+              <p>{{ reporte.fecha }}</p>
+            </section>
+          </div>
+
+          <section>
+            <div class="titulo-editable">
+              <h3>CÁMARAS INVOLUCRADAS</h3>
+
+              <button
+                type="button"
+                (click)="abrirEdicionCamaras()"
+              >
+                EDITAR
+              </button>
+            </div>
+
+            <div class="chips">
+              @for (
+                camara of reporte.camaras;
+                track camara
+              ) {
+                <span>
+                  {{ camara }} ·
+                  {{ datos.nombreCamara(camara) }}
+                </span>
+              }
+            </div>
+          </section>
+
+          <section>
+            <div class="titulo-editable">
+              <h3>PERSONAS VINCULADAS</h3>
+
+              <button
+                type="button"
+                (click)="abrirEdicionGrupos()"
+              >
+                EDITAR
+              </button>
+            </div>
+
+            @if (
+              reporte.gruposVinculados.length > 0
+            ) {
+              <div class="grupos">
+                @for (
+                  grupoId of reporte.gruposVinculados;
+                  track grupoId
+                ) {
+                  <div class="grupo">
+                    <span>{{ grupoId }}</span>
+
+                    <span>
+                      {{
+                        datos.grupoPorId(grupoId)?.nombre ??
+                          'Grupo no disponible'
+                      }}
+                    </span>
+                  </div>
+                }
+              </div>
+            } @else {
+              <p class="secundario">
+                Este reporte no tiene personas vinculadas.
+              </p>
+            }
+          </section>
+        </div>
+
+        <footer class="pie-detalle">
+          @if (
+            reporte.estado === 'investigacion'
+          ) {
+            <button
+              type="button"
+              class="boton solucion"
+              (click)="marcarSolucionado()"
+            >
+              ✓ MARCAR COMO SOLUCIONADO
+            </button>
+          } @else {
+            <button
+              type="button"
+              class="boton"
+              (click)="reabrirReporte()"
+            >
+              REABRIR INVESTIGACIÓN
+            </button>
+          }
+        </footer>
+      </aside>
+    }
+  </div>
+
+  <!-- Popup: crear reporte -->
+  <dialog
+    #dialogoNuevo
+    class="modal"
+    aria-labelledby="titulo-nuevo-reporte"
+    (cancel)="cerrarNuevoReporte()"
+  >
+    <header class="cabecera-modal">
+      <h2 id="titulo-nuevo-reporte">
+        NUEVO REPORTE
+      </h2>
+
+      <button
+        type="button"
+        aria-label="Cerrar formulario"
+        (click)="cerrarNuevoReporte()"
+      >
+        ×
+      </button>
+    </header>
+
+    <form (ngSubmit)="crearReporte()">
+      <label for="titulo-reporte">
+        Título
+      </label>
+
+      <input
+        id="titulo-reporte"
+        name="tituloReporte"
+        type="text"
+        maxlength="120"
+        placeholder="Ej. Acceso no autorizado"
+        autofocus
+        [(ngModel)]="nuevoTitulo"
+      />
+
+      <label for="descripcion-reporte">
+        Descripción
+      </label>
+
+      <textarea
+        id="descripcion-reporte"
+        name="descripcionReporte"
+        rows="5"
+        maxlength="800"
+        placeholder="Describe lo ocurrido..."
+        [(ngModel)]="nuevaDescripcion"
+      ></textarea>
+
+      <label for="prioridad-reporte">
+        Prioridad
+      </label>
+
+      <select
+        id="prioridad-reporte"
+        name="prioridadReporte"
+        [(ngModel)]="nuevaPrioridad"
+      >
+        <option value="baja">Baja</option>
+        <option value="media">Media</option>
+        <option value="alta">Alta</option>
+      </select>
+
+      <fieldset>
+        <legend>Cámaras involucradas</legend>
+
+        <div class="selector-camaras">
+          @for (
+            camara of datos.camaras();
+            track camara.id
+          ) {
+            <button
+              type="button"
+              [class.seleccionada]="
+                nuevasCamaras.includes(camara.id)
+              "
+              [attr.aria-pressed]="
+                nuevasCamaras.includes(camara.id)
+              "
+              (click)="alternarCamara(camara.id)"
+            >
+              <strong>{{ camara.id }}</strong>
+              <span>{{ camara.nombre }}</span>
+            </button>
+          }
+        </div>
+      </fieldset>
+
+      @if (error()) {
+        <p class="error" role="alert">
+          {{ error() }}
+        </p>
+      }
+
+      <div class="acciones-modal">
+        <button
+          type="button"
+          class="boton"
+          (click)="cerrarNuevoReporte()"
+        >
+          CANCELAR
+        </button>
+
+        <button
+          type="submit"
+          class="boton principal"
+        >
+          CREAR REPORTE
+        </button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Popup: editar cámaras -->
+  <dialog
+    #dialogoEditarCamaras
+    class="modal"
+    aria-labelledby="titulo-editar-camaras"
+    (cancel)="cerrarEdicionCamaras()"
+  >
+    <header class="cabecera-modal">
+      <div>
+        <p class="subtitulo-modal">
+          EDITAR REPORTE
+        </p>
+
+        <h2 id="titulo-editar-camaras">
+          CÁMARAS INVOLUCRADAS
+        </h2>
+      </div>
+
+      <button
+        type="button"
+        aria-label="Cerrar edición de cámaras"
+        (click)="cerrarEdicionCamaras()"
+      >
+        ×
+      </button>
+    </header>
+
+    <p class="descripcion-modal">
+      Selecciona las cámaras relacionadas con el
+      reporte.
+    </p>
+
+    <div class="selector-camaras selector-edicion">
+      @for (
+        camara of datos.camaras();
+        track camara.id
+      ) {
+        <button
+          type="button"
+          [class.seleccionada]="
+            camarasEdicion.includes(camara.id)
+          "
+          [attr.aria-pressed]="
+            camarasEdicion.includes(camara.id)
+          "
+          (click)="alternarCamaraEdicion(camara.id)"
+        >
+          <strong>{{ camara.id }}</strong>
+          <span>{{ camara.nombre }}</span>
+        </button>
+      }
+    </div>
+
+    @if (error()) {
+      <p class="error" role="alert">
+        {{ error() }}
+      </p>
+    }
+
+    <div class="acciones-modal">
+      <button
+        type="button"
+        class="boton"
+        (click)="cerrarEdicionCamaras()"
+      >
+        CANCELAR
+      </button>
+
+      <button
+        type="button"
+        class="boton principal"
+        (click)="guardarCamarasReporte()"
+      >
+        GUARDAR CAMBIOS
+      </button>
+    </div>
+  </dialog>
+
+  <!-- Popup: editar personas -->
+  <dialog
+    #dialogoEditarGrupos
+    class="modal modal-personas"
+    aria-labelledby="titulo-editar-personas"
+    (cancel)="cerrarEdicionGrupos()"
+  >
+    <header class="cabecera-modal">
+      <div>
+        <p class="subtitulo-modal">
+          EDITAR REPORTE
+        </p>
+
+        <h2 id="titulo-editar-personas">
+          PERSONAS VINCULADAS
+        </h2>
+      </div>
+
+      <button
+        type="button"
+        aria-label="Cerrar edición de personas"
+        (click)="cerrarEdicionGrupos()"
+      >
+        ×
+      </button>
+    </header>
+
+    <p class="descripcion-modal">
+      Puedes seleccionar cualquier persona detectada.
+      Si todavía no está guardada, se añadirá
+      automáticamente a Guardados al confirmar.
+    </p>
+
+    <div class="selector-personas">
+      @for (
+        grupo of datos.grupos();
+        track grupo.id
+      ) {
+        <button
+          type="button"
+          [class.seleccionada]="
+            gruposEdicion.includes(grupo.id)
+          "
+          [attr.aria-pressed]="
+            gruposEdicion.includes(grupo.id)
+          "
+          (click)="alternarGrupoEdicion(grupo.id)"
+        >
+          <span
+            class="icono-persona-reporte"
+            [style.color]="grupo.color"
+            aria-hidden="true"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.3"
+            >
+              <circle cx="12" cy="7" r="4" />
+
+              <path
+                d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"
+              />
+            </svg>
+          </span>
+
+          <span class="datos-persona-reporte">
+            <strong>{{ grupo.id }}</strong>
+
+            <span>{{ grupo.nombre }}</span>
+
+            <small>
+              {{ grupo.apariciones.length }}
+
+              {{
+                grupo.apariciones.length === 1
+                  ? 'aparición'
+                  : 'apariciones'
+              }}
+
+              ·
+
+              {{
+                datos.estaGuardado(grupo.id)
+                  ? 'YA GUARDADA'
+                  : 'SE GUARDARÁ AL VINCULAR'
+              }}
+            </small>
+          </span>
+
+          <span class="marca-seleccion">
+            {{
+              gruposEdicion.includes(grupo.id)
+                ? '✓'
+                : '+'
+            }}
+          </span>
+        </button>
+      }
+    </div>
+
+    <div class="acciones-modal">
+      <button
+        type="button"
+        class="boton"
+        (click)="cerrarEdicionGrupos()"
+      >
+        CANCELAR
+      </button>
+
+      <button
+        type="button"
+        class="boton principal"
+        (click)="guardarGruposReporte()"
+      >
+        GUARDAR VINCULACIONES
+      </button>
+    </div>
+  </dialog>
+</section>

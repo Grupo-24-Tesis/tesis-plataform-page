@@ -1,0 +1,925 @@
+<div class="monitor">
+  <!-- Barra lateral principal -->
+  <aside class="barra-principal" aria-label="Navegación principal">
+    <div class="logo">FC</div>
+
+    <nav class="navegacion">
+      <!-- Monitor -->
+      <button
+        type="button"
+        class="opcion"
+        [class.activa]="vista() === 'monitor'"
+        [attr.aria-current]="vista() === 'monitor' ? 'page' : null"
+        (click)="cambiarVista('monitor')"
+      >
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.5"
+          aria-hidden="true"
+        >
+          <path
+            d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3z"
+          />
+          <circle cx="12" cy="13" r="3" />
+        </svg>
+
+        <span>MONITOR</span>
+      </button>
+
+      <!-- Reportes -->
+      <button
+        type="button"
+        class="opcion"
+        [class.activa]="vista() === 'reportes'"
+        [attr.aria-current]="vista() === 'reportes' ? 'page' : null"
+        (click)="cambiarVista('reportes')"
+      >
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.5"
+          aria-hidden="true"
+        >
+          <path
+            d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+          />
+          <path d="M14 2v6h6M8 13h8M8 17h8" />
+        </svg>
+
+        <span>REPORTES</span>
+      </button>
+
+      <!-- Guardados -->
+      <button
+        type="button"
+        class="opcion"
+        [class.activa]="vista() === 'guardados'"
+        [attr.aria-current]="vista() === 'guardados' ? 'page' : null"
+        (click)="cambiarVista('guardados')"
+      >
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.5"
+          aria-hidden="true"
+        >
+          <path
+            d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.6l6.2-.9z"
+          />
+        </svg>
+
+        <span>GUARDADOS</span>
+
+        @if (datos.gruposGuardados().length > 0) {
+          <span class="contador">
+            {{ datos.gruposGuardados().length }}
+          </span>
+        }
+      </button>
+    </nav>
+
+    <!-- Usuario y cierre de turno -->
+    <div class="sesion">
+      <span class="usuario" [title]="vigilante()">
+        {{ vigilante().split(' ')[0] }}
+      </span>
+
+      <button
+        type="button"
+        class="opcion salir"
+        (click)="cerrarTurno.emit()"
+      >
+        <span class="icono-salir" aria-hidden="true">↪</span>
+        <span>SALIR</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- Área principal -->
+  <div class="area-principal">
+    <!-- Pantalla de Reportes -->
+    @if (vista() === 'reportes') {
+      <app-reportes [vigilante]="vigilante()" />
+
+    <!-- Pantalla de Guardados -->
+    } @else if (vista() === 'guardados') {
+      <app-guardados />
+
+    <!-- Pantalla del Monitor -->
+    } @else {
+      <header class="encabezado">
+        <div>
+          <span class="etiqueta">MONITOR</span>
+          <span class="conjunto">Conjunto Los Pinos</span>
+        </div>
+
+        <span class="resumen">
+          {{ datos.camaras().length }} CÁMARAS ·
+          {{ datos.grabaciones().length }} VIDEOS
+        </span>
+      </header>
+
+      <div class="espacio-trabajo">
+        <!-- Panel izquierdo -->
+        <aside
+          class="panel-camaras"
+          aria-label="Opciones de búsqueda"
+        >
+          <div class="modo-busqueda">
+            <p class="etiqueta">MODO DE BÚSQUEDA</p>
+
+            <div class="modos">
+              <button
+                type="button"
+                class="modo"
+                [class.activo]="modo() === 'camara'"
+                [attr.aria-pressed]="modo() === 'camara'"
+                (click)="cambiarModo('camara')"
+              >
+                POR CÁMARA
+              </button>
+
+              <button
+                type="button"
+                class="modo"
+                [class.activo]="modo() === 'caras'"
+                [attr.aria-pressed]="modo() === 'caras'"
+                (click)="cambiarModo('caras')"
+              >
+                CARAS ÚNICAS
+              </button>
+            </div>
+          </div>
+
+          @if (modo() === 'camara') {
+            <p class="etiqueta titulo-camaras">CÁMARAS</p>
+
+            <div class="lista-camaras">
+              @for (camara of datos.camaras(); track camara.id) {
+                <button
+                  type="button"
+                  class="camara"
+                  [class.seleccionada]="camaraId() === camara.id"
+                  [attr.aria-pressed]="camaraId() === camara.id"
+                  (click)="seleccionarCamara(camara.id)"
+                >
+                  <span class="datos-camara">
+                    <span class="codigo">{{ camara.id }}</span>
+                    <span>{{ camara.nombre }}</span>
+                  </span>
+
+                  @if (datos.cantidadVideos(camara.id) > 0) {
+                    <span class="cantidad">
+                      {{ datos.cantidadVideos(camara.id) }}v
+                    </span>
+                  }
+                </button>
+              }
+            </div>
+            <button
+              type="button"
+              class="agregar-camara"
+              (click)="abrirNuevaCamara()"
+            >
+              + AGREGAR CÁMARA
+            </button>
+          } @else {
+            <p class="ayuda-panel">
+              Agrupamientos de todas las grabaciones. Selecciona una
+              tarjeta para consultar sus apariciones.
+            </p>
+          }
+        </aside>
+
+        <!-- Contenido central -->
+        <main class="contenido">
+          <header class="barra-contenido">
+            <div class="titulo-monitor">
+              <h1>
+                @if (modo() === 'camara') {
+                  {{ camaraSeleccionada().id }} ·
+                  {{ camaraSeleccionada().nombre }}
+                } @else {
+                  Caras únicas ·
+                  {{ gruposUnicosVisibles().length }} grupos
+                }
+              </h1>
+
+              @if (filtroActivo()) {
+                <span class="filtro-aplicado">
+                  {{ horaFiltroInicio }} – {{ horaFiltroFin }}
+                </span>
+              }
+            </div>
+
+            <div class="acciones-monitor">
+              <button
+                type="button"
+                class="boton-filtro"
+                [class.activo]="mostrandoFiltro() || filtroActivo()"
+                (click)="alternarFiltro()"
+              >
+                ◷ FILTRAR HORARIO
+              </button>
+
+              <button
+                type="button"
+                class="subir"
+                (click)="abrirCarga()"
+              >
+                ↑ SUBIR VIDEO
+              </button>
+            </div>
+          </header>
+
+          <!-- Panel desplegable del filtro -->
+          @if (mostrandoFiltro()) {
+            <section
+              class="panel-filtro"
+              aria-labelledby="titulo-filtro"
+            >
+              <div>
+                <p id="titulo-filtro">
+                  INTERVALO DE APARICIONES
+                </p>
+
+                <span>
+                  Solo se mostrarán apariciones dentro de este horario.
+                </span>
+              </div>
+
+              <div class="campos-filtro">
+                <label>
+                  Desde
+
+                  <input
+                    type="time"
+                    name="horaFiltroInicio"
+                    [(ngModel)]="horaFiltroInicio"
+                  />
+                </label>
+
+                <label>
+                  Hasta
+
+                  <input
+                    type="time"
+                    name="horaFiltroFin"
+                    [(ngModel)]="horaFiltroFin"
+                  />
+                </label>
+              </div>
+
+              <div class="acciones-filtro">
+                @if (filtroActivo()) {
+                  <button
+                    type="button"
+                    class="limpiar-filtro"
+                    (click)="limpiarFiltro()"
+                  >
+                    LIMPIAR
+                  </button>
+                }
+
+                <button
+                  type="button"
+                  class="aplicar-filtro"
+                  (click)="aplicarFiltro()"
+                >
+                  APLICAR
+                </button>
+              </div>
+
+              @if (errorFiltro()) {
+                <p class="error-filtro" role="alert">
+                  {{ errorFiltro() }}
+                </p>
+              }
+            </section>
+          }
+
+          <div class="aviso-demo">
+            DATOS DE DEMOSTRACIÓN · SIN ANÁLISIS FACIAL REAL
+          </div>
+
+          <div class="mensaje-guardado" role="status">
+            {{ mensaje() }}
+          </div>
+
+          <div class="resultados">
+            <!-- Vista por cámara -->
+            @if (modo() === 'camara') {
+              @for (video of videosVisibles(); track video.id) {
+                <section class="bloque-video">
+                  <header class="cabecera-video">
+                    <h2>
+                      Video del {{ video.fecha }} ·
+                      {{ video.inicio }} – {{ video.fin }}
+                    </h2>
+
+                    <div class="datos-video">
+                      <span>{{ video.archivo }}</span>
+
+                      @if (video.estado === 'procesando') {
+                        <span class="estado-video procesando">
+                          PROCESANDO...
+                        </span>
+                      } @else if (video.estado === 'completado') {
+                        <span class="estado-video completado">
+                          PROCESADO
+                        </span>
+                      }
+                    </div>
+                  </header>
+
+                  <div class="rejilla-grupos">
+                    @for (
+                      grupo of gruposVisiblesDeVideo(video.id);
+                      track grupo.id
+                    ) {
+                      <ng-container
+                        [ngTemplateOutlet]="tarjetaGrupo"
+                        [ngTemplateOutletContext]="{
+                          $implicit: grupo,
+                          videoId: video.id
+                        }"
+                      />
+                    } @empty {
+                      <p class="sin-resultados">
+                        @if (filtroActivo()) {
+                          No hay apariciones dentro del horario
+                          seleccionado.
+                        } @else {
+                          No se encontraron agrupamientos en esta
+                          grabación.
+                        }
+                      </p>
+                    }
+                  </div>
+                </section>
+              } @empty {
+                <section class="estado">
+                  <h2>No hay grabaciones para esta cámara</h2>
+
+                  <p>
+                    Selecciona otra cámara o utiliza Subir video
+                    para registrar una grabación.
+                  </p>
+                </section>
+              }
+
+            <!-- Vista de caras únicas -->
+            } @else {
+              <section class="bloque-caras">
+                <header class="cabecera-caras">
+                  <h2>Agrupamientos únicos encontrados</h2>
+
+                  <span>
+                    {{ gruposUnicosVisibles().length }} grupos
+                  </span>
+                </header>
+
+                <div class="rejilla-grupos">
+                  @for (
+                    grupo of gruposUnicosVisibles();
+                    track grupo.id
+                  ) {
+                    <ng-container
+                      [ngTemplateOutlet]="tarjetaGrupo"
+                      [ngTemplateOutletContext]="{
+                        $implicit: grupo,
+                        videoId: null
+                      }"
+                    />
+                  } @empty {
+                    <p class="sin-resultados">
+                      No hay grupos con apariciones dentro del horario
+                      seleccionado.
+                    </p>
+                  }
+                </div>
+              </section>
+            }
+          </div>
+        </main>
+
+        <!-- Panel lateral derecho -->
+        @if (grupoSeleccionado(); as grupo) {
+          <aside
+            class="panel-detalle"
+            aria-labelledby="titulo-detalle"
+          >
+            <header class="cabecera-detalle">
+              <div>
+                <p class="etiqueta">DETALLE DEL GRUPO</p>
+                <h2 id="titulo-detalle">{{ grupo.nombre }}</h2>
+              </div>
+
+              <button
+                type="button"
+                class="cerrar-detalle"
+                aria-label="Cerrar detalle"
+                title="Cerrar"
+                (click)="grupoSeleccionado.set(null)"
+              >
+                ×
+              </button>
+            </header>
+
+            <div class="cuerpo-detalle">
+              <div
+                class="miniatura"
+                [style.color]="grupo.color"
+              >
+                <ng-container
+                  [ngTemplateOutlet]="iconoPersona"
+                />
+              </div>
+
+              <p class="nota-detalle">
+                Apariciones similares agrupadas. No representan una
+                identidad verificada.
+              </p>
+
+              <button
+                type="button"
+                class="guardar"
+                [disabled]="datos.estaGuardado(grupo.id)"
+                (click)="guardar(grupo)"
+              >
+                {{
+                  datos.estaGuardado(grupo.id)
+                    ? '✓ GUARDADO'
+                    : '+ GUARDAR'
+                }}
+              </button>
+
+              <section
+                class="seccion-reportes-monitor"
+                aria-labelledby="titulo-reportes-grupo"
+              >
+                <div class="cabecera-reportes-monitor">
+                  <h3 id="titulo-reportes-grupo">
+                    REPORTES ASOCIADOS
+                    ({{ reportesVinculados().length }})
+                  </h3>
+
+                  @if (reportesDisponibles().length > 0) {
+                    <button
+                      type="button"
+                      class="boton-vincular-monitor"
+                      (click)="abrirVinculacion()"
+                    >
+                      + VINCULAR
+                    </button>
+                  }
+                </div>
+
+                @if (reportesVinculados().length > 0) {
+                  <div class="lista-reportes-monitor">
+                    @for (
+                      reporte of reportesVinculados();
+                      track reporte.id
+                    ) {
+                      <article class="reporte-monitor">
+                        <div>
+                          <strong>{{ reporte.id }}</strong>
+                          <span>{{ reporte.titulo }}</span>
+                        </div>
+
+                        <button
+                          type="button"
+                          aria-label="Desvincular del reporte"
+                          title="Desvincular del reporte"
+                          (click)="desvincularDeReporte(reporte.id)"
+                        >
+                          QUITAR
+                        </button>
+                      </article>
+                    }
+                  </div>
+                } @else {
+                  <div class="sin-reportes-monitor">
+                    <p>
+                      Este grupo todavía no está asociado a ningún
+                      reporte.
+                    </p>
+
+                    @if (reportesDisponibles().length > 0) {
+                      <button
+                        type="button"
+                        (click)="abrirVinculacion()"
+                      >
+                        + VINCULAR A UN REPORTE
+                      </button>
+                    } @else {
+                      <span>
+                        No hay reportes disponibles para vincular.
+                      </span>
+                    }
+                  </div>
+                }
+              </section>
+
+              <h3>
+                RUTA COMPLETA DE APARICIONES
+                ({{ grupo.apariciones.length }})
+              </h3>
+
+              <ol class="ruta-apariciones">
+                @for (
+                  aparicion of grupo.apariciones;
+                  track aparicion.id
+                ) {
+                  <li>
+                    <strong>
+                      {{ aparicion.fecha }} · {{ aparicion.hora }}
+                    </strong>
+
+                    <span>{{ aparicion.camaraId }}</span>
+
+                    <span>
+                      {{ datos.nombreCamara(aparicion.camaraId) }}
+                    </span>
+
+                    <small>
+                      Confianza simulada:
+                      {{ aparicion.confianza }}%
+                    </small>
+                  </li>
+                }
+              </ol>
+            </div>
+          </aside>
+        }
+      </div>
+    }
+  </div>
+</div>
+
+<!-- Popup para agregar una cámara -->
+<dialog
+  #dialogoNuevaCamara
+  class="modal-nueva-camara"
+  aria-labelledby="titulo-nueva-camara"
+  (cancel)="cerrarNuevaCamara()"
+>
+  <header class="cabecera-nueva-camara">
+    <div>
+      <p>NUEVO DISPOSITIVO</p>
+
+      <h2 id="titulo-nueva-camara">
+        Agregar cámara
+      </h2>
+    </div>
+
+    <button
+      type="button"
+      aria-label="Cerrar formulario"
+      title="Cerrar"
+      (click)="cerrarNuevaCamara()"
+    >
+      ×
+    </button>
+  </header>
+
+  <form
+    class="formulario-nueva-camara"
+    (ngSubmit)="crearCamara()"
+  >
+    <p>
+      El código se asignará automáticamente. La cámara
+      quedará disponible en Monitor y Reportes.
+    </p>
+
+    <label for="nombre-nueva-camara">
+      Nombre o ubicación
+    </label>
+
+    <input
+      id="nombre-nueva-camara"
+      name="nombreNuevaCamara"
+      type="text"
+      maxlength="80"
+      placeholder="Ej. Recepción Torre C"
+      autocomplete="off"
+      autofocus
+      [(ngModel)]="nombreNuevaCamara"
+    />
+
+    @if (errorNuevaCamara()) {
+      <p
+        class="error-nueva-camara"
+        role="alert"
+      >
+        {{ errorNuevaCamara() }}
+      </p>
+    }
+
+    <div class="acciones-nueva-camara">
+      <button
+        type="button"
+        class="secundario"
+        (click)="cerrarNuevaCamara()"
+      >
+        CANCELAR
+      </button>
+
+      <button
+        type="submit"
+        class="principal"
+      >
+        AGREGAR CÁMARA
+      </button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Popup para vincular el grupo seleccionado con un reporte -->
+<dialog
+  #dialogoVincularMonitor
+  class="modal-vincular-monitor"
+  aria-labelledby="titulo-vincular-monitor"
+  (cancel)="cerrarVinculacion()"
+>
+  <header class="cabecera-modal-vincular">
+    <div>
+      <p>ASOCIAR DETECCIÓN</p>
+      <h2 id="titulo-vincular-monitor">
+        Vincular a un reporte
+      </h2>
+    </div>
+
+    <button
+      type="button"
+      aria-label="Cerrar popup"
+      title="Cerrar"
+      (click)="cerrarVinculacion()"
+    >
+      ×
+    </button>
+  </header>
+
+  @if (grupoSeleccionado(); as grupo) {
+    <p class="descripcion-vincular-monitor">
+      Selecciona el reporte al que deseas asociar
+      <strong>{{ grupo.nombre }}</strong>.
+    </p>
+
+    <div class="lista-vinculacion-monitor">
+      @for (
+        reporte of reportesDisponibles();
+        track reporte.id
+      ) {
+        <button
+          type="button"
+          class="opcion-reporte-monitor"
+          (click)="vincularAReporte(reporte.id)"
+        >
+          <span>
+            <strong>{{ reporte.id }}</strong>
+            <small>
+              {{ reporte.estado === 'investigacion'
+                ? 'EN INVESTIGACIÓN'
+                : 'SOLUCIONADO' }}
+            </small>
+          </span>
+
+          <span>{{ reporte.titulo }}</span>
+          <span aria-hidden="true">→</span>
+        </button>
+      } @empty {
+        <p class="sin-opciones-vinculacion">
+          Este grupo ya está vinculado a todos los reportes
+          disponibles.
+        </p>
+      }
+    </div>
+  }
+
+  <footer class="acciones-vincular-monitor">
+    <button
+      type="button"
+      (click)="cerrarVinculacion()"
+    >
+      CERRAR
+    </button>
+  </footer>
+</dialog>
+
+<!-- Popup para subir una grabación -->
+<dialog
+  #dialogoCarga
+  class="modal-carga"
+  aria-labelledby="titulo-carga"
+  (cancel)="cerrarCarga()"
+>
+  <header class="cabecera-modal-carga">
+    <div>
+      <p>NUEVA GRABACIÓN</p>
+      <h2 id="titulo-carga">Subir video</h2>
+    </div>
+
+    <button
+      type="button"
+      aria-label="Cerrar popup sin registrar el video"
+      title="Cerrar"
+      (click)="cerrarCarga()"
+    >
+      ×
+    </button>
+  </header>
+
+  <p class="descripcion-carga">
+    El archivo se registrará únicamente para demostrar el
+    funcionamiento del frontend. No se enviará ni analizará
+    realmente.
+  </p>
+
+  <form
+    class="formulario-carga"
+    (ngSubmit)="confirmarCarga()"
+  >
+    <label for="archivo-video">
+      Archivo de video
+    </label>
+
+    <input
+      id="archivo-video"
+      name="archivoVideo"
+      type="file"
+      accept="video/*"
+      (change)="seleccionarArchivo($event)"
+    />
+
+    @if (archivoVideo) {
+      <p class="archivo-seleccionado">
+        Archivo: {{ archivoVideo.name }}
+      </p>
+    }
+
+    <label for="camara-carga">
+      Cámara asociada
+    </label>
+
+    <select
+      id="camara-carga"
+      name="camaraCarga"
+      [(ngModel)]="camaraCarga"
+    >
+      @for (camara of datos.camaras(); track camara.id) {
+        <option [value]="camara.id">
+          {{ camara.id }} · {{ camara.nombre }}
+        </option>
+      }
+    </select>
+
+    <label for="fecha-carga">
+      Fecha de grabación
+    </label>
+
+    <input
+      id="fecha-carga"
+      name="fechaCarga"
+      type="date"
+      [(ngModel)]="fechaCarga"
+    />
+
+    <div class="horarios">
+      <div>
+        <label for="inicio-carga">
+          Hora inicial
+        </label>
+
+        <input
+          id="inicio-carga"
+          name="horaInicioCarga"
+          type="time"
+          [(ngModel)]="horaInicioCarga"
+        />
+      </div>
+
+      <div>
+        <label for="fin-carga">
+          Hora final
+        </label>
+
+        <input
+          id="fin-carga"
+          name="horaFinCarga"
+          type="time"
+          [(ngModel)]="horaFinCarga"
+        />
+      </div>
+    </div>
+
+    @if (errorCarga()) {
+      <p class="error-carga" role="alert">
+        {{ errorCarga() }}
+      </p>
+    }
+
+    <div class="acciones-carga">
+      <button
+        type="button"
+        class="boton-carga secundario"
+        (click)="cerrarCarga()"
+      >
+        CANCELAR
+      </button>
+
+      <button
+        type="submit"
+        class="boton-carga principal"
+      >
+        REGISTRAR Y SIMULAR PROCESAMIENTO
+      </button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Plantilla reutilizable de las tarjetas -->
+<ng-template
+  #tarjetaGrupo
+  let-grupo
+  let-videoId="videoId"
+>
+  <article class="tarjeta-grupo">
+    <button
+      type="button"
+      class="abrir-grupo"
+      [attr.aria-label]="'Ver apariciones de ' + grupo.nombre"
+      (click)="abrirDetalle(grupo)"
+    >
+      <div
+        class="miniatura"
+        [style.color]="grupo.color"
+      >
+        <ng-container
+          [ngTemplateOutlet]="iconoPersona"
+        />
+      </div>
+
+      <div class="titulo-grupo">
+        <span>{{ grupo.id }}</span>
+
+        <span>
+          {{
+            aparicionesVisibles(grupo, videoId).length
+          }}
+          {{
+            aparicionesVisibles(grupo, videoId).length === 1
+              ? 'aparición visible'
+              : 'apariciones visibles'
+          }}
+        </span>
+      </div>
+
+      <div class="chips">
+        @for (
+          aparicion of aparicionesVisibles(grupo, videoId);
+          track aparicion.id
+        ) {
+          <span>
+            {{ aparicion.camaraId }} ·
+            {{ aparicion.hora }}
+          </span>
+        }
+      </div>
+    </button>
+
+    <button
+      type="button"
+      class="guardar"
+      [disabled]="datos.estaGuardado(grupo.id)"
+      (click)="guardar(grupo)"
+    >
+      {{
+        datos.estaGuardado(grupo.id)
+          ? '✓ GUARDADO'
+          : '+ GUARDAR'
+      }}
+    </button>
+  </article>
+</ng-template>
+
+<!-- Icono reutilizable de persona -->
+<ng-template #iconoPersona>
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="1.3"
+    aria-hidden="true"
+  >
+    <circle cx="12" cy="7" r="4" />
+
+    <path
+      d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"
+    />
+  </svg>
+</ng-template>
