@@ -1,20 +1,87 @@
-<div class="app-shell">
+<div class="app-shell" [class.menu-open]="menuOpen">
   <header class="topbar">
-    <button class="hamburger" (click)="toggleMenu()">☰</button>
-    <h1>Sistema de vigilancia</h1>
+    <button
+      type="button"
+      class="hamburger"
+      aria-label="Ampliar o retraer menú"
+      [attr.aria-expanded]="menuOpen"
+      (click)="toggleMenu()"
+    >
+      ☰
+    </button>
+
+    <div class="topbar-title">
+      <span>FACECLUSTER</span>
+      <strong>Sistema de vigilancia</strong>
+    </div>
   </header>
 
   <aside class="drawer" [class.open]="menuOpen">
+    <a
+      class="logo"
+      routerLink="/monitor"
+      aria-label="Ir al monitor"
+      (click)="closeMenu()"
+    >
+      FC
+    </a>
+
     <nav>
-      
-      <a routerLink="/monitor" routerLinkActive="active" (click)="closeMenu()">Monitor</a>
-      <a routerLink="/unique-faces" routerLinkActive="active" (click)="closeMenu()">Caras únicas</a>
-      <a routerLink="/reports" routerLinkActive="active" (click)="closeMenu()">Reportes</a>
-      <a routerLink="/marked" routerLinkActive="active" (click)="closeMenu()">Marcados</a>
+      <a
+        routerLink="/monitor"
+        routerLinkActive="active"
+        (click)="closeMenu()"
+      >
+        <span class="nav-icon" aria-hidden="true">▣</span>
+        <span class="nav-label">Monitor</span>
+      </a>
+
+      <a
+        routerLink="/unique-faces"
+        routerLinkActive="active"
+        (click)="closeMenu()"
+      >
+        <span class="nav-icon" aria-hidden="true">◎</span>
+        <span class="nav-label">Caras únicas</span>
+      </a>
+
+      <a
+        routerLink="/reports"
+        routerLinkActive="active"
+        (click)="closeMenu()"
+      >
+        <span class="nav-icon" aria-hidden="true">▤</span>
+        <span class="nav-label">Reportes</span>
+      </a>
+
+      <a
+        routerLink="/marked"
+        routerLinkActive="active"
+        (click)="closeMenu()"
+      >
+        <span class="nav-icon" aria-hidden="true">☆</span>
+        <span class="nav-label">Guardados</span>
+      </a>
     </nav>
+
+    <div class="session">
+      <div class="guard" [title]="guardName">
+        <span class="nav-icon" aria-hidden="true">♙</span>
+        <span class="nav-label">{{ guardName }}</span>
+      </div>
+
+      <button type="button" class="logout" (click)="logout()">
+        <span class="nav-icon" aria-hidden="true">↪</span>
+        <span class="nav-label">Salir</span>
+      </button>
+    </div>
   </aside>
 
-  <div class="overlay" *ngIf="menuOpen" (click)="closeMenu()"></div>
+  <div
+    class="overlay"
+    *ngIf="menuOpen"
+    (click)="closeMenu()"
+  ></div>
 
   <main class="content">
     <router-outlet />

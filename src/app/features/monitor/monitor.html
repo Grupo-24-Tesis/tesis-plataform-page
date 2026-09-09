@@ -1,11 +1,169 @@
-<h2>Monitor por cámara</h2>
+<section class="monitor-page">
+  <aside class="camera-panel">
+    <header class="search-header">
+      <span>MODO DE BÚSQUEDA</span>
 
-<div class="cams">
-  <div class="cam" *ngFor="let c of cameras()">
-    <h3>{{ c.name }}</h3>
+      <div class="search-mode">
+        <button type="button" class="active">
+          POR CÁMARA
+        </button>
 
-    <p>{{ c.active ? 'Activa' : 'Inactiva' }}</p>
+        <a routerLink="/unique-faces">
+          CARAS ÚNICAS
+        </a>
+      </div>
+    </header>
 
-    <button>Subir video</button>
-  </div>
-</div>
+    <div class="camera-title">
+      <span>CÁMARAS</span>
+
+      <button
+        type="button"
+        aria-label="Agregar cámara"
+        title="Agregar cámara"
+        (click)="openCameraDialog()"
+      >
+               +
+      </button>
+    </div>
+
+    <p class="loading" *ngIf="loading">
+      Cargando cámaras...
+    </p>
+
+    <div class="camera-list">
+      <button
+        type="button"
+        class="camera"
+        *ngFor="let camera of cameras()"
+        [class.selected]="selectedCamera()?.id === camera.id"
+        [class.inactive]="!camera.active"
+        (click)="selectCamera(camera)"
+      >
+        <span class="camera-information">
+          <small>{{ camera.id }}</small>
+          <strong>{{ camera.name }}</strong>
+        </span>
+
+        <span
+          class="camera-status"
+          [class.offline]="!camera.active"
+        >
+          {{ camera.active ? 'ACTIVA' : 'INACTIVA' }}
+        </span>
+      </button>
+
+      <p class="empty" *ngIf="!loading && cameras().length === 0">
+        No hay cámaras registradas.
+      </p>
+    </div>
+
+    <p class="demo-message" *ngIf="errorMsg">
+      {{ errorMsg }}
+    </p>
+  </aside>
+
+  <main class="monitor-content">
+    <header class="monitor-header">
+      <div>
+        <span class="section-label">MONITOR</span>
+
+        <h1 *ngIf="selectedCamera(); else noCameraTitle">
+          {{ selectedCamera()?.id }} · {{ selectedCamera()?.name }}
+        </h1>
+
+        <ng-template #noCameraTitle>
+          <h1>Selecciona una cámara</h1>
+        </ng-template>
+      </div>
+
+      <button
+        type="button"
+        class="upload-button"
+        disabled
+        title="Se habilitará en la siguiente etapa"
+      >
+        ↑ SUBIR VIDEO
+      </button>
+    </header>
+
+    <section class="camera-preview" *ngIf="selectedCamera()">
+           <div class="preview-placeholder">
+        <span class="preview-icon" aria-hidden="true">▣</span>
+
+        <h2>{{ selectedCamera()?.name }}</h2>
+
+        <p>
+          Los videos y las apariciones de esta cámara
+          se agregarán en la siguiente etapa.
+        </p>
+      </div>
+    </section>
+
+    <section class="no-camera" *ngIf="!selectedCamera()">
+      <h2>No hay una cámara seleccionada</h2>
+      <p>
+        Selecciona una cámara del panel lateral o registra una nueva.
+      </p>
+    </section>
+  </main>
+</section>
+
+<dialog
+  #cameraDialog
+  class="camera-dialog"
+  aria-labelledby="camera-dialog-title"
+  (cancel)="closeCameraDialog()"
+>
+  <header class="dialog-header">
+    <div>
+      <span>NUEVO REGISTRO</span>
+      <h2 id="camera-dialog-title">Agregar cámara</h2>
+    </div>
+
+    <button
+      type="button"
+      aria-label="Cerrar"
+      (click)="closeCameraDialog()"
+    >
+      ×
+    </button>
+  </header>
+
+  <p class="dialog-description">
+    Registra una cámara para utilizarla durante la demostración
+    del frontend.
+  </p>
+
+  <form (ngSubmit)="addCamera()">
+    <label for="camera-name">Nombre de la cámara</label>
+
+    <input
+      id="camera-name"
+      name="cameraName"
+      type="text"
+      maxlength="80"
+      placeholder="Ej. Recepción Torre A"
+      autocomplete="off"
+      [(ngModel)]="newCameraName"
+    />
+
+    <p class="form-error" *ngIf="cameraErrorMsg">
+      {{ cameraErrorMsg }}
+    </p>
+
+       <div class="dialog-actions">
+      <button
+               type="button"
+        class="secondary-button"
+        (click)="closeCameraDialog()"
+      >
+        CANCELAR
+      </button>
+
+      <button type="submit" class="primary-button">
+        AGREGAR CÁMARA
+      </button>
+    </div>
+  </form>
+</dialog>
