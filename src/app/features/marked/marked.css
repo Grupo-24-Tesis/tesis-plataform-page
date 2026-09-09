@@ -565,3 +565,10 @@ textarea:focus {
   }
 
 }
+
+.face-id {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--azul);
+  font: 12px var(--fuente-mono);
+}
