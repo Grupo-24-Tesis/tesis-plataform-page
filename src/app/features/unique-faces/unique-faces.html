@@ -1,202 +1,221 @@
-<h2>Caras únicas</h2>
-
-<!-- ========================= -->
-<!-- FILTROS -->
-<!-- ========================= -->
-
-<section class="filters">
-
-  <div class="filter-field">
-    <label for="startDate">Desde</label>
-    <input
-      id="startDate"
-      type="date"
-      [(ngModel)]="startDate"
-    >
-  </div>
-
-  <div class="filter-field">
-    <label for="endDate">Hasta</label>
-    <input
-      id="endDate"
-      type="date"
-      [(ngModel)]="endDate"
-    >
-  </div>
-
-  <div class="filter-field">
-    <label for="hasReports">Reportes</label>
-    <select
-      id="hasReports"
-      [(ngModel)]="hasReports"
-    >
-      <option value="">Todos</option>
-      <option value="true">Con reportes</option>
-      <option value="false">Sin reportes</option>
-    </select>
-  </div>
-
-  <div class="filter-field">
-    <label for="suspect">Estado</label>
-    <select
-      id="suspect"
-      [(ngModel)]="suspect"
-    >
-      <option value="">Todos</option>
-      <option value="true">Sospechoso</option>
-      <option value="false">No sospechoso</option>
-    </select>
-  </div>
-
-  <div class="filter-actions">
-    <button
-      type="button"
-      class="btn btn-primary"
-      (click)="applyFilters()"
-    >
-      Aplicar
-    </button>
-
-    <button
-      type="button"
-      class="btn btn-secondary"
-      (click)="clearFilters()"
-    >
-      Limpiar
-    </button>
-  </div>
-
-</section>
-
-
-<!-- ========================= -->
-<!-- GRID DE CARAS -->
-<!-- ========================= -->
-
-<div class="grid">
-
-  <div
-    class="card"
-    *ngFor="let face of faces()"
-    (click)="selectFace(face)"
-  >
-
-    <div class="face-image-container">
-
-      <img
-        class="face-image"
-        [src]="face.appearances[0].frameUrl"
-        [alt]="face.faceId"
-      >
-
-    </div>
-
-
-    <div class="face-info">
-
-      <p>
-        {{ face.appearances.length }} apariciones
-      </p>
-
-      <p>
-        Reportes: {{ face.reportCount }}
-      </p>
-
-      <p
-        class="suspect"
-        [class.is-suspect]="face.suspect"
-      >
-        {{ face.suspect ? 'Sospechoso' : 'No sospechoso' }}
-      </p>
-
-    </div>
-
-  </div>
-
-  <p
-    *ngIf="faces().length === 0"
-    class="empty-state"
-  >
-    No se encontraron caras con los filtros aplicados.
-  </p>
-
-</div>
-
-
-<!-- ========================= -->
-<!-- DETALLE -->
-<!-- ========================= -->
-
 <section
-  *ngIf="selected()"
-  class="detail"
+  class="faces-page"
+  [class.with-detail]="selected()"
 >
-
-  <div class="detail-header">
-
-    <div>
-
-      <h3>
-        Apariciones:
-      </h3>
+  <main class="faces-content">
+    <header class="page-header">
+      <div>
+        <span>APARICIONES</span>
+        <h1>Caras únicas</h1>
+      </div>
 
       <p>
-        {{ selected()!.appearances.length }} apariciones encontradas
-        · {{ selected()!.reportCount }} reportes relacionados
+        {{ faces().length }}
+        {{ faces().length === 1 ? 'persona encontrada' : 'personas encontradas' }}
       </p>
+    </header>
 
+    <section class="filters">
+      <div class="filter-field">
+        <label for="startDate">Desde</label>
+        <input
+          id="startDate"
+          type="date"
+          [(ngModel)]="startDate"
+        >
+      </div>
+
+      <div class="filter-field">
+        <label for="endDate">Hasta</label>
+        <input
+          id="endDate"
+          type="date"
+          [(ngModel)]="endDate"
+        >
+      </div>
+
+      <div class="filter-field">
+        <label for="hasReports">Reportes</label>
+        <select
+          id="hasReports"
+          [(ngModel)]="hasReports"
+        >
+          <option value="">Todos</option>
+          <option value="true">Con reportes</option>
+          <option value="false">Sin reportes</option>
+        </select>
+      </div>
+
+      <div class="filter-field">
+        <label for="suspect">Estado</label>
+        <select
+          id="suspect"
+          [(ngModel)]="suspect"
+        >
+          <option value="">Todos</option>
+          <option value="true">Sospechoso</option>
+          <option value="false">No sospechoso</option>
+        </select>
+      </div>
+
+      <div class="filter-actions">
+        <button
+          type="button"
+          class="btn btn-primary"
+          (click)="applyFilters()"
+        >
+          FILTRAR
+        </button>
+
+        <button
+          type="button"
+          class="btn btn-secondary"
+          (click)="clearFilters()"
+        >
+          LIMPIAR
+        </button>
+      </div>
+    </section>
+
+    <div class="grid">
+      <button
+        type="button"
+        class="card"
+        *ngFor="let face of faces()"
+        [class.selected]="selected()?.faceId === face.faceId"
+        (click)="selectFace(face)"
+      >
+        <div class="face-image-container">
+          <img
+            class="face-image"
+            *ngIf="face.appearances[0]?.frameUrl as image; else facePlaceholder"
+            [src]="image"
+            [alt]="face.faceId"
+          >
+
+          <ng-template #facePlaceholder>
+            <span class="image-placeholder" aria-hidden="true">♙</span>
+          </ng-template>
+
+          <span
+            class="status-badge"
+            [class.is-suspect]="face.suspect"
+          >
+            {{ face.suspect ? 'SOSPECHOSO' : 'SIN MARCA' }}
+          </span>
+        </div>
+
+        <div class="face-info">
+          <strong>{{ face.faceId }}</strong>
+
+          <div class="face-stats">
+            <span>
+              {{ face.appearances.length }}
+              {{ face.appearances.length === 1 ? 'aparición' : 'apariciones' }}
+            </span>
+
+            <span>
+              {{ face.reportCount }}
+              {{ face.reportCount === 1 ? 'reporte' : 'reportes' }}
+            </span>
+          </div>
+        </div>
+      </button>
+
+      <div
+        *ngIf="faces().length === 0"
+        class="empty-state"
+      >
+        <span aria-hidden="true">◎</span>
+        <strong>No se encontraron personas</strong>
+        <p>No hay resultados que coincidan con los filtros seleccionados.</p>
+      </div>
     </div>
+  </main>
 
-    <strong
-      class="detail-suspect"
-      [class.is-suspect]="selected()!.suspect"
-    >
-      {{ selected()!.suspect
-        ? 'Sospechoso'
-        : 'No sospechoso'
-      }}
-    </strong>
+  <aside
+    class="detail"
+    *ngIf="selected() as face"
+  >
+    <header class="detail-header">
+      <div>
+        <span>DETALLE DE PERSONA</span>
+        <strong>{{ face.faceId }}</strong>
+      </div>
 
-  </div>
+      <button
+        type="button"
+        aria-label="Cerrar detalle"
+        (click)="selectFace(face)"
+      >
+        ×
+      </button>
+    </header>
 
-
-  <div class="appearances">
-
-    <div
-      class="appearance"
-      *ngFor="let a of selected()!.appearances"
-    >
-
-      <div class="appearance-image-container">
-
+    <div class="detail-content">
+      <div class="detail-main-image">
         <img
-          class="appearance-image"
-          [src]="a.frameUrl"
-          [alt]="selected()!.faceId"
+          *ngIf="face.appearances[0]?.frameUrl as image; else detailPlaceholder"
+          [src]="image"
+          [alt]="face.faceId"
         >
 
+        <ng-template #detailPlaceholder>
+          <span aria-hidden="true">♙</span>
+        </ng-template>
       </div>
 
+      <div class="detail-summary">
+        <span
+          class="detail-status"
+          [class.is-suspect]="face.suspect"
+        >
+          {{ face.suspect ? 'SOSPECHOSO' : 'NO SOSPECHOSO' }}
+        </span>
 
-      <div class="appearance-info">
+        <div>
+          <span>APARICIONES</span>
+          <strong>{{ face.appearances.length }}</strong>
+        </div>
 
-        <strong>
-          {{ a.cameraId }}
-        </strong>
-
-        <p>
-          Tiempo: {{ a.timestamp }}
-        </p>
-
-        <p>
-          Capturada:
-          {{ a.capturedAt | date:'dd/MM/yyyy HH:mm' }}
-        </p>
-
+        <div>
+          <span>REPORTES</span>
+          <strong>{{ face.reportCount }}</strong>
+        </div>
       </div>
 
+      <section class="appearances-section">
+        <h2>RUTA DE APARICIONES</h2>
+
+        <div class="appearances">
+          <article
+            class="appearance"
+            *ngFor="let appearance of face.appearances"
+          >
+            <div class="appearance-image-container">
+              <img
+                class="appearance-image"
+                *ngIf="appearance.frameUrl as image; else appearancePlaceholder"
+                [src]="image"
+                [alt]="face.faceId"
+              >
+
+              <ng-template #appearancePlaceholder>
+                <span class="image-placeholder" aria-hidden="true">♙</span>
+              </ng-template>
+            </div>
+
+            <div class="appearance-info">
+              <strong>{{ appearance.cameraId }}</strong>
+              <span>{{ appearance.timestamp }}</span>
+
+              <small>
+                {{ appearance.capturedAt | date:'dd/MM/yyyy HH:mm' }}
+              </small>
+            </div>
+          </article>
+        </div>
+      </section>
     </div>
-
-  </div>
-
+  </aside>
 </section>
