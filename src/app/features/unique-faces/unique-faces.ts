@@ -2,7 +2,7 @@ import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
-import { ApiService } from '../../core/services/api.service';
+import { ApiService, Camera } from '../../core/services/api.service';
 import { UniqueFace } from '../../core/models/UniqueFace';
 
 @Component({
@@ -22,6 +22,7 @@ export class UniqueFaces implements OnInit {
   // ==========================================
 
   faces = signal<UniqueFace[]>([]);
+  cameras = signal<Camera[]>([]);
 
   selected = signal<UniqueFace | null>(null);
 
@@ -49,7 +50,15 @@ export class UniqueFaces implements OnInit {
   ngOnInit(): void {
 
     this.loadFaces();
+        this.api.getCameras().subscribe({
+      next: (cameras) => this.cameras.set(cameras),
+      error: (err) => console.error('Error loading cameras', err)
+    });
 
+  }
+  getCameraName(cameraId: string): string {
+    return this.cameras().find(camera => camera.id === cameraId)?.name
+      ?? 'Cámara no identificada';
   }
 
 

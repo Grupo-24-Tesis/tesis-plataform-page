@@ -62,7 +62,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin: 30px 5px 12px;
+  margin: 0 5px 12px;
 }
 
 .camera-title button {
@@ -99,7 +99,7 @@
   color: var(--texto);
   text-align: left;
   background: transparent;
-  border: 1px solid transparent;
+  border: 1px solid var(--borde);
   border-radius: 6px;
   cursor: pointer;
 }

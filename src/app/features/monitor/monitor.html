@@ -3,19 +3,6 @@
   [class.with-detail]="selectedCluster()"
 >
   <aside class="camera-panel">
-    <header class="search-header">
-      <span>MODO DE BÚSQUEDA</span>
-
-      <div class="search-mode">
-        <button type="button" class="active">
-          POR CÁMARA
-        </button>
-
-        <a routerLink="/unique-faces">
-          CARAS ÚNICAS
-        </a>
-      </div>
-    </header>
 
     <div class="camera-title">
       <span>CÁMARAS</span>
@@ -38,27 +25,23 @@
       <button
         type="button"
         class="camera"
-        *ngFor="let camera of cameras()"
+        *ngFor="let camera of sortedCameras()"
         [class.selected]="selectedCamera()?.id === camera.id"
-        [class.inactive]="!camera.active"
         (click)="selectCamera(camera)"
       >
         <span class="camera-information">
-          <small>{{ camera.id }}</small>
           <strong>{{ camera.name }}</strong>
         </span>
 
         <span class="camera-summary">
-          <span
-            class="camera-status"
-            [class.offline]="!camera.active"
-          >
-            {{ camera.active ? 'ACTIVA' : 'INACTIVA' }}
-          </span>
-
           <small>
             {{ getCameraVideoCount(camera.id) }}
-            {{ getCameraVideoCount(camera.id) === 1 ? 'video' : 'videos' }}
+            {{ getCameraVideoCount(camera.id) === 1 ? 'video subido' : 'videos subidos' }}
+          </small>
+
+          <small>
+            {{ getCameraAppearanceCount(camera.id) }}
+            {{ getCameraAppearanceCount(camera.id) === 1 ? 'aparición total' : 'apariciones totales' }}
           </small>
         </span>
       </button>
@@ -79,7 +62,7 @@
         <span class="section-label">MONITOR</span>
 
         <h1 *ngIf="selectedCamera(); else noCameraTitle">
-          {{ selectedCamera()?.id }} · {{ selectedCamera()?.name }}
+          {{ selectedCamera()?.name }}
         </h1>
 
         <ng-template #noCameraTitle>
@@ -322,7 +305,7 @@
   <div class="selected-camera">
     <span>CÁMARA ASOCIADA</span>
     <strong>
-      {{ selectedCamera()?.id }} · {{ selectedCamera()?.name }}
+      {{ selectedCamera()?.name }}
     </strong>
   </div>
 

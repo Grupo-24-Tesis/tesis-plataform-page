@@ -177,10 +177,34 @@
 /* LISTA DE REPORTES */
 /* ========================= */
 
+.report-section + .report-section {
+  margin-top: 30px;
+}
+
+.report-section-title {
+  margin: 0 0 12px;
+  padding-bottom: 10px;
+  color: var(--texto);
+  border-bottom: 1px solid var(--borde);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.report-section-title span {
+  color: var(--texto-secundario);
+  font: 11px var(--fuente-mono);
+}
+
 .list {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
+}
+
+@media (max-width: 1300px) {
+  .list {
+    grid-template-columns: 1fr;
+  }
 }
 
 .item {

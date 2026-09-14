@@ -1,7 +1,6 @@
-import { Component, ElementRef, OnInit, signal, ViewChild } from '@angular/core';
+import { Component, ElementRef, OnInit, computed, signal, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
 import { ApiService, Camera } from '../../core/services/api.service';
 import { MockModelService } from '../../core/services/mock-model';
 import { ProcessingResult } from '../../shared/models/processing.models';
@@ -24,7 +23,7 @@ interface SelectedCluster {
 @Component({
   selector: 'app-monitor',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule],
   templateUrl: './monitor.html',
   styleUrl: './monitor.css',
 })
@@ -33,6 +32,11 @@ export class MonitorComponent implements OnInit {
   @ViewChild('videoDialog') videoDialog?: ElementRef<HTMLDialogElement>;
 
   cameras = signal<Camera[]>([]);
+  sortedCameras = computed(() =>
+  [...this.cameras()].sort((a, b) =>
+    a.name.localeCompare(b.name, 'es', { sensitivity: 'base' })
+  )
+);
   selectedCamera = signal<Camera | null>(null);
   loading = true;
   errorMsg = '';
@@ -241,6 +245,18 @@ export class MonitorComponent implements OnInit {
 
   getCameraVideoCount(cameraId: string): number {
     return this.videos().filter(video => video.cameraId === cameraId).length;
+  }
+  getCameraAppearanceCount(cameraId: string): number {
+  return this.videos()
+    .filter(video => video.cameraId === cameraId)
+    .reduce(
+      (total, video) =>
+        total + video.clusters.reduce(
+          (count, cluster) => count + cluster.appearances.length,
+          0
+        ),
+      0
+    );
   }
 
   openVideoDialog(): void {

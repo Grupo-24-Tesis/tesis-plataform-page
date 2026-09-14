@@ -106,8 +106,6 @@
         </div>
 
         <div class="face-info">
-          <strong>{{ face.faceId }}</strong>
-
           <div class="face-stats">
             <span>
               {{ face.appearances.length }}
@@ -140,7 +138,6 @@
     <header class="detail-header">
       <div>
         <span>DETALLE DE PERSONA</span>
-        <strong>{{ face.faceId }}</strong>
       </div>
 
       <button
@@ -206,7 +203,7 @@
             </div>
 
             <div class="appearance-info">
-              <strong>{{ appearance.cameraId }}</strong>
+              <strong>{{ getCameraName(appearance.cameraId) }}</strong>
               <span>{{ appearance.timestamp }}</span>
 
               <small>

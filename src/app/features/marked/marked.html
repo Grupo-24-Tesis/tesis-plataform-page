@@ -40,9 +40,6 @@
         <header>
           <div>
             <span>PERSONA GUARDADA</span>
-            <strong class="face-id">
-              {{ markedPerson.faceId }}
-            </strong>
           </div>
 
           <span class="suspect-badge">
@@ -139,9 +136,6 @@
               <span class="image-placeholder" aria-hidden="true">♙</span>
             </ng-template>
           </div>
-
-          <strong>{{ person.faceId }}</strong>
-          <small>{{ person.appearance.cameraId }}</small>
         </button>
 
         <p
@@ -158,7 +152,6 @@
       *ngIf="selectedPerson() as person"
     >
       <span>PERSONA SELECCIONADA</span>
-      <strong>{{ person.faceId }}</strong>
     </div>
 
     <div class="reason-container">

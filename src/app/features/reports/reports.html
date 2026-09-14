@@ -252,12 +252,21 @@
 <!-- LISTA DE REPORTES -->
 <!-- ========================= -->
 
-<div class="list">
+<section
+  class="report-section"
+  *ngFor="let section of reportSections"
+>
+  <h2 class="report-section-title">
+    {{ section.title }}
+    <span>({{ getReportsByStatus(section.status).length }})</span>
+  </h2>
 
-  <article
-    *ngFor="let r of reports()"
-    class="item"
-  >
+  <div class="list">
+
+    <article
+      *ngFor="let r of getReportsByStatus(section.status)"
+      class="item"
+    >
 
     <!-- INFORMACIÓN PRINCIPAL -->
 
@@ -277,12 +286,6 @@
         </span>
 
       </div>
-
-
-      
-<div class="report-case-id">
-  ID del caso: <strong>{{ r.id }}</strong>
-</div>
 
 <p class="description">
   {{ r.description }}
@@ -401,12 +404,10 @@
       </select>
 
     </div>
-
-  </article>
+    </article>
 
 </div>
-
-
+</section>
 
 
 <!-- ========================= -->
