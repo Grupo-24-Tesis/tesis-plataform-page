@@ -25,7 +25,7 @@
 .selected-info span,
 .reason-container label {
   color: var(--texto-secundario);
-  font: 9px var(--fuente-mono);
+  font: 11px var(--fuente-mono);
   letter-spacing: 1.3px;
 }
 
@@ -39,7 +39,7 @@
 .page-header p {
   margin: 0;
   color: var(--texto-secundario);
-  font: 10px var(--fuente-mono);
+  font: 11px var(--fuente-mono);
 }
 
 .add-button {
@@ -49,7 +49,7 @@
   background: var(--azul);
   border: 1px solid var(--azul);
   border-radius: 5px;
-  font: 10px var(--fuente-mono);
+  font: 11px var(--fuente-mono);
   cursor: pointer;
 }
 
@@ -84,7 +84,7 @@
 }
 
 .item:hover {
-  border-color: rgba(77, 157, 224, 0.45);
+  border-color: rgba(85, 182, 242, 0.45);
 }
 
 .marked-image-container {
@@ -141,10 +141,10 @@
   flex-shrink: 0;
   padding: 5px 8px;
   color: var(--rojo);
-  background: rgba(224, 92, 92, 0.1);
-  border: 1px solid rgba(224, 92, 92, 0.4);
+  background: rgba(255, 107, 117, 0.1);
+  border: 1px solid rgba(255, 107, 117, 0.4);
   border-radius: 4px;
-  font: 8px var(--fuente-mono);
+  font: 11px var(--fuente-mono);
 }
 
 .reason-section {
@@ -168,15 +168,15 @@
 .delete-button {
   padding: 7px 11px;
   color: var(--rojo);
-  background: rgba(224, 92, 92, 0.08);
-  border: 1px solid rgba(224, 92, 92, 0.35);
+  background: rgba(255, 107, 117, 0.08);
+  border: 1px solid rgba(255, 107, 117, 0.35);
   border-radius: 5px;
-  font: 9px var(--fuente-mono);
+  font: 11px var(--fuente-mono);
   cursor: pointer;
 }
 
 .delete-button:hover {
-  background: rgba(224, 92, 92, 0.15);
+  background: rgba(255, 107, 117, 0.15);
   border-color: var(--rojo);
 }
 
@@ -332,13 +332,13 @@
 .person-option strong {
   margin-top: 8px;
   color: var(--azul);
-  font: 9px var(--fuente-mono);
+  font: 11px var(--fuente-mono);
 }
 
 .person-option small {
   margin-top: 5px;
   color: var(--texto-secundario);
-  font: 8px var(--fuente-mono);
+  font: 11px var(--fuente-mono);
 }
 
 .no-people {
@@ -361,7 +361,7 @@
 
 .selected-info strong {
   color: var(--azul);
-  font: 10px var(--fuente-mono);
+  font: 11px var(--fuente-mono);
 }
 
 .reason-container {
@@ -398,7 +398,7 @@
   min-height: 40px;
   padding: 8px 14px;
   border-radius: 5px;
-  font: 10px var(--fuente-mono);
+  font: 11px var(--fuente-mono);
   cursor: pointer;
 }
 

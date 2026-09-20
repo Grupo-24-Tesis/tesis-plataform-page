@@ -133,6 +133,7 @@
 
   <aside
     class="detail"
+    [class.closing]="detailClosing"
     *ngIf="selected() as face"
   >
     <header class="detail-header">
@@ -143,7 +144,7 @@
       <button
         type="button"
         aria-label="Cerrar detalle"
-        (click)="selectFace(face)"
+        (click)="closeDetail()"
       >
         ×
       </button>

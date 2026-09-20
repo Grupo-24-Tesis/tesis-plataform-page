@@ -25,6 +25,7 @@ export class UniqueFaces implements OnInit {
   cameras = signal<Camera[]>([]);
 
   selected = signal<UniqueFace | null>(null);
+  detailClosing = false;
 
 
   // ==========================================
@@ -156,13 +157,38 @@ export class UniqueFaces implements OnInit {
       this.selected()?.faceId === face.faceId
     ) {
 
-      this.selected.set(null);
+      this.closeDetail();
 
     } else {
 
+      this.detailClosing = false;
       this.selected.set(face);
 
     }
+
+  }
+
+
+  // ==========================================
+  // CERRAR DETALLE
+  // ==========================================
+
+  closeDetail(): void {
+
+    if (this.detailClosing || !this.selected()) {
+
+      return;
+
+    }
+
+    this.detailClosing = true;
+
+    window.setTimeout(() => {
+
+      this.selected.set(null);
+      this.detailClosing = false;
+
+    }, 160);
 
   }
 

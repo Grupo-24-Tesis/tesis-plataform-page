@@ -20,7 +20,7 @@
 .camera-title > span,
 .section-label {
   color: var(--texto-secundario);
-  font: 10px var(--fuente-mono);
+  font: 11px var(--fuente-mono);
   letter-spacing: 1.5px;
 }
 
@@ -42,7 +42,7 @@
   color: var(--texto-secundario);
   background: transparent;
   border: 0;
-  font: 10px var(--fuente-mono);
+  font: 11px var(--fuente-mono);
   text-decoration: none;
   cursor: pointer;
 }
@@ -126,7 +126,7 @@
 
 .camera-information small {
   color: var(--azul);
-  font: 10px var(--fuente-mono);
+  font: 11px var(--fuente-mono);
 }
 
 .camera-information strong {
@@ -140,7 +140,7 @@
 .camera-status {
   flex-shrink: 0;
   color: var(--verde);
-  font: 8px var(--fuente-mono);
+  font: 11px var(--fuente-mono);
 }
 
 .camera-status.offline {
@@ -151,7 +151,7 @@
 .empty,
 .demo-message {
   color: var(--texto-secundario);
-  font: 10px var(--fuente-mono);
+  font: 11px var(--fuente-mono);
   line-height: 1.5;
 }
 
@@ -188,7 +188,7 @@
   background: var(--superficie-3);
   border: 1px solid var(--borde);
   border-radius: 5px;
-  font: 10px var(--fuente-mono);
+  font: 11px var(--fuente-mono);
 }
 
 .upload-button:disabled {
@@ -263,7 +263,7 @@
   display: block;
   margin-bottom: 8px;
   color: var(--azul);
-  font: 10px var(--fuente-mono);
+  font: 11px var(--fuente-mono);
   letter-spacing: 1.5px;
 }
 
@@ -330,7 +330,7 @@
   min-height: 42px;
   padding: 8px 14px;
   border-radius: 5px;
-  font: 10px var(--fuente-mono);
+  font: 11px var(--fuente-mono);
   cursor: pointer;
 }
 
@@ -385,18 +385,18 @@
 
 .camera-summary small {
   color: var(--texto-secundario);
-  font: 8px var(--fuente-mono);
+  font: 11px var(--fuente-mono);
 }
 
 .upload-button:not(:disabled) {
   color: var(--azul);
-  background: rgba(77, 157, 224, 0.1);
-  border-color: rgba(77, 157, 224, 0.45);
+  background: rgba(85, 182, 242, 0.1);
+  border-color: rgba(85, 182, 242, 0.45);
   cursor: pointer;
 }
 
 .upload-button:not(:disabled):hover {
-  background: rgba(77, 157, 224, 0.18);
+  background: rgba(85, 182, 242, 0.18);
   border-color: var(--azul);
 }
 
@@ -435,7 +435,7 @@
 
 .video-header > span {
   color: var(--texto-secundario);
-  font: 9px var(--fuente-mono);
+  font: 11px var(--fuente-mono);
 }
 
 .video-status {
@@ -490,7 +490,7 @@
 
 .cluster-title > span {
   color: var(--texto-secundario);
-  font: 9px var(--fuente-mono);
+  font: 11px var(--fuente-mono);
 }
 
 .appearance-list {
@@ -506,7 +506,7 @@
   background: var(--superficie-3);
   border: 1px solid var(--borde);
   border-radius: 4px;
-  font: 8px var(--fuente-mono);
+  font: 11px var(--fuente-mono);
 }
 
 /* Popup de video */
@@ -545,7 +545,7 @@
 
 .selected-camera span {
   color: var(--texto-secundario);
-  font: 8px var(--fuente-mono);
+  font: 11px var(--fuente-mono);
   letter-spacing: 1px;
 }
 
@@ -599,7 +599,7 @@
 }
 
 .cluster-card:hover {
-  border-color: rgba(77, 157, 224, 0.5);
+  border-color: rgba(85, 182, 242, 0.5);
 }
 
 .cluster-card.selected {
@@ -637,7 +637,7 @@
 .detail-header span,
 .detail-section > span {
   color: var(--texto-secundario);
-  font: 9px var(--fuente-mono);
+  font: 11px var(--fuente-mono);
   letter-spacing: 1.3px;
 }
 
@@ -693,7 +693,7 @@
 
 .detail-section small {
   color: var(--texto-secundario);
-  font: 9px var(--fuente-mono);
+  font: 11px var(--fuente-mono);
 }
 
 .detail-appearances {
@@ -736,7 +736,7 @@
 
 .detail-appearances li strong {
   color: var(--azul);
-  font: 10px var(--fuente-mono);
+  font: 11px var(--fuente-mono);
 }
 
 .detail-appearances li span {
@@ -752,17 +752,17 @@
   width: 100%;
   min-height: 42px;
   color: var(--azul);
-  background: rgba(77, 157, 224, 0.1);
-  border: 1px solid rgba(77, 157, 224, 0.45);
+  background: rgba(85, 182, 242, 0.1);
+  border: 1px solid rgba(85, 182, 242, 0.45);
   border-radius: 5px;
-  font: 10px var(--fuente-mono);
+  font: 11px var(--fuente-mono);
   cursor: pointer;
 }
 
 .detail-actions button.saved {
   color: var(--verde);
-  background: rgba(72, 189, 145, 0.1);
-  border-color: rgba(72, 189, 145, 0.45);
+  background: rgba(71, 215, 160, 0.1);
+  border-color: rgba(71, 215, 160, 0.45);
 }
 
 @media (max-width: 1250px) {

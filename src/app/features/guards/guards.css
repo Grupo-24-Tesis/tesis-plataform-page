@@ -4,6 +4,7 @@
 }
 
 .pagina {
+  view-transition-name: guard-screen;
   min-height: 100dvh;
   display: grid;
   place-items: center;
@@ -103,7 +104,7 @@ h1 {
 
 .vigilante:hover {
   background: var(--superficie-3);
-  border-color: rgba(77, 157, 224, 0.45);
+  border-color: rgba(85, 182, 242, 0.45);
   transform: translateY(-1px);
 }
 
@@ -127,7 +128,7 @@ h1 {
 
 .seleccionado .avatar {
   color: var(--azul);
-  background: rgba(77, 157, 224, 0.12);
+  background: rgba(85, 182, 242, 0.12);
 }
 
 .informacion {
@@ -146,7 +147,7 @@ h1 {
 
 .informacion small {
   color: var(--texto-secundario);
-  font: 10px var(--fuente-mono);
+  font: 11px var(--fuente-mono);
 }
 
 .indicador {
@@ -155,7 +156,7 @@ h1 {
   flex-shrink: 0;
   border-radius: 50%;
   background: var(--azul);
-  box-shadow: 0 0 10px rgba(77, 157, 224, 0.7);
+  box-shadow: 0 0 10px rgba(85, 182, 242, 0.7);
 }
 
 .agregar {
@@ -227,7 +228,7 @@ footer p {
 }
 
 footer span {
-  font-size: 10px;
+  font-size: 11px;
 }
 
 /* Popup de registro */
@@ -261,7 +262,7 @@ footer span {
   display: block;
   margin-bottom: 8px;
   color: var(--azul);
-  font: 10px var(--fuente-mono);
+  font: 11px var(--fuente-mono);
   letter-spacing: 1.5px;
 }
 

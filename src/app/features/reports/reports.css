@@ -21,7 +21,7 @@
 
 .section-label {
   color: var(--azul);
-  font: 10px var(--fuente-mono);
+  font: 11px var(--fuente-mono);
   letter-spacing: 1.5px;
 }
 
@@ -51,7 +51,7 @@
   background: var(--azul);
   border: 1px solid var(--azul);
   border-radius: 6px;
-  font: 10px var(--fuente-mono);
+  font: 11px var(--fuente-mono);
   font-weight: 600;
   letter-spacing: 0.5px;
   cursor: pointer;
@@ -62,8 +62,8 @@
 }
 
 .new-report-btn:hover {
-  background: #72bdff;
-  border-color: #72bdff;
+  background: var(--azul);
+  border-color: var(--azul);
   transform: translateY(-1px);
 }
 
@@ -122,7 +122,7 @@
 .filter-group select:focus,
 .filter-group input:focus {
   border-color: var(--azul);
-  box-shadow: 0 0 0 3px rgba(82, 169, 235, 0.12);
+  box-shadow: 0 0 0 3px rgba(85, 182, 242, 0.12);
 }
 
 .filter-group input[type="number"] {
@@ -156,8 +156,8 @@
 }
 
 .apply-filter-btn:hover {
-  background: #72bdff;
-  border-color: #72bdff;
+  background: var(--azul);
+  border-color: var(--azul);
   transform: translateY(-1px);
 }
 
@@ -225,7 +225,7 @@
 
 .item:hover {
   background: var(--superficie-2);
-  border-color: rgba(82, 169, 235, 0.45);
+  border-color: rgba(85, 182, 242, 0.45);
   transform: translateY(-1px);
 }
 
@@ -251,7 +251,7 @@
 .report-case-id {
   margin-bottom: 10px;
   color: var(--texto-secundario);
-  font: 10px var(--fuente-mono);
+  font: 11px var(--fuente-mono);
 }
 
 .report-case-id strong {
@@ -262,27 +262,27 @@
 .priority-badge {
   padding: 4px 8px;
   border-radius: 5px;
-  font: 9px var(--fuente-mono);
+  font: 11px var(--fuente-mono);
   font-weight: 600;
   text-transform: uppercase;
 }
 
 .priority-alta {
   color: var(--rojo);
-  background: rgba(248, 113, 113, 0.12);
-  border: 1px solid rgba(248, 113, 113, 0.25);
+  background: rgba(255, 107, 117, 0.12);
+  border: 1px solid rgba(255, 107, 117, 0.25);
 }
 
 .priority-media {
-  color: #facc15;
-  background: rgba(250, 204, 21, 0.1);
-  border: 1px solid rgba(250, 204, 21, 0.2);
+  color: var(--amarillo);
+  background: rgba(244, 201, 93, 0.1);
+  border: 1px solid rgba(244, 201, 93, 0.2);
 }
 
 .priority-baja {
   color: var(--verde);
-  background: rgba(74, 222, 128, 0.1);
-  border: 1px solid rgba(74, 222, 128, 0.2);
+  background: rgba(71, 215, 160, 0.1);
+  border: 1px solid rgba(71, 215, 160, 0.2);
 }
 
 .description {
@@ -305,7 +305,7 @@
 
 .detail-label {
   color: var(--texto-secundario);
-  font: 9px var(--fuente-mono);
+  font: 11px var(--fuente-mono);
   letter-spacing: 0.4px;
   text-transform: uppercase;
 }
@@ -351,8 +351,8 @@
 .resolution-info {
   margin-top: 16px;
   padding: 11px 13px;
-  background: rgba(74, 222, 128, 0.07);
-  border: 1px solid rgba(74, 222, 128, 0.18);
+  background: rgba(71, 215, 160, 0.07);
+  border: 1px solid rgba(71, 215, 160, 0.18);
   border-left: 3px solid var(--verde);
   border-radius: 6px;
 }
@@ -386,7 +386,7 @@
 
 .status-container label {
   color: var(--texto-secundario);
-  font: 9px var(--fuente-mono);
+  font: 11px var(--fuente-mono);
   letter-spacing: 0.5px;
   text-transform: uppercase;
 }
@@ -539,7 +539,7 @@
 .field textarea:focus,
 .field select:focus {
   border-color: var(--azul);
-  box-shadow: 0 0 0 3px rgba(82, 169, 235, 0.12);
+  box-shadow: 0 0 0 3px rgba(85, 182, 242, 0.12);
 }
 
 .field textarea {
@@ -598,9 +598,9 @@
 }
 
 .person-option.selected {
-  background: rgba(82, 169, 235, 0.1);
+  background: rgba(85, 182, 242, 0.1);
   border-color: var(--azul);
-  box-shadow: 0 0 0 1px rgba(82, 169, 235, 0.2);
+  box-shadow: 0 0 0 1px rgba(85, 182, 242, 0.2);
 }
 
 .person-image-container {
@@ -640,8 +640,8 @@
   gap: 8px;
   padding: 10px 12px;
   color: var(--texto-secundario);
-  background: rgba(82, 169, 235, 0.08);
-  border: 1px solid rgba(82, 169, 235, 0.25);
+  background: rgba(85, 182, 242, 0.08);
+  border: 1px solid rgba(85, 182, 242, 0.25);
   border-radius: 6px;
   font-size: 12px;
 }
@@ -668,7 +668,7 @@
   min-height: 40px;
   padding: 8px 15px;
   border-radius: 6px;
-  font: 10px var(--fuente-mono);
+  font: 11px var(--fuente-mono);
   font-weight: 600;
   cursor: pointer;
 }
@@ -691,8 +691,8 @@
 }
 
 .confirm-button:hover {
-  background: #72bdff;
-  border-color: #72bdff;
+  background: var(--azul);
+  border-color: var(--azul);
 }
 
 /* ========================= */

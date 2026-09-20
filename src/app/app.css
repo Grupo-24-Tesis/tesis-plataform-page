@@ -3,8 +3,8 @@ html, body {
   padding: 0;
   width: 100%;
   min-height: 100%;
-  background: #0b1220;
-  color: #dbe7ff;
+  background: var(--fondo);
+  color: var(--texto);
   overflow-x: hidden;
 }
 
