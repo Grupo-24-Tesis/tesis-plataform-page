@@ -21,35 +21,6 @@ export class Guards implements OnInit {
   errorMsg = '';
   newGuardName = '';
 
-  private readonly storageKey = 'facecluster-vigilantes-v1';
-
-  private readonly demoGuards: Guard[] = [
-    {
-      id: 'GUARD-001',
-      name: 'Carlos Ramírez',
-      shift: 'Diurno',
-      schedule: '08:00 - 16:00'
-    },
-    {
-      id: 'GUARD-002',
-      name: 'Andrés Torres',
-      shift: 'Diurno',
-      schedule: '08:00 - 16:00'
-    },
-    {
-      id: 'GUARD-003',
-      name: 'Patricia Méndez',
-      shift: 'Tarde',
-      schedule: '16:00 - 00:00'
-    },
-    {
-      id: 'GUARD-004',
-      name: 'Luis García',
-      shift: 'Nocturno',
-      schedule: '00:00 - 08:00'
-    }
-  ];
-
   constructor(
     private api: ApiService,
     private session: SessionService,
@@ -57,36 +28,16 @@ export class Guards implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    const localGuards = this.loadLocalGuards();
-
-    if (localGuards.length > 0) {
-      this.guards.set(localGuards);
-    }
-
     this.api.getGuards().subscribe({
       next: (data) => {
         console.log('GUARDS API =>', data);
-
-        if (data.length > 0) {
-          this.guards.set(this.mergeGuards(data, localGuards));
-          this.saveLocalGuards();
-        } else if (localGuards.length === 0) {
-          this.guards.set(this.demoGuards);
-          this.saveLocalGuards();
-        }
-
+        this.guards.set(data);
         this.loading = false;
       },
       error: (err) => {
-        console.error(err);
-
-        if (localGuards.length === 0) {
-          this.guards.set(this.demoGuards);
-          this.saveLocalGuards();
-        }
-
-        this.errorMsg =
-          'Modo demostración activo. Los datos se guardarán localmente.';
+        console.error('Error loading guards', err);
+        this.guards.set([]);
+        this.errorMsg = 'No se pudieron cargar los vigilantes.';
         this.loading = false;
       }
     });
@@ -162,71 +113,7 @@ export class Guards implements OnInit {
 
     this.guards.update(currentGuards => [...currentGuards, guard]);
     this.selectedGuard.set(guard);
-    this.saveLocalGuards();
     this.closeGuardDialog();
-  }
-
-  private loadLocalGuards(): Guard[] {
-    try {
-      const content = localStorage.getItem(this.storageKey);
-
-      if (!content) {
-        return [];
-      }
-
-      const savedGuards = JSON.parse(content);
-
-      if (!Array.isArray(savedGuards)) {
-        return [];
-      }
-
-      /*
-       * También reconoce los vigilantes guardados por la versión
-       * anterior, que usaba las propiedades "nombre" e identificadores
-       * numéricos.
-       */
-      return savedGuards
-        .map((guard: any) => ({
-          id: String(guard.id),
-          name: guard.name ?? guard.nombre,
-          shift: guard.shift ?? 'Sin asignar',
-          schedule: guard.schedule ?? 'Horario no definido'
-        }))
-        .filter((guard: Guard) => guard.id && guard.name);
-    } catch {
-      console.warn('No fue posible recuperar los vigilantes guardados.');
-      return [];
-    }
-  }
-
-  private saveLocalGuards(): void {
-    try {
-      localStorage.setItem(
-        this.storageKey,
-        JSON.stringify(this.guards())
-      );
-    } catch {
-      console.warn('No fue posible guardar los vigilantes.');
-    }
-  }
-
-  private mergeGuards(apiGuards: Guard[], localGuards: Guard[]): Guard[] {
-    const merged = [...apiGuards];
-
-    localGuards.forEach(localGuard => {
-      const exists = merged.some(
-        guard =>
-          guard.id === localGuard.id ||
-          guard.name.toLocaleLowerCase('es') ===
-          localGuard.name.toLocaleLowerCase('es')
-      );
-
-      if (!exists) {
-        merged.push(localGuard);
-      }
-    });
-
-    return merged;
   }
 
   private generateGuardId(): string {

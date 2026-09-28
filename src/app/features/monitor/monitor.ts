@@ -50,52 +50,8 @@ export class MonitorComponent implements OnInit {
   processingVideo = false;
   videoErrorMsg = '';
 
-  private readonly storageKey = 'facecluster-cameras-v1';
   private readonly videosStorageKey = 'facecluster-monitor-videos-v1';
   private readonly savedClustersStorageKey = 'facecluster-saved-clusters-v1';
-
-  private readonly demoCameras: Camera[] = [
-    {
-      id: 'CAM-01',
-      name: 'Entrada Principal',
-      active: true
-    },
-    {
-      id: 'CAM-02',
-      name: 'Parqueadero A',
-      active: true
-    },
-    {
-      id: 'CAM-03',
-      name: 'Zona Común Piscina',
-      active: true
-    },
-    {
-      id: 'CAM-04',
-      name: 'Torre B - Lobby',
-      active: true
-    },
-    {
-      id: 'CAM-05',
-      name: 'Torre A - Lobby',
-      active: true
-    },
-    {
-      id: 'CAM-06',
-      name: 'Salida Vehicular',
-      active: true
-    },
-    {
-      id: 'CAM-07',
-      name: 'Cuarto de Bombas',
-      active: true
-    },
-    {
-      id: 'CAM-08',
-      name: 'Cancha Múltiple',
-      active: true
-    }
-  ];
 
   constructor(
     private api: ApiService,
@@ -106,37 +62,18 @@ export class MonitorComponent implements OnInit {
     this.loadLocalVideos();
     this.loadSavedClusters();
 
-    const localCameras = this.loadLocalCameras();
-
-    if (localCameras.length > 0) {
-      this.cameras.set(localCameras);
-      this.selectedCamera.set(localCameras[0]);
-    }
-
     this.api.getCameras().subscribe({
       next: (data) => {
         console.log('CAMERAS API =>', data);
-
-        if (data.length > 0) {
-          const cameras = this.mergeCameras(data, localCameras);
-          this.cameras.set(cameras);
-          this.selectedCamera.set(cameras[0]);
-          this.saveLocalCameras();
-        } else if (localCameras.length === 0) {
-          this.useDemoCameras();
-        }
-
+        this.cameras.set(data);
+        this.selectedCamera.set(data[0] ?? null);
         this.loading = false;
       },
       error: (err) => {
-        console.error(err);
-
-        if (localCameras.length === 0) {
-          this.useDemoCameras();
-        }
-
-        this.errorMsg =
-          'Modo demostración activo. Las cámaras se guardarán localmente.';
+        console.error('Error loading cameras', err);
+        this.cameras.set([]);
+        this.selectedCamera.set(null);
+        this.errorMsg = 'No se pudieron cargar las cámaras.';
         this.loading = false;
       }
     });
@@ -191,7 +128,6 @@ export class MonitorComponent implements OnInit {
     ]);
 
     this.selectedCamera.set(camera);
-    this.saveLocalCameras();
     this.closeCameraDialog();
   }
 
@@ -243,9 +179,6 @@ export class MonitorComponent implements OnInit {
     return this.videos().filter(video => video.cameraId === camera.id);
   }
 
-  getCameraVideoCount(cameraId: string): number {
-    return this.videos().filter(video => video.cameraId === cameraId).length;
-  }
   getCameraAppearanceCount(cameraId: string): number {
   return this.videos()
     .filter(video => video.cameraId === cameraId)
@@ -429,76 +362,6 @@ export class MonitorComponent implements OnInit {
     const nextNumber = Math.max(...videoNumbers, 0) + 1;
 
     return `VIDEO-${String(nextNumber).padStart(3, '0')}`;
-  }
-
-  private useDemoCameras(): void {
-    this.cameras.set(this.demoCameras);
-    this.selectedCamera.set(this.demoCameras[0]);
-    this.saveLocalCameras();
-  }
-
-  private loadLocalCameras(): Camera[] {
-    try {
-      const content = localStorage.getItem(this.storageKey);
-
-      if (!content) {
-        return [];
-      }
-
-      const savedCameras = JSON.parse(content);
-
-      if (!Array.isArray(savedCameras)) {
-        return [];
-      }
-
-      /*
-       * Reconoce tanto el modelo de develop como el utilizado
-       * previamente por el frontend de demostración.
-       */
-      return savedCameras
-        .map((camera: any) => ({
-          id: String(camera.id),
-          name: camera.name ?? camera.nombre,
-          active: camera.active ?? camera.activa ?? true
-        }))
-        .filter((camera: Camera) => camera.id && camera.name);
-    } catch {
-      console.warn('No fue posible recuperar las cámaras guardadas.');
-      return [];
-    }
-  }
-
-  private saveLocalCameras(): void {
-    try {
-      localStorage.setItem(
-        this.storageKey,
-        JSON.stringify(this.cameras())
-      );
-    } catch {
-      console.warn('No fue posible guardar las cámaras.');
-    }
-  }
-
-  private mergeCameras(
-    apiCameras: Camera[],
-    localCameras: Camera[]
-  ): Camera[] {
-    const merged = [...apiCameras];
-
-    localCameras.forEach(localCamera => {
-      const exists = merged.some(
-        camera =>
-          camera.id === localCamera.id ||
-          camera.name.toLocaleLowerCase('es') ===
-          localCamera.name.toLocaleLowerCase('es')
-      );
-
-      if (!exists) {
-        merged.push(localCamera);
-      }
-    });
-
-    return merged;
   }
 
   private generateCameraId(): string {
