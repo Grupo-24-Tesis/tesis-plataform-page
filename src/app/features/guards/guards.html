@@ -1,18 +1,133 @@
-<section class="wrap">
-  <div class="panel">
-    <h2>¿Quién entra a revisar?</h2>
+<main class="pagina">
+  <section class="acceso" aria-labelledby="main-title">
+    <header class="marca">
+      <div class="logo" aria-hidden="true">FC</div>
+      <p class="nombre-marca">FACECLUSTER</p>
+      <h1 id="main-title">Sistema de vigilancia</h1>
+    </header>
 
-    <p>Vigilantes encontrados: {{ guards().length }}</p>
+    <section class="tarjeta" aria-labelledby="question">
+      <h2 id="question">¿QUIÉN ENTRA A REVISAR?</h2>
 
-    <div class="list">
+      <p class="estado" *ngIf="loading">
+        Buscando vigilantes registrados...
+      </p>
+
+      <div class="vigilantes">
+        <button
+          type="button"
+          class="vigilante"
+          *ngFor="let guard of guards()"
+          [class.seleccionado]="selectedGuard()?.id === guard.id"
+          [attr.aria-pressed]="selectedGuard()?.id === guard.id"
+          (click)="selectGuard(guard)"
+        >
+          <span class="avatar">
+            {{ initials(guard.name) }}
+          </span>
+
+          <span class="informacion">
+            <strong class="nombre">{{ guard.name }}</strong>
+            <small>{{ guard.schedule }}</small>
+          </span>
+
+          <span
+            class="indicador"
+            *ngIf="selectedGuard()?.id === guard.id"
+            aria-hidden="true"
+          ></span>
+        </button>
+
+        <p class="estado" *ngIf="!loading && guards().length === 0">
+          No hay vigilantes registrados.
+        </p>
+      </div>
+
       <button
-        class="card"
-        *ngFor="let g of guards()"
-        (click)="select(g.id!)"
+        type="button"
+        class="agregar"
+        (click)="openGuardDialog()"
       >
-        <strong>{{ g.name }}</strong>
-        <small>Turno {{ g.shift }} · {{ g.schedule }}</small>
+        + AGREGAR VIGILANTE
+      </button>
+
+      <button
+        type="button"
+        class="iniciar"
+        [disabled]="!selectedGuard()"
+        (click)="startShift()"
+      >
+        INICIAR TURNO
+      </button>
+
+      <p class="aviso" *ngIf="errorMsg && !guardDialog.open">
+        {{ errorMsg }}
+      </p>
+    </section>
+
+    <footer>
+      <p>Conjunto Los Pinos</p>
+      <span>Demostración · Sin autenticación real</span>
+    </footer>
+  </section>
+</main>
+
+<dialog
+  #guardDialog
+  class="modal-guardia"
+  aria-labelledby="register-title"
+  (cancel)="closeGuardDialog()"
+>
+  <header class="modal-encabezado">
+    <div>
+      <span class="modal-etiqueta">NUEVO REGISTRO</span>
+      <h2 id="register-title">Agregar vigilante</h2>
+    </div>
+
+    <button
+      type="button"
+      class="cerrar-modal"
+      aria-label="Cerrar registro"
+      (click)="closeGuardDialog()"
+    >
+      ×
+    </button>
+  </header>
+
+  <p class="modal-descripcion">
+    Escribe el nombre del vigilante que podrá iniciar turno.
+    Este registro se guardará localmente para la demostración.
+  </p>
+
+  <form class="registro" (ngSubmit)="addGuard()">
+    <label for="guard-name">Nombre completo</label>
+
+    <input
+      id="guard-name"
+      name="guardName"
+      type="text"
+      placeholder="Ej. Laura Martínez"
+      maxlength="80"
+      autocomplete="off"
+      [(ngModel)]="newGuardName"
+    />
+
+    <p class="error" *ngIf="errorMsg" role="alert">
+      {{ errorMsg }}
+    </p>
+
+    <div class="modal-acciones">
+      <button
+        type="button"
+        class="boton-secundario"
+        (click)="closeGuardDialog()"
+      >
+        CANCELAR
+      </button>
+
+      <button type="submit" class="boton-principal">
+        AGREGAR VIGILANTE
       </button>
     </div>
-  </div>
-</section>
+  </form>
+</dialog>

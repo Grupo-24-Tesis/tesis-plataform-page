@@ -1,22 +1,259 @@
-/* You can add global styles to this file, and also import other style files */
-html, body {
-  margin: 0 !important;
-  padding: 0 !important;
-  width: 100%;
-  height: 100%;
-  background: #0b1220;
-  overflow-x: hidden;
-}
+:root {
+  color-scheme: dark;
 
-app-root {
-  display: block;
-  width: 100%;
-  min-height: 100vh;
-  background: #0b1220;
+  --fondo: #080c12;
+  --superficie: #0d131c;
+  --superficie-2: #121b28;
+  --superficie-3: #19263a;
+
+  --borde: #2b3a4f;
+  --borde-destacado: #4ea8de;
+
+  --texto: #f3f6fa;
+  --texto-secundario: #b8c4d4;
+  --texto-terciario: #8292a8;
+  --texto-deshabilitado: #64748b;
+
+  --azul: #55b6f2;
+  --rojo: #ff6b75;
+  --verde: #47d7a0;
+  --amarillo: #f4c95d;
+  --morado: #b58cff;
+  --enlace: var(--azul);
+
+  --fuente: "Inter", "Segoe UI", sans-serif;
+  --fuente-mono: "JetBrains Mono", Consolas, monospace;
 }
 
 *,
 *::before,
 *::after {
   box-sizing: border-box;
+}
+
+html,
+body {
+  width: 100%;
+  min-width: 0;
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--fondo);
+  color: var(--texto);
+  font-family: var(--fuente);
+}
+
+app-root {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  min-height: 100dvh;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--azul);
+  outline-offset: 3px;
+}
+
+/* Transiciones entre rutas */
+
+::view-transition-old(root),
+::view-transition-new(root),
+::view-transition-old(app-shell),
+::view-transition-new(app-shell),
+::view-transition-old(route-content),
+::view-transition-new(route-content),
+::view-transition-old(guard-screen),
+::view-transition-new(guard-screen) {
+  animation: none;
+}
+
+::view-transition-old(root) {
+  opacity: 0;
+}
+
+::view-transition-new(root) {
+  opacity: 1;
+}
+
+html.route-forward-transition::view-transition-old(route-content) {
+  animation: route-leave-left 190ms ease both;
+}
+
+html.route-forward-transition::view-transition-new(route-content) {
+  animation: route-enter-right 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+html.route-backward-transition::view-transition-old(route-content) {
+  animation: route-leave-right 190ms ease both;
+}
+
+html.route-backward-transition::view-transition-new(route-content) {
+  animation: route-enter-left 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+html.guard-exit-transition::view-transition-old(guard-screen) {
+  z-index: 2;
+  animation: guard-screen-leave 210ms ease both;
+}
+
+html.guard-exit-transition::view-transition-new(app-shell) {
+  z-index: 1;
+}
+
+html.guard-enter-transition::view-transition-old(app-shell) {
+  z-index: 1;
+  animation: application-leave 180ms ease both;
+}
+
+html.guard-enter-transition::view-transition-new(guard-screen) {
+  z-index: 2;
+  animation: guard-screen-enter 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes route-enter-right {
+  from {
+    opacity: 0;
+    transform: translateX(32px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes route-enter-left {
+  from {
+    opacity: 0;
+    transform: translateX(-32px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes route-leave-left {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  to {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+}
+
+@keyframes route-leave-right {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  to {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+}
+
+@keyframes guard-screen-leave {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  to {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
+
+@keyframes guard-screen-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes application-leave {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+  }
+}
+
+/* Apertura y cierre de popups */
+
+dialog {
+  opacity: 0;
+  transform: translateY(8px) scale(0.96);
+  transition:
+    opacity 140ms ease,
+    transform 140ms ease,
+    overlay 140ms ease allow-discrete,
+    display 140ms ease allow-discrete;
+}
+
+dialog[open] {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+@starting-style {
+  dialog[open] {
+    opacity: 0;
+    transform: translateY(8px) scale(0.96);
+  }
+}
+
+dialog::backdrop {
+  opacity: 0;
+  transition:
+    opacity 140ms ease,
+    overlay 140ms ease allow-discrete,
+    display 140ms ease allow-discrete;
+}
+
+dialog[open]::backdrop {
+  opacity: 1;
+}
+
+@starting-style {
+  dialog[open]::backdrop {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

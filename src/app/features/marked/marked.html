@@ -1,162 +1,179 @@
-<h2>Marcados (sospechosos)</h2>
-
-<button
-  class="add-button"
-  type="button"
-  (click)="openModal()"
->
-  + Agregar persona marcada
-</button>
-
-
-<!-- ========================= -->
-<!-- LISTA DE MARCADOS -->
-<!-- ========================= -->
-
-<div class="list">
-
-  <article
-    *ngFor="let m of marked()"
-    class="item"
-  >
-
-    <div class="marked-image-container">
-
-      <img
-        class="marked-image"
-        *ngIf="getPersonImage(m.faceId) as image"
-        [src]="image"
-        [alt]="m.faceId"
-      />
-
-    </div>
-
-    <div class="marked-info">
-
-      <p class="reason">
-        {{ m.reason }}
+<section class="marked-page">
+  <header class="page-header">
+    <div>
+      <span>DETECCIONES</span>
+      <h1>Personas guardadas</h1>
+      <p>
+        {{ marked().length }}
+        {{ marked().length === 1 ? 'registro guardado' : 'registros guardados' }}
       </p>
-
-      <button
-        type="button"
-        class="delete-button"
-        (click)="deleteMarked(m)"
-      >
-        Eliminar marcado
-      </button>
-
     </div>
 
-  </article>
+    <button
+      class="add-button"
+      type="button"
+      (click)="openModal()"
+    >
+      + AGREGAR PERSONA
+    </button>
+  </header>
 
-</div>
+  <div class="list">
+    <article
+      *ngFor="let markedPerson of marked()"
+      class="item"
+    >
+      <div class="marked-image-container">
+        <img
+          class="marked-image"
+          *ngIf="getPersonImage(markedPerson.faceId) as image; else imagePlaceholder"
+          [src]="image"
+          [alt]="markedPerson.faceId"
+        >
 
-<!-- ========================= -->
-<!-- MODAL AGREGAR MARCADO -->
-<!-- ========================= -->
+        <ng-template #imagePlaceholder>
+          <span class="image-placeholder" aria-hidden="true">♙</span>
+        </ng-template>
+      </div>
+
+      <div class="marked-info">
+        <header>
+          <div>
+            <span>PERSONA GUARDADA</span>
+          </div>
+
+          <span class="suspect-badge">
+            SOSPECHOSO
+          </span>
+        </header>
+
+        <section class="reason-section">
+          <span>RAZÓN DEL MARCADO</span>
+
+          <p class="reason">
+            {{ markedPerson.reason }}
+          </p>
+        </section>
+
+        <footer>
+          <button
+            type="button"
+            class="delete-button"
+            (click)="deleteMarked(markedPerson)"
+          >
+            QUITAR DE GUARDADOS
+          </button>
+        </footer>
+      </div>
+    </article>
+
+    <div
+      class="empty-state"
+      *ngIf="marked().length === 0"
+    >
+      <span aria-hidden="true">☆</span>
+      <strong>No hay personas guardadas</strong>
+      <p>
+        Las personas marcadas como sospechosas aparecerán en esta sección.
+      </p>
+    </div>
+  </div>
+</section>
 
 <div
   class="modal-overlay"
   *ngIf="showModal()"
   (click)="closeModal()"
 >
-
   <div
     class="modal"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="marked-modal-title"
     (click)="$event.stopPropagation()"
   >
-
-    <!-- ENCABEZADO -->
-
-    <div class="modal-header">
-
-      <h3>Agregar persona marcada</h3>
+    <header class="modal-header">
+      <div>
+        <span>NUEVO REGISTRO</span>
+        <h2 id="marked-modal-title">Agregar persona guardada</h2>
+      </div>
 
       <button
         type="button"
         class="close-button"
+        aria-label="Cerrar"
         (click)="closeModal()"
       >
         ×
       </button>
-
-    </div>
-
-
-    <!-- SELECCIÓN DE PERSONA -->
+    </header>
 
     <p class="modal-description">
-      Seleccione la persona que desea marcar:
+      Selecciona una persona detectada e indica la razón por la que
+      debe permanecer guardada.
     </p>
 
+    <section class="people-section">
+      <span class="section-label">SELECCIONAR PERSONA</span>
 
-    <div class="people-grid">
+      <div class="people-grid">
+        <button
+          type="button"
+          class="person-option"
+          *ngFor="let person of people()"
+          [class.selected]="selectedPerson()?.faceId === person.faceId"
+          (click)="selectPerson(person)"
+        >
+          <div class="person-image-container">
+            <img
+              class="person-image"
+              *ngIf="person.appearance.frameUrl; else personPlaceholder"
+              [src]="person.appearance.frameUrl"
+              [alt]="person.faceId"
+            >
 
-      <div
-        class="person-option"
-        *ngFor="let person of people()"
+            <ng-template #personPlaceholder>
+              <span class="image-placeholder" aria-hidden="true">♙</span>
+            </ng-template>
+          </div>
+        </button>
 
-        [class.selected]="
-          selectedPerson()?.faceId === person.faceId
-        "
-
-        (click)="selectPerson(person)"
-      >
-
-        <div class="person-image-container">
-
-          <img
-            class="person-image"
-            [src]="person.appearance.frameUrl"
-            [alt]="person.faceId"
-          >
-
-        </div>
-
-       
+        <p
+          class="no-people"
+          *ngIf="people().length === 0"
+        >
+          No hay personas disponibles para seleccionar.
+        </p>
       </div>
-
-    </div>
-
-
-    <!-- PERSONA SELECCIONADA -->
+    </section>
 
     <div
       class="selected-info"
-      *ngIf="selectedPerson()"
+      *ngIf="selectedPerson() as person"
     >
-
+      <span>PERSONA SELECCIONADA</span>
     </div>
 
-
-    <!-- RAZÓN -->
-
     <div class="reason-container">
-
       <label for="reason">
-        Razón del marcado
+        RAZÓN DEL MARCADO
       </label>
 
       <textarea
         id="reason"
         [(ngModel)]="reason"
-        placeholder="Escriba la razón por la que esta persona está marcada..."
+        placeholder="Describe por qué esta persona debe quedar guardada..."
         rows="4"
       ></textarea>
-
     </div>
 
-
-    <!-- BOTONES -->
-
-    <div class="modal-actions">
-
+    <footer class="modal-actions">
       <button
         type="button"
         class="cancel-button"
         (click)="closeModal()"
       >
-        Cancelar
+        CANCELAR
       </button>
 
       <button
@@ -164,11 +181,8 @@
         class="confirm-button"
         (click)="createMarked()"
       >
-        Marcar persona
+        GUARDAR PERSONA
       </button>
-
-    </div>
-
+    </footer>
   </div>
-
 </div>

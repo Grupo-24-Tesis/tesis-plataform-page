@@ -11,4 +11,9 @@ export class SessionService {
   getActiveGuard(): string | null {
     return localStorage.getItem(this.key);
   }
+
+  clearActiveGuard(): void {
+    localStorage.removeItem(this.key);
+    localStorage.removeItem('facecluster-active-guard');
+  }
 }

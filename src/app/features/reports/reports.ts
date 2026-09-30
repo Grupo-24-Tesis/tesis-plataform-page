@@ -19,6 +19,17 @@ export class Reports implements OnInit {
 
 
   reports = signal<ReportItem[]>([]);
+  readonly reportSections: {
+  status: ReportItem['status'];
+  title: string;
+}[] = [
+  { status: 'investigacion', title: 'En investigación' },
+  { status: 'solucionado', title: 'Solucionados' }
+];
+
+getReportsByStatus(status: ReportItem['status']): ReportItem[] {
+  return this.reports().filter(report => report.status === status);
+}
 
   appearances = signal<FaceAppearance[]>([]);
 

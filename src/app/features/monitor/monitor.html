@@ -1,11 +1,346 @@
-<h2>Monitor por cámara</h2>
+<section
+  class="monitor-page"
+  [class.with-detail]="selectedCluster()"
+>
+  <aside class="camera-panel">
 
-<div class="cams">
-  <div class="cam" *ngFor="let c of cameras()">
-    <h3>{{ c.name }}</h3>
+    <div class="camera-title">
+      <span>CÁMARAS</span>
 
-    <p>{{ c.active ? 'Activa' : 'Inactiva' }}</p>
+      <button
+        type="button"
+        aria-label="Agregar cámara"
+        title="Agregar cámara"
+        (click)="openCameraDialog()"
+      >
+               +
+      </button>
+    </div>
 
-    <button>Subir video</button>
+    <p class="loading" *ngIf="loading">
+      Cargando cámaras...
+    </p>
+
+    <div class="camera-list">
+      <button
+        type="button"
+        class="camera"
+        *ngFor="let camera of sortedCameras()"
+        [class.selected]="selectedCamera()?.id === camera.id"
+        (click)="selectCamera(camera)"
+      >
+        <span class="camera-information">
+          <strong>{{ camera.name }}</strong>
+        </span>
+
+        <span class="camera-summary">
+          <small>
+            {{ getCameraAppearanceCount(camera.id) }}
+            {{ getCameraAppearanceCount(camera.id) === 1 ? 'aparición total' : 'apariciones totales' }}
+          </small>
+        </span>
+      </button>
+
+      <p class="empty" *ngIf="!loading && cameras().length === 0">
+        No hay cámaras registradas.
+      </p>
+    </div>
+
+    <p class="demo-message" *ngIf="errorMsg">
+      {{ errorMsg }}
+    </p>
+  </aside>
+
+  <main class="monitor-content">
+    <header class="monitor-header">
+      <div>
+        <span class="section-label">MONITOR</span>
+
+        <h1 *ngIf="selectedCamera(); else noCameraTitle">
+          {{ selectedCamera()?.name }}
+        </h1>
+
+        <ng-template #noCameraTitle>
+          <h1>Selecciona una cámara</h1>
+        </ng-template>
+      </div>
+
+      <button
+        type="button"
+        class="upload-button"
+        [disabled]="!selectedCamera()"
+        (click)="openVideoDialog()"
+      >
+        ↑ SUBIR VIDEO
+      </button>
+    </header>
+
+    <section class="camera-preview" *ngIf="selectedCamera()">
+      <div class="video-list" *ngIf="getCameraVideos().length > 0">
+        <article
+          class="video-block"
+          *ngFor="let video of getCameraVideos()"
+        >
+          <header class="video-header">
+            <div>
+              <span class="video-status"></span>
+              <strong>{{ video.fileName }}</strong>
+            </div>
+
+            <span>
+              {{ video.processedAt | date:'yyyy-MM-dd · HH:mm' }}
+            </span>
+          </header>
+
+          <div class="cluster-grid">
+            <button
+              type="button"
+              class="cluster-card"
+              *ngFor="let cluster of video.clusters"
+              [class.selected]="
+                selectedCluster()?.video?.id === video.id &&
+                selectedCluster()?.cluster?.clusterId === cluster.clusterId
+              "
+              (click)="selectCluster(video, cluster)"
+            >
+              <div class="face-preview">
+                <span aria-hidden="true">♙</span>
+              </div>
+
+              <div class="cluster-information">
+                <div class="cluster-title">
+                  <strong>{{ cluster.clusterId }}</strong>
+                  <span>
+                    {{ cluster.appearances.length }}
+                    apariciones
+                  </span>
+                </div>
+
+                <div class="appearance-list">
+                  <span
+                    *ngFor="let appearance of cluster.appearances"
+                  >
+                    {{ appearance.cameraId }} ·
+                    {{ appearance.timestamp }}
+                  </span>
+                </div>
+              </div>
+            </button>
+          </div>
+        </article>
+      </div>
+
+      <div
+        class="preview-placeholder"
+        *ngIf="getCameraVideos().length === 0"
+      >
+        <span class="preview-icon" aria-hidden="true">▣</span>
+
+        <h2>{{ selectedCamera()?.name }}</h2>
+
+        <p>
+          Esta cámara todavía no tiene videos procesados.
+          Utiliza “Subir video” para agregar el primero.
+        </p>
+      </div>
+    </section>
+
+    <section class="no-camera" *ngIf="!selectedCamera()">
+      <h2>No hay una cámara seleccionada</h2>
+      <p>
+        Selecciona una cámara del panel lateral o registra una nueva.
+      </p>
+    </section>
+  </main>
+
+  <aside class="detail-panel" *ngIf="selectedCluster() as selected">
+    <header class="detail-header">
+      <div>
+        <span>DETECCIÓN</span>
+        <strong>{{ selected.cluster.clusterId }}</strong>
+      </div>
+
+      <button
+        type="button"
+        aria-label="Cerrar detalle"
+        (click)="closeClusterDetail()"
+      >
+        ×
+      </button>
+    </header>
+
+    <div class="detail-content">
+      <div class="detail-preview">
+        <span aria-hidden="true">♙</span>
+      </div>
+
+      <section class="detail-section">
+        <span>VIDEO DE ORIGEN</span>
+        <strong>{{ selected.video.fileName }}</strong>
+        <small>
+          {{ selected.video.processedAt | date:'yyyy-MM-dd · HH:mm' }}
+        </small>
+      </section>
+
+      <section class="detail-section">
+        <span>RUTA DE APARICIONES</span>
+
+        <ol class="detail-appearances">
+          <li *ngFor="let appearance of selected.cluster.appearances">
+            <strong>{{ appearance.timestamp }}</strong>
+            <span>{{ appearance.cameraId }}</span>
+            <small>{{ appearance.faceId }}</small>
+          </li>
+        </ol>
+      </section>
+    </div>
+
+    <footer class="detail-actions">
+      <button
+        type="button"
+        [class.saved]="isClusterSaved(selected.video, selected.cluster)"
+        (click)="toggleSavedCluster(selected.video, selected.cluster)"
+      >
+        {{
+          isClusterSaved(selected.video, selected.cluster)
+            ? '✓ DETECCIÓN GUARDADA'
+            : '+ GUARDAR DETECCIÓN'
+        }}
+      </button>
+    </footer>
+  </aside>
+</section>
+
+<dialog
+  #cameraDialog
+  class="camera-dialog"
+  aria-labelledby="camera-dialog-title"
+  (cancel)="closeCameraDialog()"
+>
+  <header class="dialog-header">
+    <div>
+      <span>NUEVO REGISTRO</span>
+      <h2 id="camera-dialog-title">Agregar cámara</h2>
+    </div>
+
+    <button
+      type="button"
+      aria-label="Cerrar"
+      (click)="closeCameraDialog()"
+    >
+      ×
+    </button>
+  </header>
+
+  <p class="dialog-description">
+    Registra una cámara para utilizarla durante la demostración
+    del frontend.
+  </p>
+
+  <form (ngSubmit)="addCamera()">
+    <label for="camera-name">Nombre de la cámara</label>
+
+    <input
+      id="camera-name"
+      name="cameraName"
+      type="text"
+      maxlength="80"
+      placeholder="Ej. Recepción Torre A"
+      autocomplete="off"
+      [(ngModel)]="newCameraName"
+    />
+
+    <p class="form-error" *ngIf="cameraErrorMsg">
+      {{ cameraErrorMsg }}
+    </p>
+
+       <div class="dialog-actions">
+      <button
+               type="button"
+        class="secondary-button"
+        (click)="closeCameraDialog()"
+      >
+        CANCELAR
+      </button>
+
+      <button type="submit" class="primary-button">
+        AGREGAR CÁMARA
+      </button>
+    </div>
+  </form>
+</dialog>
+
+<dialog
+  #videoDialog
+  class="video-dialog"
+  aria-labelledby="video-dialog-title"
+  (cancel)="closeVideoDialog()"
+>
+  <header class="dialog-header">
+    <div>
+      <span>NUEVA GRABACIÓN</span>
+      <h2 id="video-dialog-title">Subir video</h2>
+    </div>
+
+    <button
+      type="button"
+      aria-label="Cerrar"
+      [disabled]="processingVideo"
+      (click)="closeVideoDialog()"
+    >
+      ×
+    </button>
+  </header>
+
+  <p class="dialog-description">
+    El archivo será procesado mediante la simulación existente
+    y no se enviará al backend.
+  </p>
+
+  <div class="selected-camera">
+    <span>CÁMARA ASOCIADA</span>
+    <strong>
+      {{ selectedCamera()?.name }}
+    </strong>
   </div>
-</div>
+
+  <form (ngSubmit)="processVideo()">
+    <label for="video-file">Archivo de video</label>
+
+    <input
+      id="video-file"
+      name="videoFile"
+      type="file"
+      accept="video/*"
+      [disabled]="processingVideo"
+      (change)="onFileSelected($event)"
+    />
+
+    <p class="selected-file" *ngIf="selectedFile">
+      Archivo seleccionado: {{ selectedFile.name }}
+    </p>
+
+    <p class="form-error" *ngIf="videoErrorMsg">
+      {{ videoErrorMsg }}
+    </p>
+
+    <div class="dialog-actions">
+      <button
+        type="button"
+        class="secondary-button"
+        [disabled]="processingVideo"
+        (click)="closeVideoDialog()"
+      >
+        CANCELAR
+      </button>
+
+      <button
+        type="submit"
+        class="primary-button"
+        [disabled]="processingVideo"
+      >
+        {{ processingVideo ? 'PROCESANDO...' : 'PROCESAR VIDEO' }}
+      </button>
+    </div>
+  </form>
+</dialog>
