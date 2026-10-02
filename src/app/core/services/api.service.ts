@@ -4,6 +4,7 @@ import { HttpClient } from '@angular/common/http';
 import { ReportItem } from '../models/report.model';
 import {FaceAppearance} from '../models/face.model';
 import { UniqueFace } from '../models/UniqueFace';
+import { PresignedUploadRequest, PresignedUploadResponse, VideoJobResponse, VideoUploadedRequest } from '../models/uploadVideo';
 export interface Guard { id?: string; name: string; shift: string; schedule: string; }
 export interface Camera { id: string; name: string; active: boolean; }
 
@@ -140,5 +141,41 @@ deleteMarked(id: string) {
   );
 }
 
+//api para el cargue del video
+requestVideoUploadUrl(
+  payload: PresignedUploadRequest
+) {
+  return this.http.post<PresignedUploadResponse>(
+    `${this.base}/videos/upload-url`,
+    payload
+  );
+}
+
+uploadVideoToS3(
+  uploadUrl: string,
+  file: File
+) {
+  return this.http.put(
+    uploadUrl,
+    file,
+    {
+      headers: {
+        'Content-Type': file.type
+      },
+      observe: 'events',
+      reportProgress: true,
+      responseType: 'text'
+    }
+  );
+}
+
+notifyVideoUploaded(
+  payload: VideoUploadedRequest
+) {
+  return this.http.post<VideoJobResponse>(
+    `${this.base}/videos`,
+    payload
+  );
+}
  
 }
