@@ -293,19 +293,26 @@
   </header>
 
   <p class="dialog-description">
-    El archivo será procesado mediante la simulación existente
-    y no se enviará al backend.
+    El video será almacenado en AWS S3 y registrado en el backend
+    junto con la cámara seleccionada.
   </p>
 
   <div class="selected-camera">
     <span>CÁMARA ASOCIADA</span>
+
     <strong>
       {{ selectedCamera()?.name }}
     </strong>
+
+    <small>
+      ID: {{ selectedCamera()?.id }}
+    </small>
   </div>
 
   <form (ngSubmit)="processVideo()">
-    <label for="video-file">Archivo de video</label>
+    <label for="video-file">
+      Archivo de video
+    </label>
 
     <input
       id="video-file"
@@ -316,12 +323,48 @@
       (change)="onFileSelected($event)"
     />
 
-    <p class="selected-file" *ngIf="selectedFile">
-      Archivo seleccionado: {{ selectedFile.name }}
+    <p
+      class="selected-file"
+      *ngIf="selectedFile"
+    >
+      Archivo seleccionado:
+      {{ selectedFile.name }}
     </p>
 
-    <p class="form-error" *ngIf="videoErrorMsg">
+    <p
+      class="selected-file"
+      *ngIf="selectedFile"
+    >
+      Tamaño:
+      {{ selectedFile.size / 1024 / 1024 | number:'1.2-2' }} MB
+    </p>
+
+    <div
+      *ngIf="processingVideo"
+      class="upload-progress"
+    >
+      <p>
+        {{ uploadProgress }}% cargado
+      </p>
+
+      <progress
+        [value]="uploadProgress"
+        max="100"
+      ></progress>
+    </div>
+
+    <p
+      class="form-error"
+      *ngIf="videoErrorMsg"
+    >
       {{ videoErrorMsg }}
+    </p>
+
+    <p
+      class="form-success"
+      *ngIf="videoSuccessMsg"
+    >
+      {{ videoSuccessMsg }}
     </p>
 
     <div class="dialog-actions">
@@ -337,9 +380,13 @@
       <button
         type="submit"
         class="primary-button"
-        [disabled]="processingVideo"
+        [disabled]="processingVideo || !selectedFile"
       >
-        {{ processingVideo ? 'PROCESANDO...' : 'PROCESAR VIDEO' }}
+        {{
+          processingVideo
+            ? 'SUBIENDO...'
+            : 'SUBIR VIDEO'
+        }}
       </button>
     </div>
   </form>

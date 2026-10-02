@@ -1,19 +1,41 @@
-import { Component, ElementRef, OnInit, computed, signal, ViewChild } from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  OnInit,
+  ViewChild,
+  computed,
+  signal
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { HttpEventType } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
-import { ApiService, Camera } from '../../core/services/api.service';
-import { MockModelService } from '../../core/services/mock-model';
-import { ProcessingResult } from '../../shared/models/processing.models';
+
+import {
+  ApiService,
+  Camera
+} from '../../core/services/api.service';
+import { PresignedUploadResponse, VideoJobResponse } from '../../core/models/uploadVideo';
 
 interface MonitorVideo {
   id: string;
   cameraId: string;
   fileName: string;
   processedAt: string;
-  clusters: ProcessingResult['clusters'];
+  status: string;
+  jobId?: string;
+  clusters: Array<{
+    clusterId: string;
+    appearances: Array<{
+      faceId: string;
+      timestamp: string;
+      cameraId: string;
+      frameUrl?: string;
+      capturedAt?: string;
+    }>;
+  }>;
 }
 
-type MonitorCluster = ProcessingResult['clusters'][number];
+type MonitorCluster = MonitorVideo['clusters'][number];
 
 interface SelectedCluster {
   video: MonitorVideo;
@@ -28,16 +50,24 @@ interface SelectedCluster {
   styleUrl: './monitor.css',
 })
 export class MonitorComponent implements OnInit {
-  @ViewChild('cameraDialog') cameraDialog?: ElementRef<HTMLDialogElement>;
-  @ViewChild('videoDialog') videoDialog?: ElementRef<HTMLDialogElement>;
+  @ViewChild('cameraDialog')
+  cameraDialog?: ElementRef<HTMLDialogElement>;
+
+  @ViewChild('videoDialog')
+  videoDialog?: ElementRef<HTMLDialogElement>;
 
   cameras = signal<Camera[]>([]);
+
   sortedCameras = computed(() =>
-  [...this.cameras()].sort((a, b) =>
-    a.name.localeCompare(b.name, 'es', { sensitivity: 'base' })
-  )
-);
+    [...this.cameras()].sort((a, b) =>
+      a.name.localeCompare(b.name, 'es', {
+        sensitivity: 'base'
+      })
+    )
+  );
+
   selectedCamera = signal<Camera | null>(null);
+
   loading = true;
   errorMsg = '';
   cameraErrorMsg = '';
@@ -46,16 +76,21 @@ export class MonitorComponent implements OnInit {
   videos = signal<MonitorVideo[]>([]);
   selectedCluster = signal<SelectedCluster | null>(null);
   savedClusterIds = signal<string[]>([]);
+
   selectedFile: File | null = null;
   processingVideo = false;
+  uploadProgress = 0;
   videoErrorMsg = '';
+  videoSuccessMsg = '';
 
-  private readonly videosStorageKey = 'facecluster-monitor-videos-v1';
-  private readonly savedClustersStorageKey = 'facecluster-saved-clusters-v1';
+  private readonly videosStorageKey =
+    'facecluster-monitor-videos-v1';
+
+  private readonly savedClustersStorageKey =
+    'facecluster-saved-clusters-v1';
 
   constructor(
-    private api: ApiService,
-    private mockModelService: MockModelService
+    private api: ApiService
   ) {}
 
   ngOnInit(): void {
@@ -65,12 +100,14 @@ export class MonitorComponent implements OnInit {
     this.api.getCameras().subscribe({
       next: (data) => {
         console.log('CAMERAS API =>', data);
+
         this.cameras.set(data);
         this.selectedCamera.set(data[0] ?? null);
         this.loading = false;
       },
       error: (err) => {
         console.error('Error loading cameras', err);
+
         this.cameras.set([]);
         this.selectedCamera.set(null);
         this.errorMsg = 'No se pudieron cargar las cámaras.';
@@ -97,7 +134,9 @@ export class MonitorComponent implements OnInit {
   }
 
   addCamera(): void {
-    const name = this.newCameraName.trim().replace(/\s+/g, ' ');
+    const name = this.newCameraName
+      .trim()
+      .replace(/\s+/g, ' ');
 
     if (name.length < 3) {
       this.cameraErrorMsg =
@@ -112,7 +151,8 @@ export class MonitorComponent implements OnInit {
     );
 
     if (exists) {
-      this.cameraErrorMsg = 'Ya existe una cámara con ese nombre.';
+      this.cameraErrorMsg =
+        'Ya existe una cámara con ese nombre.';
       return;
     }
 
@@ -131,7 +171,10 @@ export class MonitorComponent implements OnInit {
     this.closeCameraDialog();
   }
 
-    selectCluster(video: MonitorVideo, cluster: MonitorCluster): void {
+  selectCluster(
+    video: MonitorVideo,
+    cluster: MonitorCluster
+  ): void {
     const selected = this.selectedCluster();
 
     if (
@@ -142,20 +185,29 @@ export class MonitorComponent implements OnInit {
       return;
     }
 
-    this.selectedCluster.set({ video, cluster });
+    this.selectedCluster.set({
+      video,
+      cluster
+    });
   }
 
   closeClusterDetail(): void {
     this.selectedCluster.set(null);
   }
 
-  isClusterSaved(video: MonitorVideo, cluster: MonitorCluster): boolean {
+  isClusterSaved(
+    video: MonitorVideo,
+    cluster: MonitorCluster
+  ): boolean {
     return this.savedClusterIds().includes(
       this.getClusterKey(video, cluster)
     );
   }
 
-  toggleSavedCluster(video: MonitorVideo, cluster: MonitorCluster): void {
+  toggleSavedCluster(
+    video: MonitorVideo,
+    cluster: MonitorCluster
+  ): void {
     const key = this.getClusterKey(video, cluster);
 
     if (this.savedClusterIds().includes(key)) {
@@ -163,33 +215,40 @@ export class MonitorComponent implements OnInit {
         ids.filter(currentId => currentId !== key)
       );
     } else {
-      this.savedClusterIds.update(ids => [...ids, key]);
+      this.savedClusterIds.update(ids => [
+        ...ids,
+        key
+      ]);
     }
 
     this.saveSavedClusters();
   }
 
-    getCameraVideos(): MonitorVideo[] {
+  getCameraVideos(): MonitorVideo[] {
     const camera = this.selectedCamera();
 
     if (!camera) {
       return [];
     }
 
-    return this.videos().filter(video => video.cameraId === camera.id);
+    return this.videos().filter(
+      video => video.cameraId === camera.id
+    );
   }
 
   getCameraAppearanceCount(cameraId: string): number {
-  return this.videos()
-    .filter(video => video.cameraId === cameraId)
-    .reduce(
-      (total, video) =>
-        total + video.clusters.reduce(
-          (count, cluster) => count + cluster.appearances.length,
-          0
-        ),
-      0
-    );
+    return this.videos()
+      .filter(video => video.cameraId === cameraId)
+      .reduce(
+        (total, video) =>
+          total +
+          video.clusters.reduce(
+            (count, cluster) =>
+              count + cluster.appearances.length,
+            0
+          ),
+        0
+      );
   }
 
   openVideoDialog(): void {
@@ -198,7 +257,11 @@ export class MonitorComponent implements OnInit {
     }
 
     this.selectedFile = null;
+    this.processingVideo = false;
+    this.uploadProgress = 0;
     this.videoErrorMsg = '';
+    this.videoSuccessMsg = '';
+
     this.videoDialog?.nativeElement.showModal();
   }
 
@@ -209,12 +272,17 @@ export class MonitorComponent implements OnInit {
 
     this.videoDialog?.nativeElement.close();
     this.selectedFile = null;
+    this.uploadProgress = 0;
     this.videoErrorMsg = '';
+    this.videoSuccessMsg = '';
   }
 
   onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
+
     this.videoErrorMsg = '';
+    this.videoSuccessMsg = '';
+    this.uploadProgress = 0;
 
     if (!input.files || input.files.length === 0) {
       this.selectedFile = null;
@@ -223,17 +291,18 @@ export class MonitorComponent implements OnInit {
 
     const file = input.files[0];
 
-    if (file.type && !file.type.startsWith('video/')) {
+    if (!file.type.startsWith('video/')) {
       this.selectedFile = null;
       input.value = '';
-      this.videoErrorMsg = 'Selecciona un archivo de video válido.';
+      this.videoErrorMsg =
+        'Selecciona un archivo de video válido.';
       return;
     }
 
     this.selectedFile = file;
   }
 
-  async processVideo(): Promise<void> {
+  processVideo(): void {
     const camera = this.selectedCamera();
 
     if (!camera) {
@@ -242,48 +311,139 @@ export class MonitorComponent implements OnInit {
     }
 
     if (!this.selectedFile) {
-      this.videoErrorMsg = 'Selecciona un video primero.';
+      this.videoErrorMsg =
+        'Selecciona un video primero.';
       return;
     }
 
-    try {
-      this.processingVideo = true;
-      this.videoErrorMsg = '';
+    const file = this.selectedFile;
 
-      const result = await this.mockModelService.processVideoMock(
-        this.selectedFile
-      );
+    this.processingVideo = true;
+    this.uploadProgress = 0;
+    this.videoErrorMsg = '';
+    this.videoSuccessMsg = '';
 
-      const video: MonitorVideo = {
-        id: this.generateVideoId(),
-        cameraId: camera.id,
-        fileName: result.videoName,
-        processedAt: result.processedAt,
-        clusters: result.clusters.map(cluster => ({
-          ...cluster,
-          appearances: cluster.appearances.map(appearance => ({
-            ...appearance,
-            cameraId: camera.id
-          }))
-        }))
-      };
+    this.api.requestVideoUploadUrl({
+      fileName: file.name,
+      contentType: file.type
+    }).subscribe({
+      next: uploadData => {
+        this.uploadFileToS3(
+          uploadData,
+          camera,
+          file
+        );
+      },
+      error: error => {
+        console.error(
+          'Error solicitando URL prefirmada',
+          error
+        );
 
-      this.videos.update(currentVideos => [
-        video,
-        ...currentVideos
-      ]);
-
-      this.saveLocalVideos();
-      this.processingVideo = false;
-      this.closeVideoDialog();
-    } catch {
-      this.processingVideo = false;
-      this.videoErrorMsg =
-        'Ocurrió un error durante el procesamiento simulado.';
-    }
+        this.videoErrorMsg =
+          'No se pudo preparar la carga del video.';
+        this.processingVideo = false;
+      }
+    });
   }
 
-    private getClusterKey(
+  private uploadFileToS3(
+    uploadData: PresignedUploadResponse,
+    camera: Camera,
+    file: File
+  ): void {
+    this.api.uploadVideoToS3(
+      uploadData.uploadUrl,
+      file
+    ).subscribe({
+      next: event => {
+        if (
+          event.type === HttpEventType.UploadProgress &&
+          event.total
+        ) {
+          this.uploadProgress = Math.round(
+            (event.loaded / event.total) * 100
+          );
+        }
+
+        if (event.type === HttpEventType.Response) {
+          this.uploadProgress = 100;
+
+          this.notifyBackend(
+            uploadData,
+            camera
+          );
+        }
+      },
+      error: error => {
+        console.error(
+          'Error subiendo video a S3',
+          error
+        );
+
+        this.videoErrorMsg =
+          'No se pudo subir el video a AWS S3. ' +
+          'Verifica el CORS del bucket.';
+        this.processingVideo = false;
+      }
+    });
+  }
+
+  private notifyBackend(
+    uploadData: PresignedUploadResponse,
+    camera: Camera
+  ): void {
+    this.api.notifyVideoUploaded({
+      originalFileName: uploadData.originalFileName,
+      bucket: uploadData.bucket,
+      objectKey: uploadData.objectKey,
+      cameraId: camera.id
+    }).subscribe({
+      next: job => {
+        this.addUploadedVideo(job, camera);
+
+        this.videoSuccessMsg =
+          'Video subido a S3 y registrado correctamente.';
+
+        this.processingVideo = false;
+      },
+      error: error => {
+        console.error(
+          'Error notificando video al backend',
+          error
+        );
+
+        this.videoErrorMsg =
+          'El video se subió a S3, pero no se pudo ' +
+          'registrar en el backend.';
+        this.processingVideo = false;
+      }
+    });
+  }
+
+  private addUploadedVideo(
+    job: VideoJobResponse,
+    camera: Camera
+  ): void {
+    const video: MonitorVideo = {
+      id: job.jobId,
+      jobId: job.jobId,
+      cameraId: camera.id,
+      fileName: job.originalFileName,
+      processedAt: job.createdAt,
+      status: job.status,
+      clusters: []
+    };
+
+    this.videos.update(currentVideos => [
+      video,
+      ...currentVideos
+    ]);
+
+    this.saveLocalVideos();
+  }
+
+  private getClusterKey(
     video: MonitorVideo,
     cluster: MonitorCluster
   ): string {
@@ -327,7 +487,9 @@ export class MonitorComponent implements OnInit {
 
   private loadLocalVideos(): void {
     try {
-      const content = localStorage.getItem(this.videosStorageKey);
+      const content = localStorage.getItem(
+        this.videosStorageKey
+      );
 
       if (!content) {
         return;
@@ -339,7 +501,9 @@ export class MonitorComponent implements OnInit {
         this.videos.set(savedVideos);
       }
     } catch {
-      console.warn('No fue posible recuperar los videos guardados.');
+      console.warn(
+        'No fue posible recuperar los videos guardados.'
+      );
     }
   }
 
@@ -350,26 +514,21 @@ export class MonitorComponent implements OnInit {
         JSON.stringify(this.videos())
       );
     } catch {
-      console.warn('No fue posible guardar los videos.');
+      console.warn(
+        'No fue posible guardar los videos.'
+      );
     }
-  }
-
-  private generateVideoId(): string {
-    const videoNumbers = this.videos()
-      .map(video => Number(video.id.replace(/\D/g, '')))
-      .filter(number => Number.isFinite(number));
-
-    const nextNumber = Math.max(...videoNumbers, 0) + 1;
-
-    return `VIDEO-${String(nextNumber).padStart(3, '0')}`;
   }
 
   private generateCameraId(): string {
     const cameraNumbers = this.cameras()
-      .map(camera => Number(camera.id.replace(/\D/g, '')))
+      .map(camera =>
+        Number(camera.id.replace(/\D/g, ''))
+      )
       .filter(number => Number.isFinite(number));
 
-    const nextNumber = Math.max(...cameraNumbers, 0) + 1;
+    const nextNumber =
+      Math.max(...cameraNumbers, 0) + 1;
 
     return `CAM-${String(nextNumber).padStart(2, '0')}`;
   }
