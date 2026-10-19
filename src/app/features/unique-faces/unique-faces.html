@@ -87,6 +87,7 @@
       >
         <div class="face-image-container">
           <img
+            appImageFallback
             class="face-image"
             *ngIf="face.appearances[0]?.frameUrl as image; else facePlaceholder"
             [src]="image"
@@ -153,6 +154,7 @@
     <div class="detail-content">
       <div class="detail-main-image">
         <img
+          appImageFallback
           *ngIf="face.appearances[0]?.frameUrl as image; else detailPlaceholder"
           [src]="image"
           [alt]="face.faceId"
@@ -192,6 +194,7 @@
           >
             <div class="appearance-image-container">
               <img
+                appImageFallback
                 class="appearance-image"
                 *ngIf="appearance.frameUrl as image; else appearancePlaceholder"
                 [src]="image"

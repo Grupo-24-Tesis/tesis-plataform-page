@@ -1,6 +1,7 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ImageFallbackDirective } from '../../shared/directives/image-fallback.directive';
 
 import { ApiService } from '../../core/services/api.service';
 import { ReportItem } from '../../core/models/report.model';
@@ -10,7 +11,7 @@ import { FaceAppearance } from '../../core/models/face.model';
 @Component({
   selector: 'app-reports',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ImageFallbackDirective],
   templateUrl: './reports.html',
   styleUrl: './reports.css',
 })
