@@ -156,19 +156,25 @@ export class MonitorComponent implements OnInit {
       return;
     }
 
-    const camera: Camera = {
-      id: this.generateCameraId(),
+    const camera: Omit<Camera, 'id'> = {
       name,
       active: true
     };
 
-    this.cameras.update(currentCameras => [
-      ...currentCameras,
-      camera
-    ]);
-
-    this.selectedCamera.set(camera);
-    this.closeCameraDialog();
+    this.api.createCamera(camera).subscribe({
+      next: (createdCamera) => {
+        this.cameras.update(currentCameras => [
+          ...currentCameras,
+          createdCamera
+        ]);
+        this.selectedCamera.set(createdCamera);
+        this.closeCameraDialog();
+      },
+      error: (err) => {
+        console.error('Error creating camera', err);
+        this.cameraErrorMsg = 'No se pudo registrar la cámara.';
+      }
+    });
   }
 
   selectCluster(
@@ -520,16 +526,4 @@ export class MonitorComponent implements OnInit {
     }
   }
 
-  private generateCameraId(): string {
-    const cameraNumbers = this.cameras()
-      .map(camera =>
-        Number(camera.id.replace(/\D/g, ''))
-      )
-      .filter(number => Number.isFinite(number));
-
-    const nextNumber =
-      Math.max(...cameraNumbers, 0) + 1;
-
-    return `CAM-${String(nextNumber).padStart(2, '0')}`;
-  }
 }

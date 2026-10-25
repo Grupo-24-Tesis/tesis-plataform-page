@@ -326,6 +326,7 @@
           >
 
             <img
+              appImageFallback
               class="involved-image"
               [src]="getPersonImage(faceId)"
               [alt]="faceId"
@@ -580,6 +581,7 @@
           <div class="person-image-container">
 
             <img
+              appImageFallback
               class="person-image"
               [src]="person.appearance.frameUrl"
               [alt]="person.faceId"

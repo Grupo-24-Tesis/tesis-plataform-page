@@ -18,9 +18,11 @@ export class ApiService {
 
   //Estas son las apis de guardias
   getGuards() { return this.http.get<Guard[]>(`${this.base}/guards`); }
+  createGuard(payload: Omit<Guard, 'id'>) { return this.http.post<Guard>(`${this.base}/guards`, payload); }
 
   //Estas son las apis de camaras
   getCameras() { return this.http.get<Camera[]>(`${this.base}/cameras`); }
+  createCamera(payload: Omit<Camera, 'id'>) { return this.http.post<Camera>(`${this.base}/cameras`, payload); }
 
 
   // Estas son las apis de apariciones de caras

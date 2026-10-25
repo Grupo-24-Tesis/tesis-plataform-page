@@ -104,25 +104,25 @@ export class Guards implements OnInit {
       return;
     }
 
-    const guard: Guard = {
-      id: this.generateGuardId(),
+    const guard: Omit<Guard, 'id'> = {
       name,
       shift: 'Sin asignar',
       schedule: 'Horario no definido'
     };
 
-    this.guards.update(currentGuards => [...currentGuards, guard]);
-    this.selectedGuard.set(guard);
-    this.closeGuardDialog();
-  }
-
-  private generateGuardId(): string {
-    const guardNumbers = this.guards()
-      .map(guard => Number(String(guard.id ?? '').replace(/\D/g, '')))
-      .filter(number => Number.isFinite(number));
-
-    const nextNumber = Math.max(...guardNumbers, 0) + 1;
-
-    return `GUARD-${String(nextNumber).padStart(3, '0')}`;
+    this.api.createGuard(guard).subscribe({
+      next: (createdGuard) => {
+        this.guards.update(currentGuards => [
+          ...currentGuards,
+          createdGuard
+        ]);
+        this.selectedGuard.set(createdGuard);
+        this.closeGuardDialog();
+      },
+      error: (err) => {
+        console.error('Error creating guard', err);
+        this.errorMsg = 'No se pudo registrar el vigilante.';
+      }
+    });
   }
 }

@@ -25,6 +25,7 @@
     >
       <div class="marked-image-container">
         <img
+          appImageFallback
           class="marked-image"
           *ngIf="getPersonImage(markedPerson.faceId) as image; else imagePlaceholder"
           [src]="image"
@@ -126,6 +127,7 @@
         >
           <div class="person-image-container">
             <img
+              appImageFallback
               class="person-image"
               *ngIf="person.appearance.frameUrl; else personPlaceholder"
               [src]="person.appearance.frameUrl"

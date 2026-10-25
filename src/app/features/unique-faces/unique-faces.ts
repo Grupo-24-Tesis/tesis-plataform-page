@@ -1,6 +1,7 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ImageFallbackDirective } from '../../shared/directives/image-fallback.directive';
 
 import { ApiService, Camera } from '../../core/services/api.service';
 import { UniqueFace } from '../../core/models/UniqueFace';
@@ -9,6 +10,7 @@ import { UniqueFace } from '../../core/models/UniqueFace';
   selector: 'app-unique-faces',
   standalone: true,
   imports: [
+    ImageFallbackDirective,
     CommonModule,
     FormsModule
   ],
