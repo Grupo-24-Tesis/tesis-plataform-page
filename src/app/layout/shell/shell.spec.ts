@@ -45,6 +45,15 @@ describe('Shell', () => {
     expect(element.querySelector('nav')?.textContent).toContain('Marcados');
   });
 
+  it('no repite el icono de un enlace en otro enlace', async () => {
+    const element = await render();
+    const icons = Array.from(element.querySelectorAll('nav a .nav-icon'))
+      .map(icon => icon.textContent?.trim() ?? '')
+      .filter(icon => icon !== '');
+
+    expect(new Set(icons).size).toBe(icons.length);
+  });
+
   it('cierra la sesion y vuelve a la seleccion de vigilante', async () => {
     session.setActiveGuard({ id: 'g1', name: 'Laura Martinez' });
     const navigate = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
