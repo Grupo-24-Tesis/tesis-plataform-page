@@ -3,7 +3,7 @@ import { HttpErrorResponse, HttpEventType } from '@angular/common/http';
 import { Subject, of, throwError } from 'rxjs';
 
 import { ApiService } from '../../core/services/api.service';
-import { VideoJobResponse } from '../../core/models/uploadVideo';
+import { VideoJobMetrics, VideoJobResponse } from '../../core/models/uploadVideo';
 import { MonitorComponent } from './monitor';
 
 function job(
@@ -24,6 +24,18 @@ function job(
   };
 }
 
+const METRICS: VideoJobMetrics = {
+  total: 5,
+  completed: 3,
+  failed: 1,
+  inProgress: 1,
+  failureRate: 0.25,
+  averageQueueWaitSeconds: 12,
+  averageProcessingSeconds: 80,
+  totalFaces: 9,
+  averageFacesPerVideo: 3
+};
+
 const FACE = {
   id: 'a',
   faceId: 'job-1_4',
@@ -39,6 +51,7 @@ describe('MonitorComponent', () => {
   let api: {
     getCameras: ReturnType<typeof vi.fn>;
     getVideoJobs: ReturnType<typeof vi.fn>;
+    getVideoJobMetrics: ReturnType<typeof vi.fn>;
     getVideoJobFaces: ReturnType<typeof vi.fn>;
     requestVideoUploadUrl: ReturnType<typeof vi.fn>;
     uploadVideoToS3: ReturnType<typeof vi.fn>;
@@ -72,6 +85,7 @@ describe('MonitorComponent', () => {
         ])
       ),
       getVideoJobs: vi.fn(() => of([job('QUEUED')])),
+      getVideoJobMetrics: vi.fn(() => of(METRICS)),
       getVideoJobFaces: vi.fn(() => of([])),
       requestVideoUploadUrl: vi.fn(),
       uploadVideoToS3: vi.fn(),
@@ -100,6 +114,62 @@ describe('MonitorComponent', () => {
     expect(text).toContain('En cola');
     expect(text).toContain('1 video');
     expect(text).not.toContain('apariciones totales');
+  });
+
+  it('shows the timings and detections of a completed video', async () => {
+    api.getVideoJobs.mockReturnValue(of([{
+      ...job('COMPLETED'),
+      queueWaitSeconds: 12,
+      processingSeconds: 80,
+      faceCount: 3
+    }]));
+    await create();
+
+    expect(fixture.nativeElement.textContent).toContain(
+      'En cola 12 s, procesado en 1 min 20 s, 3 detecciones'
+    );
+  });
+
+  it('shows the summary strip with the metrics of the camera', async () => {
+    await create();
+
+    const text = fixture.nativeElement.textContent;
+    expect(api.getVideoJobMetrics).toHaveBeenCalledWith('CAM-01');
+    expect(text).toContain('Tasa de fallo');
+    expect(text).toContain('25 %');
+    expect(text).toContain('Espera media');
+    expect(text).toContain('12 s');
+    expect(text).toContain('1 min 20 s');
+    expect(text).toContain('Detecciones totales');
+    expect(text).toContain('9');
+  });
+
+  it('shows the backend message when the metrics fail and keeps the list', async () => {
+    api.getVideoJobMetrics.mockReturnValue(
+      throwError(() => new HttpErrorResponse({
+        status: 500,
+        error: { message: 'No se pudieron calcular las métricas' }
+      }))
+    );
+    await create();
+
+    const text = fixture.nativeElement.textContent;
+    expect(text).toContain('No se pudieron calcular las métricas');
+    expect(text).toContain('Camera_ch6.mp4');
+  });
+
+  it('refreshes the metrics together with the list', async () => {
+    vi.useFakeTimers();
+    try {
+      await create();
+      api.getVideoJobMetrics.mockClear();
+
+      await vi.advanceTimersByTimeAsync(5000);
+
+      expect(api.getVideoJobMetrics).toHaveBeenCalledTimes(1);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('shows the failure reason of a failed job', async () => {

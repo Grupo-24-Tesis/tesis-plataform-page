@@ -5,7 +5,7 @@ import { ReportItem } from '../models/report.model';
 import { videoContentType } from '../models/video-content-type';
 import {FaceAppearance} from '../models/face.model';
 import { UniqueFace } from '../models/UniqueFace';
-import { PresignedUploadRequest, PresignedUploadResponse, VideoJobResponse, VideoUploadedRequest } from '../models/uploadVideo';
+import { PresignedUploadRequest, PresignedUploadResponse, VideoJobMetrics, VideoJobResponse, VideoUploadedRequest } from '../models/uploadVideo';
 export interface Guard { id?: string; name: string; shift: string; schedule: string; }
 export interface Camera { id: string; name: string; active: boolean; }
 
@@ -171,6 +171,13 @@ notifyVideoUploaded(
 getVideoJobs(cameraId?: string) {
   return this.http.get<VideoJobResponse[]>(
     `${this.base}/video-jobs`,
+    { params: cameraId ? { cameraId } : {} }
+  );
+}
+
+getVideoJobMetrics(cameraId?: string) {
+  return this.http.get<VideoJobMetrics>(
+    `${this.base}/metrics/video-jobs`,
     { params: cameraId ? { cameraId } : {} }
   );
 }

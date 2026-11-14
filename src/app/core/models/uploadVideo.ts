@@ -29,4 +29,21 @@ export interface VideoJobResponse {
   createdAt: string;
   updatedAt?: string;
   failureReason?: string | null;
+  startedAt?: string | null;
+  completedAt?: string | null;
+  faceCount?: number | null;
+  queueWaitSeconds?: number | null;
+  processingSeconds?: number | null;
+}
+
+export interface VideoJobMetrics {
+  total: number;
+  completed: number;
+  failed: number;
+  inProgress: number;
+  failureRate: number;
+  averageQueueWaitSeconds: number | null;
+  averageProcessingSeconds: number | null;
+  totalFaces: number;
+  averageFacesPerVideo: number | null;
 }

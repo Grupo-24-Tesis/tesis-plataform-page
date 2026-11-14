@@ -19,7 +19,8 @@ import {
   Camera,
   MarkedPerson
 } from '../../core/services/api.service';
-import { PresignedUploadResponse, VideoJobResponse } from '../../core/models/uploadVideo';
+import { PresignedUploadResponse, VideoJobMetrics, VideoJobResponse } from '../../core/models/uploadVideo';
+import { describeVideoTimings, formatDuration } from '../../core/models/duration-format';
 import { FaceAppearance } from '../../core/models/face.model';
 import { ImageFallbackDirective } from '../../shared/directives/image-fallback.directive';
 import {
@@ -41,6 +42,7 @@ interface MonitorVideo {
   status: string;
   jobId?: string;
   failureReason?: string;
+  timings: string;
   facesLoaded: boolean;
   facesLoadedAt: number;
   clusters: Array<{
@@ -99,6 +101,25 @@ export class MonitorComponent implements OnInit, OnDestroy {
 
   videos = signal<MonitorVideo[]>([]);
   videosLoading = signal(false);
+  metrics = signal<VideoJobMetrics | null>(null);
+  metricsErrorMsg = signal('');
+  metricItems = computed(() => {
+    const metrics = this.metrics();
+
+    if (!metrics) {
+      return [];
+    }
+
+    return [
+      { label: 'Videos', value: `${metrics.total}` },
+      { label: 'Completados', value: `${metrics.completed}` },
+      { label: 'Fallidos', value: `${metrics.failed}` },
+      { label: 'Tasa de fallo', value: `${Math.round(metrics.failureRate * 100)} %` },
+      { label: 'Espera media', value: this.durationOrNone(metrics.averageQueueWaitSeconds) },
+      { label: 'Procesamiento medio', value: this.durationOrNone(metrics.averageProcessingSeconds) },
+      { label: 'Detecciones totales', value: `${metrics.totalFaces}` }
+    ];
+  });
   selectedCluster = signal<SelectedCluster | null>(null);
   marks = signal<MarkedPerson[]>([]);
   markReason = signal('');
@@ -176,6 +197,8 @@ export class MonitorComponent implements OnInit, OnDestroy {
     this.selectedCamera.set(camera);
     this.selectedCluster.set(null);
     this.videos.set([]);
+    this.metrics.set(null);
+    this.metricsErrorMsg.set('');
     this.videosLoading.set(camera !== null);
     this.loadingFaceJobs.clear();
 
@@ -214,6 +237,7 @@ export class MonitorComponent implements OnInit, OnDestroy {
     this.stopRefresh();
     const token = ++this.requestToken;
     this.loadingFaceJobs.clear();
+    this.loadMetrics(camera.id, token);
 
     this.api.getVideoJobs(camera.id).subscribe({
       next: jobs => {
@@ -261,6 +285,40 @@ export class MonitorComponent implements OnInit, OnDestroy {
     });
   }
 
+  private loadMetrics(cameraId: string, token: number): void {
+    this.api.getVideoJobMetrics(cameraId).subscribe({
+      next: metrics => {
+        if (token !== this.requestToken) {
+          return;
+        }
+
+        this.metrics.set(metrics);
+        this.metricsErrorMsg.set('');
+      },
+      error: error => {
+        if (token !== this.requestToken) {
+          return;
+        }
+
+        console.warn('No se pudieron cargar las métricas', error);
+        this.metricsErrorMsg.set(
+          apiErrorMessage(
+            error,
+            'No se pudieron cargar las métricas de procesamiento.'
+          )
+        );
+      }
+    });
+  }
+
+  private durationOrNone(seconds: number | null): string {
+    return seconds === null ? 'Sin datos' : formatDuration(seconds);
+  }
+
+  retryLoad(): void {
+    this.loadVideos();
+  }
+
   private toVideo(
     job: VideoJobResponse,
     previous?: MonitorVideo
@@ -276,6 +334,7 @@ export class MonitorComponent implements OnInit, OnDestroy {
       processedAt: job.createdAt,
       status: job.status,
       failureReason: job.failureReason ?? undefined,
+      timings: describeVideoTimings(job),
       facesLoaded: keepFaces,
       facesLoadedAt: keepFaces ? previous.facesLoadedAt : 0,
       clusters: keepFaces ? previous.clusters : []

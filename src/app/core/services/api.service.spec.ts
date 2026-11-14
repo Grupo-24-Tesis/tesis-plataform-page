@@ -42,6 +42,27 @@ describe('ApiService', () => {
     request.flush([]);
   });
 
+  it('requests the processing metrics of a camera', () => {
+    api.getVideoJobMetrics('CAM-01').subscribe();
+
+    const request = http.expectOne(
+      r => r.url === 'http://localhost:8080/api/metrics/video-jobs'
+    );
+    expect(request.request.method).toBe('GET');
+    expect(request.request.params.get('cameraId')).toBe('CAM-01');
+    request.flush({});
+  });
+
+  it('requests the processing metrics without a camera filter', () => {
+    api.getVideoJobMetrics().subscribe();
+
+    const request = http.expectOne(
+      r => r.url === 'http://localhost:8080/api/metrics/video-jobs'
+    );
+    expect(request.request.params.has('cameraId')).toBe(false);
+    request.flush({});
+  });
+
   it('requests the faces of a video job', () => {
     api.getVideoJobFaces('job-1').subscribe();
 

@@ -75,6 +75,18 @@
     </header>
 
     <section class="camera-preview" *ngIf="selectedCamera()">
+      <div class="metrics-strip" *ngIf="metricItems().length > 0">
+        <div class="video-block metric-item" *ngFor="let item of metricItems()">
+          <small>{{ item.label }}</small>
+          <strong>{{ item.value }}</strong>
+        </div>
+      </div>
+
+      <p class="video-failure" *ngIf="metricsErrorMsg()">
+        {{ metricsErrorMsg() }}
+        <button type="button" (click)="retryLoad()">Reintentar</button>
+      </p>
+
       <div class="video-list" *ngIf="getCameraVideos().length > 0">
         <article
           class="video-block"
@@ -96,6 +108,10 @@
               {{ video.processedAt | date:'yyyy-MM-dd · HH:mm' }}
             </span>
           </header>
+
+          <p class="video-timings" *ngIf="video.timings">
+            {{ video.timings }}
+          </p>
 
           <p class="video-failure" *ngIf="video.failureReason">
             {{ video.failureReason }}
