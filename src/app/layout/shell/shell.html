@@ -1,10 +1,10 @@
-<div class="app-shell" [class.menu-open]="menuOpen">
+<div class="app-shell" [class.menu-open]="menuOpen()">
   <header class="topbar">
     <button
       type="button"
       class="hamburger"
       aria-label="Ampliar o retraer menú"
-      [attr.aria-expanded]="menuOpen"
+      [attr.aria-expanded]="menuOpen()"
       (click)="toggleMenu()"
     >
       ☰
@@ -16,7 +16,7 @@
     </div>
   </header>
 
-  <aside class="drawer" [class.open]="menuOpen">
+  <aside class="drawer" [class.open]="menuOpen()">
     <a
       class="logo"
       routerLink="/monitor"
@@ -65,9 +65,9 @@
     </nav>
 
     <div class="session">
-      <div class="guard" [title]="guardName">
+      <div class="guard" [title]="guardName()">
         <span class="nav-icon" aria-hidden="true">♙</span>
-        <span class="nav-label">{{ guardName }}</span>
+        <span class="nav-label">{{ guardName() }}</span>
       </div>
 
       <button type="button" class="logout" (click)="logout()">
@@ -79,7 +79,7 @@
 
   <div
     class="overlay"
-    *ngIf="menuOpen"
+    *ngIf="menuOpen()"
     (click)="closeMenu()"
   ></div>
 

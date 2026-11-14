@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { SessionService } from '../../core/services/session.service';
@@ -11,8 +11,8 @@ import { SessionService } from '../../core/services/session.service';
   styleUrl: './shell.css'
 })
 export class Shell implements OnInit {
-  menuOpen = false;
-  guardName = 'Vigilante';
+  menuOpen = signal(false);
+  guardName = signal('Vigilante');
 
   constructor(
     private session: SessionService,
@@ -28,18 +28,18 @@ export class Shell implements OnInit {
 
     try {
       const guard = JSON.parse(savedGuard);
-      this.guardName = guard.name ?? 'Vigilante';
+      this.guardName.set(guard.name ?? 'Vigilante');
     } catch {
       console.warn('No fue posible recuperar el vigilante activo.');
     }
   }
 
   toggleMenu() {
-    this.menuOpen = !this.menuOpen;
+    this.menuOpen.update(open => !open);
   }
 
   closeMenu() {
-    this.menuOpen = false;
+    this.menuOpen.set(false);
   }
 
   logout(): void {

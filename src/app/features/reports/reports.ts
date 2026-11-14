@@ -52,7 +52,7 @@ endDate: string = '';
 
 
 
-  showModal = false;
+  showModal = signal(false);
 
   newReport: Omit<ReportItem, 'id' | 'createdAt'> = {
     title: '',
@@ -67,9 +67,9 @@ endDate: string = '';
 
 
 
-  resolutionModal = false;
+  resolutionModal = signal(false);
 
-  selectedReport: ReportItem | null = null;
+  selectedReport = signal<ReportItem | null>(null);
 
   resolutionData = {
     resolvedAt: '',
@@ -280,14 +280,14 @@ endDate: string = '';
 
     };
 
-    this.showModal = true;
+    this.showModal.set(true);
 
   }
 
 
   closeModal(): void {
 
-    this.showModal = false;
+    this.showModal.set(false);
 
   }
 
@@ -363,7 +363,7 @@ endDate: string = '';
 
     if (newStatus === 'solucionado') {
 
-      this.selectedReport = report;
+      this.selectedReport.set(report);
 
       this.resolutionData = {
 
@@ -373,7 +373,7 @@ endDate: string = '';
 
       };
 
-      this.resolutionModal = true;
+      this.resolutionModal.set(true);
 
      
       select.value = report.status;
@@ -563,9 +563,9 @@ endDate: string = '';
 
   closeResolutionModal(): void {
 
-    this.resolutionModal = false;
+    this.resolutionModal.set(false);
 
-    this.selectedReport = null;
+    this.selectedReport.set(null);
 
     this.resolutionData = {
 
@@ -581,7 +581,9 @@ endDate: string = '';
   
   confirmResolution(): void {
 
-    if (!this.selectedReport) {
+    const reportToResolve = this.selectedReport();
+
+    if (!reportToResolve) {
 
       return;
 
@@ -605,7 +607,7 @@ endDate: string = '';
 
     this.api.updateReportStatus(
 
-      this.selectedReport.id,
+      reportToResolve.id,
 
       'solucionado',
 

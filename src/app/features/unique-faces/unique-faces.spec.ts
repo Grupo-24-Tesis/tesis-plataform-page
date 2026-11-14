@@ -1,3 +1,5 @@
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { UniqueFaces } from './unique-faces';
@@ -9,6 +11,7 @@ describe('UniqueFaces', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [UniqueFaces],
+      providers: [provideHttpClient(), provideHttpClientTesting()]
     }).compileComponents();
 
     fixture = TestBed.createComponent(UniqueFaces);

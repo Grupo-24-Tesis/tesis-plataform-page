@@ -23,7 +23,7 @@ export class UniqueFaces implements OnInit {
   cameras = signal<Camera[]>([]);
 
   selected = signal<UniqueFace | null>(null);
-  detailClosing = false;
+  detailClosing = signal(false);
 
 
   startDate: string = '';
@@ -135,7 +135,7 @@ export class UniqueFaces implements OnInit {
 
     } else {
 
-      this.detailClosing = false;
+      this.detailClosing.set(false);
       this.selected.set(face);
 
     }
@@ -145,18 +145,18 @@ export class UniqueFaces implements OnInit {
 
   closeDetail(): void {
 
-    if (this.detailClosing || !this.selected()) {
+    if (this.detailClosing() || !this.selected()) {
 
       return;
 
     }
 
-    this.detailClosing = true;
+    this.detailClosing.set(true);
 
     window.setTimeout(() => {
 
       this.selected.set(null);
-      this.detailClosing = false;
+      this.detailClosing.set(false);
 
     }, 160);
 

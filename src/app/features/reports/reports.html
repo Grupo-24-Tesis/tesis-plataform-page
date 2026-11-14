@@ -375,7 +375,7 @@
 
 <div
   class="modal-overlay"
-  *ngIf="showModal"
+  *ngIf="showModal()"
   (click)="closeModal()"
 >
 
@@ -590,7 +590,7 @@
 
 <div
   class="modal-overlay"
-  *ngIf="resolutionModal"
+  *ngIf="resolutionModal()"
   (click)="closeResolutionModal()"
 >
 
@@ -621,7 +621,7 @@
       Está resolviendo:
 
       <strong>
-        {{ selectedReport?.title }}
+        {{ selectedReport()?.title }}
       </strong>
 
     </p>

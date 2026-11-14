@@ -17,8 +17,8 @@ export class Guards implements OnInit {
 
   guards = signal<Guard[]>([]);
   selectedGuard = signal<Guard | null>(null);
-  loading = true;
-  errorMsg = '';
+  loading = signal(true);
+  errorMsg = signal('');
   newGuardName = '';
 
   constructor(
@@ -32,13 +32,13 @@ export class Guards implements OnInit {
       next: (data) => {
         console.log('GUARDS API =>', data);
         this.guards.set(data);
-        this.loading = false;
+        this.loading.set(false);
       },
       error: (err) => {
         console.error('Error loading guards', err);
         this.guards.set([]);
-        this.errorMsg = 'No se pudieron cargar los vigilantes.';
-        this.loading = false;
+        this.errorMsg.set('No se pudieron cargar los vigilantes.');
+        this.loading.set(false);
       }
     });
   }
@@ -75,21 +75,21 @@ export class Guards implements OnInit {
 
   openGuardDialog(): void {
     this.newGuardName = '';
-    this.errorMsg = '';
+    this.errorMsg.set('');
     this.guardDialog?.nativeElement.showModal();
   }
 
   closeGuardDialog(): void {
     this.guardDialog?.nativeElement.close();
     this.newGuardName = '';
-    this.errorMsg = '';
+    this.errorMsg.set('');
   }
 
   addGuard(): void {
     const name = this.newGuardName.trim().replace(/\s+/g, ' ');
 
     if (name.length < 3) {
-      this.errorMsg = 'Escribe un nombre de al menos tres caracteres.';
+      this.errorMsg.set('Escribe un nombre de al menos tres caracteres.');
       return;
     }
 
@@ -100,7 +100,7 @@ export class Guards implements OnInit {
     );
 
     if (exists) {
-      this.errorMsg = 'Este vigilante ya está registrado.';
+      this.errorMsg.set('Este vigilante ya está registrado.');
       return;
     }
 
@@ -121,7 +121,7 @@ export class Guards implements OnInit {
       },
       error: (err) => {
         console.error('Error creating guard', err);
-        this.errorMsg = 'No se pudo registrar el vigilante.';
+        this.errorMsg.set('No se pudo registrar el vigilante.');
       }
     });
   }
