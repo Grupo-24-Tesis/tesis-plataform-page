@@ -48,7 +48,7 @@ export class UniqueFaces implements OnInit {
     this.loadFaces();
         this.api.getCameras().subscribe({
       next: (cameras) => this.cameras.set(cameras),
-      error: (err) => console.error('Error loading cameras', err)
+      error: (err) => console.error('Error al cargar las cámaras', err)
     });
 
   }

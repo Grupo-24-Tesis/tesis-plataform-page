@@ -379,11 +379,12 @@
 
     <div class="status-container">
 
-      <label>
+      <label [attr.for]="'status-' + r.id">
         Estado
       </label>
 
       <select
+        [id]="'status-' + r.id"
         [value]="r.status"
         (change)="updateStatus(r, $event)"
       >
@@ -414,18 +415,22 @@
 
   <div
     class="modal"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="create-report-title"
     (click)="$event.stopPropagation()"
   >
 
     <div class="modal-header">
 
-      <h3>
+      <h3 id="create-report-title">
         Nuevo reporte
       </h3>
 
       <button
         type="button"
         class="close-button"
+        aria-label="Cerrar"
         (click)="closeModal()"
       >
         ×
@@ -570,21 +575,24 @@
 
     <div class="people-section">
 
-      <label class="people-title">
+      <span class="people-title" id="people-title">
         Personas involucradas
-      </label>
+      </span>
 
       <p class="people-description">
         Seleccione una o varias personas relacionadas con el incidente.
       </p>
 
 
-      <div class="people-grid">
+      <div class="people-grid" role="group" aria-labelledby="people-title">
 
-        <div
+        <button
+          type="button"
           class="person-option"
           *ngFor="let person of uniquePeople"
           [class.selected]="isFaceSelected(person.faceId)"
+          [attr.aria-pressed]="isFaceSelected(person.faceId)"
+          [attr.aria-label]="'Detección ' + person.faceId"
           (click)="toggleFace(person.faceId)"
         >
 
@@ -609,7 +617,7 @@
 
          
 
-        </div>
+        </button>
 
       </div>
 
@@ -681,18 +689,22 @@
 
   <div
     class="modal"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="resolve-report-title"
     (click)="$event.stopPropagation()"
   >
 
     <div class="modal-header">
 
-      <h3>
+      <h3 id="resolve-report-title">
         Resolver reporte
       </h3>
 
       <button
         type="button"
         class="close-button"
+        aria-label="Cerrar"
         (click)="closeResolutionModal()"
       >
         ×

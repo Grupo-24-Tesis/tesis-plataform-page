@@ -541,6 +541,8 @@
   border-radius: 7px;
   box-sizing: border-box;
   cursor: pointer;
+  font: inherit;
+  text-align: left;
   transition:
     background 0.2s,
     border-color 0.2s,

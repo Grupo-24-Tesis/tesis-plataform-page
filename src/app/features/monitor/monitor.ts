@@ -129,7 +129,7 @@ export class MonitorComponent implements OnInit, OnDestroy {
         this.showCamera(data[0] ?? null);
       },
       error: (err) => {
-        console.error('Error loading cameras', err);
+        console.error('Error al cargar las cámaras', err);
 
         this.cameras.set([]);
         this.selectedCamera.set(null);
@@ -407,7 +407,7 @@ export class MonitorComponent implements OnInit, OnDestroy {
         this.closeCameraDialog();
       },
       error: (err) => {
-        console.error('Error creating camera', err);
+        console.error('Error al registrar la cámara', err);
         this.cameraErrorMsg.set(
           apiErrorMessage(err, 'No se pudo registrar la cámara.')
         );

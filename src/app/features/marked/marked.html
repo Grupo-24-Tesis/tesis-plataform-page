@@ -179,6 +179,7 @@
           [class.selected]="selectedPerson()?.faceId === person.faceId"
           [disabled]="isMarked(person.faceId)"
           [attr.title]="isMarked(person.faceId) ? 'Ya está marcada' : null"
+          [attr.aria-label]="'Detección ' + person.faceId"
           (click)="selectPerson(person)"
         >
           <div class="person-image-container">

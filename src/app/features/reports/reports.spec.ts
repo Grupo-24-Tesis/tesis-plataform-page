@@ -226,4 +226,22 @@ describe('Reports', () => {
 
     expect(api.createReport).toHaveBeenCalledTimes(1);
   });
+
+  it('closes the create modal with Escape and labels the dialog', async () => {
+    await create();
+
+    component.openModal();
+    fixture.detectChanges();
+
+    const dialog = fixture.nativeElement.querySelector('.modal');
+    expect(dialog.getAttribute('role')).toBe('dialog');
+    expect(dialog.getAttribute('aria-modal')).toBe('true');
+    expect(fixture.nativeElement.querySelector('.close-button').getAttribute('aria-label')).toBe('Cerrar');
+
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    fixture.detectChanges();
+
+    expect(component.showModal()).toBe(false);
+    expect(fixture.nativeElement.querySelector('.modal')).toBeNull();
+  });
 });

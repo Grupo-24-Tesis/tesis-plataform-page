@@ -1,4 +1,4 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, HostListener, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ImageFallbackDirective } from '../../shared/directives/image-fallback.directive';
@@ -276,6 +276,18 @@ endDate: string = '';
   }
 
 
+  @HostListener('document:keydown.escape')
+  closeOpenModal(): void {
+    if (this.resolutionModal()) {
+      this.closeResolutionModal();
+      return;
+    }
+
+    if (this.showModal()) {
+      this.closeModal();
+    }
+  }
+
   closeModal(): void {
 
     this.showModal.set(false);
@@ -452,7 +464,7 @@ endDate: string = '';
 
         console.error(
 
-          'Error updating report status',
+          'Error al actualizar el estado del reporte',
 
           err
 
@@ -473,11 +485,6 @@ endDate: string = '';
 
       next: (data) => {
 
-        console.log(
-          'FACE APPEARANCES API =>',
-          data
-        );
-
         this.appearances.set(data);
 
       },
@@ -485,7 +492,7 @@ endDate: string = '';
       error: (err) => {
 
         console.error(
-          'Error loading face appearances',
+          'Error al cargar las apariciones de rostros',
           err
         );
 
@@ -680,7 +687,7 @@ endDate: string = '';
 
         console.error(
 
-          'Error resolving report',
+          'Error al resolver el reporte',
 
           err
 
