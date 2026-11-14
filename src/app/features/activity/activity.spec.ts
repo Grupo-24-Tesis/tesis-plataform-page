@@ -139,6 +139,34 @@ describe('Activity', () => {
     expect(root().querySelector('svg')).toBeNull();
   });
 
+  it('muestra el total del encabezado solo con datos cargados sin error', async () => {
+    const pending = new Subject<ActivityResponse>();
+    api.getActivity.mockReturnValueOnce(pending);
+
+    await create();
+
+    expect(root().querySelector('.page-header p')).toBeNull();
+
+    pending.next(response({ 8: 3, 18: 14 }));
+    pending.complete();
+    await fixture.whenStable();
+
+    expect(root().querySelector('.page-header p')?.textContent).toContain('17 detecciones');
+
+    const reload = new Subject<ActivityResponse>();
+    api.getActivity.mockReturnValueOnce(reload);
+    component.applyFilters();
+    await fixture.whenStable();
+
+    expect(root().querySelector('.page-header p')).toBeNull();
+
+    reload.error(new HttpErrorResponse({ status: 500 }));
+    await fixture.whenStable();
+
+    expect(root().querySelector('.page-header p')).toBeNull();
+    expect(root().textContent).toContain('No se pudo cargar la actividad.');
+  });
+
   it('muestra el error con Reintentar que vuelve a cargar', async () => {
     api.getActivity.mockReturnValueOnce(
       throwError(() => new HttpErrorResponse({ status: 400, error: { message: 'Fecha inválida' } }))

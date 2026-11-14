@@ -5,10 +5,12 @@
       <h1>Actividad por hora</h1>
     </div>
 
-    <p>
-      {{ activity()?.total ?? 0 }}
-      {{ activity()?.total === 1 ? 'detección' : 'detecciones' }}
-    </p>
+    @if (!loading() && !loadError() && activity(); as data) {
+      <p>
+        {{ data.total }}
+        {{ data.total === 1 ? 'detección' : 'detecciones' }}
+      </p>
+    }
   </header>
 
   <section class="filters">
