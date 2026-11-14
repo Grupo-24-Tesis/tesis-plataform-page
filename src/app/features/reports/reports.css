@@ -733,3 +733,33 @@
     width: 100%;
   }
 }
+
+.image-placeholder {
+  color: var(--azul);
+  font-size: 40px;
+}
+
+.empty-state {
+  display: grid;
+  min-height: 300px;
+  place-items: center;
+  align-content: center;
+  gap: 12px;
+  padding: 30px;
+  text-align: center;
+  background: var(--superficie);
+  border: 1px dashed var(--borde);
+  border-radius: 8px;
+}
+
+.empty-state p {
+  margin: 0;
+  color: var(--texto-secundario);
+  font-size: 13px;
+}
+
+.feedback {
+  margin: 0 0 16px;
+  color: #ff7b72;
+  font: 12px var(--fuente-mono);
+}

@@ -3,7 +3,10 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ImageFallbackDirective } from '../../shared/directives/image-fallback.directive';
 
+import { Observable } from 'rxjs';
+
 import { ApiService } from '../../core/services/api.service';
+import { apiErrorMessage } from '../../core/services/api-error';
 import { ReportItem } from '../../core/models/report.model';
 
 import { FaceAppearance } from '../../core/models/face.model';
@@ -20,6 +23,10 @@ export class Reports implements OnInit {
 
 
   reports = signal<ReportItem[]>([]);
+
+  loading = signal(false);
+
+  loadError = signal('');
   readonly reportSections: {
   status: ReportItem['status'];
   title: string;
@@ -54,6 +61,10 @@ endDate: string = '';
 
   showModal = signal(false);
 
+  formErrors = signal<string[]>([]);
+
+  saving = signal(false);
+
   newReport: Omit<ReportItem, 'id' | 'createdAt'> = {
     title: '',
     status: 'investigacion',
@@ -86,30 +97,29 @@ endDate: string = '';
 
 
   loadReports(): void {
-  this.api.getReports().subscribe({
-    next: (data) => {
+    this.fetchReports(this.api.getReports());
+  }
 
-      console.log('REPORTS API =>', data);
 
-      data.forEach(r => {
-        console.log(
-          'Reporte:',
-          r.id,
-          'incidentDate:',
-          r.incidentDate,
-          'Date:',
-          new Date(r.incidentDate)
+  private fetchReports(request: Observable<ReportItem[]>): void {
+    this.reports.set([]);
+    this.loading.set(true);
+    this.loadError.set('');
+
+    request.subscribe({
+      next: (data) => {
+        this.reports.set(data);
+        this.loading.set(false);
+      },
+
+      error: (err) => {
+        this.loadError.set(
+          apiErrorMessage(err, 'No se pudieron cargar los reportes.')
         );
-      });
-
-      this.reports.set(data);
-    },
-
-    error: (err) => {
-      console.error('Error loading reports', err);
-    }
-  });
-}
+        this.loading.set(false);
+      }
+    });
+  }
 
 
   applyFilters(): void {
@@ -171,46 +181,25 @@ endDate: string = '';
 
   else if (
     this.dateFilter === 'rango' &&
-    this.startDate &&
-    this.endDate
+    (this.startDate || this.endDate)
   ) {
 
-    startDate = this.startDate;
+    startDate = this.startDate || undefined;
 
-    endDate = this.endDate;
+    endDate = this.endDate || undefined;
 
   }
 
 
-  this.api.getFilteredReports(
-    this.statusFilter || undefined,
-    date,
-    startDate,
-    endDate,
-    this.dateType
-  ).subscribe({
-
-    next: (data) => {
-
-      console.log(
-        'REPORTS FILTERED =>',
-        data
-      );
-
-      this.reports.set(data);
-
-    },
-
-    error: (err) => {
-
-      console.error(
-        'Error filtering reports',
-        err
-      );
-
-    }
-
-  });
+  this.fetchReports(
+    this.api.getFilteredReports(
+      this.statusFilter || undefined,
+      date,
+      startDate,
+      endDate,
+      this.dateType
+    )
+  );
 
 }
 
@@ -280,6 +269,8 @@ endDate: string = '';
 
     };
 
+    this.formErrors.set([]);
+
     this.showModal.set(true);
 
   }
@@ -289,55 +280,101 @@ endDate: string = '';
 
     this.showModal.set(false);
 
+    this.formErrors.set([]);
+
   }
 
 
 
+  private validateNewReport(): string[] {
+
+    const errors: string[] = [];
+
+    if (!this.newReport.title.trim()) {
+      errors.push('Falta el título.');
+    }
+
+    if (!this.newReport.description.trim()) {
+      errors.push('Falta la descripción.');
+    }
+
+    if (!this.newReport.incidentDate) {
+      errors.push('Falta la fecha del incidente.');
+    }
+
+    if (this.newReport.status === 'solucionado') {
+
+      if (!this.newReport.resolvedAt) {
+        errors.push('Falta la fecha de resolución.');
+      }
+
+      if (!this.newReport.resolutionDescription?.trim()) {
+        errors.push('Falta la descripción de la resolución.');
+      }
+
+    }
+
+    return errors;
+
+  }
+
+
   createReport(): void {
 
-    if (
-
-      !this.newReport.title.trim() ||
-
-      !this.newReport.description.trim() ||
-
-      !this.newReport.incidentDate
-
-    ) {
+    if (this.saving()) {
 
       return;
 
     }
 
 
-    this.api.createReport(
-      this.newReport as ReportItem
-    ).subscribe({
+    const errors = this.validateNewReport();
 
-      next: (createdReport) => {
+    this.formErrors.set(errors);
 
-        console.log(
-          'REPORTE CREADO =>',
-          createdReport
-        );
+    if (errors.length > 0) {
 
-        this.reports.update(
-          reports => [
-            ...reports,
-            createdReport
-          ]
-        );
+      return;
+
+    }
+
+
+    const isResolved = this.newReport.status === 'solucionado';
+
+    const payload = {
+
+      ...this.newReport,
+
+      resolvedAt: isResolved ? this.newReport.resolvedAt : undefined,
+
+      resolutionDescription: isResolved
+        ? this.newReport.resolutionDescription
+        : undefined
+
+    } as ReportItem;
+
+
+    this.saving.set(true);
+
+    this.api.createReport(payload).subscribe({
+
+      next: () => {
+
+        this.saving.set(false);
 
         this.closeModal();
+
+        this.applyFilters();
 
       },
 
       error: (err) => {
 
-        console.error(
-          'Error creating report',
-          err
-        );
+        this.saving.set(false);
+
+        this.formErrors.set([
+          apiErrorMessage(err, 'No se pudo crear el reporte.')
+        ]);
 
       }
 
@@ -346,7 +383,6 @@ endDate: string = '';
   }
 
 
-  
   updateStatus(
     report: ReportItem,
     event: Event

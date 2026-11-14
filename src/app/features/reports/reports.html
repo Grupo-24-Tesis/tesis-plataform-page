@@ -224,6 +224,38 @@
 
 
 
+<div
+  class="empty-state"
+  role="status"
+  *ngIf="loading()"
+>
+  <strong>Cargando...</strong>
+</div>
+
+<div
+  class="empty-state"
+  role="alert"
+  *ngIf="!loading() && loadError()"
+>
+  <strong>{{ loadError() }}</strong>
+  <button
+    type="button"
+    class="apply-filter-btn"
+    (click)="applyFilters()"
+  >
+    Reintentar
+  </button>
+</div>
+
+<div
+  class="empty-state"
+  *ngIf="!loading() && !loadError() && reports().length === 0"
+>
+  <strong>No hay reportes</strong>
+  <p>No hay reportes que coincidan con los filtros seleccionados.</p>
+</div>
+
+<ng-container *ngIf="!loading() && !loadError()">
 <section
   class="report-section"
   *ngFor="let section of reportSections"
@@ -371,6 +403,7 @@
 
 </div>
 </section>
+</ng-container>
 
 
 <div
@@ -500,6 +533,41 @@
     </div>
 
 
+    <ng-container *ngIf="newReport.status === 'solucionado'">
+
+      <div class="field">
+
+        <label for="newResolvedAt">
+          Fecha y hora de resolución
+        </label>
+
+        <input
+          id="newResolvedAt"
+          type="datetime-local"
+          [(ngModel)]="newReport.resolvedAt"
+        >
+
+      </div>
+
+
+      <div class="field">
+
+        <label for="newResolutionDescription">
+          ¿Cómo se solucionó?
+        </label>
+
+        <textarea
+          id="newResolutionDescription"
+          [(ngModel)]="newReport.resolutionDescription"
+          placeholder="Describa cómo se solucionó el incidente..."
+          rows="4"
+        ></textarea>
+
+      </div>
+
+    </ng-container>
+
+
     <div class="people-section">
 
       <label class="people-title">
@@ -564,6 +632,22 @@
     </div>
 
 
+    <div
+      class="form-errors"
+      role="alert"
+      *ngIf="formErrors().length > 0"
+    >
+
+      <p
+        class="feedback"
+        *ngFor="let error of formErrors()"
+      >
+        {{ error }}
+      </p>
+
+    </div>
+
+
     <div class="modal-actions">
 
       <button
@@ -577,6 +661,7 @@
       <button
         type="button"
         class="confirm-button"
+        [disabled]="saving()"
         (click)="createReport()"
       >
         Crear reporte
