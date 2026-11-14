@@ -161,7 +161,7 @@ export class Marked implements OnInit {
         this.marked.update(current => [...current, created]);
         this.busy.set(false);
         this.closeModal();
-        this.showMessage('Persona guardada.', false);
+        this.showMessage('Detección marcada.', false);
       },
       error: error => {
         this.busy.set(false);

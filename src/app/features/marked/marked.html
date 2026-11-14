@@ -2,10 +2,10 @@
   <header class="page-header">
     <div>
       <span>DETECCIONES</span>
-      <h1>Personas guardadas</h1>
+      <h1>Detecciones marcadas</h1>
       <p>
         {{ marked().length }}
-        {{ marked().length === 1 ? 'registro guardado' : 'registros guardados' }}
+        {{ marked().length === 1 ? 'detección marcada' : 'detecciones marcadas' }}
       </p>
     </div>
 
@@ -49,11 +49,11 @@
       <div class="marked-info">
         <header>
           <div>
-            <span>PERSONA GUARDADA</span>
+            <span>DETECCIÓN MARCADA</span>
           </div>
 
           <span class="suspect-badge">
-            SOSPECHOSO
+            MARCADO
           </span>
         </header>
 
@@ -72,7 +72,7 @@
             class="delete-button"
             (click)="askDelete(markedPerson)"
           >
-            QUITAR DE GUARDADOS
+            QUITAR DE MARCADOS
           </button>
 
           <ng-container *ngIf="pendingDeleteId() === markedPerson.id">
@@ -127,9 +127,9 @@
       *ngIf="!loading() && !loadError() && marked().length === 0"
     >
       <span aria-hidden="true">☆</span>
-      <strong>No hay personas guardadas</strong>
+      <strong>No hay detecciones marcadas</strong>
       <p>
-        Las personas marcadas como sospechosas aparecerán en esta sección.
+        Las detecciones marcadas aparecerán en esta sección.
       </p>
     </div>
   </div>
@@ -150,7 +150,7 @@
     <header class="modal-header">
       <div>
         <span>NUEVO REGISTRO</span>
-        <h2 id="marked-modal-title">Agregar persona guardada</h2>
+        <h2 id="marked-modal-title">Agregar detección marcada</h2>
       </div>
 
       <button
@@ -164,8 +164,8 @@
     </header>
 
     <p class="modal-description">
-      Selecciona una persona detectada e indica la razón por la que
-      debe permanecer guardada.
+      Selecciona una detección e indica la razón por la que
+      debe permanecer marcada.
     </p>
 
     <section class="people-section">
@@ -201,7 +201,7 @@
           class="no-people"
           *ngIf="people().length === 0"
         >
-          No hay personas disponibles para seleccionar.
+          No hay detecciones disponibles para seleccionar.
         </p>
       </div>
     </section>
@@ -222,7 +222,7 @@
         id="reason"
         [ngModel]="reason()"
         (ngModelChange)="reason.set($event)"
-        placeholder="Describe por qué esta persona debe quedar guardada..."
+        placeholder="Describe por qué esta detección debe quedar marcada..."
         rows="4"
       ></textarea>
     </div>

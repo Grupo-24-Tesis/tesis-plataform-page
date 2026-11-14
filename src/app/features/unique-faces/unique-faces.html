@@ -5,13 +5,13 @@
   <main class="faces-content">
     <header class="page-header">
       <div>
-        <span>APARICIONES</span>
-        <h1>Caras únicas</h1>
+        <span>DETECCIONES</span>
+        <h1>Rostros detectados</h1>
       </div>
 
       <p>
         {{ faces().length }}
-        {{ faces().length === 1 ? 'persona encontrada' : 'personas encontradas' }}
+        {{ faces().length === 1 ? 'detección' : 'detecciones' }}
       </p>
     </header>
 
@@ -53,8 +53,8 @@
           [(ngModel)]="suspect"
         >
           <option value="">Todos</option>
-          <option value="true">Sospechoso</option>
-          <option value="false">No sospechoso</option>
+          <option value="true">Marcadas</option>
+          <option value="false">Sin marcar</option>
         </select>
       </div>
 
@@ -102,17 +102,12 @@
             class="status-badge"
             [class.is-suspect]="face.suspect"
           >
-            {{ face.suspect ? 'SOSPECHOSO' : 'SIN MARCA' }}
+            {{ face.suspect ? 'MARCADO' : 'SIN MARCAR' }}
           </span>
         </div>
 
         <div class="face-info">
           <div class="face-stats">
-            <span>
-              {{ face.appearances.length }}
-              {{ face.appearances.length === 1 ? 'aparición' : 'apariciones' }}
-            </span>
-
             <span>
               {{ face.reportCount }}
               {{ face.reportCount === 1 ? 'reporte' : 'reportes' }}
@@ -149,7 +144,7 @@
         class="empty-state"
       >
         <span aria-hidden="true">◎</span>
-        <strong>No se encontraron personas</strong>
+        <strong>No se encontraron detecciones</strong>
         <p>No hay resultados que coincidan con los filtros seleccionados.</p>
       </div>
     </div>
@@ -193,13 +188,8 @@
           class="detail-status"
           [class.is-suspect]="face.suspect"
         >
-          {{ face.suspect ? 'SOSPECHOSO' : 'NO SOSPECHOSO' }}
+          {{ face.suspect ? 'MARCADO' : 'SIN MARCAR' }}
         </span>
-
-        <div>
-          <span>APARICIONES</span>
-          <strong>{{ face.appearances.length }}</strong>
-        </div>
 
         <div>
           <span>REPORTES</span>
@@ -208,7 +198,7 @@
       </div>
 
       <section class="appearances-section">
-        <h2>RUTA DE APARICIONES</h2>
+        <h2>APARICIÓN EN EL VIDEO</h2>
 
         <div class="appearances">
           <article

@@ -506,7 +506,7 @@ export class MonitorComponent implements OnInit, OnDestroy {
       next: created => {
         this.marks.update(marks => [...marks, created]);
         this.markBusy.set(false);
-        this.reportMark(cluster, 'Detección guardada.', false, () =>
+        this.reportMark(cluster, 'Detección marcada.', false, () =>
           this.markReason.set('')
         );
       },

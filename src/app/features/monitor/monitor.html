@@ -135,10 +135,6 @@
               <div class="cluster-information">
                 <div class="cluster-title">
                   <strong>{{ cluster.clusterId }}</strong>
-                  <span>
-                    {{ cluster.appearances.length }}
-                    apariciones
-                  </span>
                 </div>
 
                 <div class="appearance-list">
@@ -217,7 +213,7 @@
       </section>
 
       <section class="detail-section">
-        <span>RUTA DE APARICIONES</span>
+        <span>APARICIÓN EN EL VIDEO</span>
 
         <ol class="detail-appearances">
           <li *ngFor="let appearance of selected.cluster.appearances">
@@ -249,7 +245,7 @@
       >
         {{
           markFor(selected.cluster)
-            ? 'DETECCIÓN GUARDADA - QUITAR'
+            ? 'DETECCIÓN MARCADA - QUITAR'
             : '+ GUARDAR DETECCIÓN'
         }}
       </button>

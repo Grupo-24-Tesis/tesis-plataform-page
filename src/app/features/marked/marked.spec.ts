@@ -192,7 +192,7 @@ describe('Marked', () => {
     await create();
 
     expect(text()).toContain('Cargando...');
-    expect(text()).not.toContain('No hay personas guardadas');
+    expect(text()).not.toContain('No hay detecciones marcadas');
 
     pending.next([{ id: 'm1', faceId: 'job-1_1', reason: 'Merodeo' }]);
     pending.complete();
@@ -212,7 +212,7 @@ describe('Marked', () => {
     await create();
 
     expect(text()).toContain('Fallo al leer las marcas');
-    expect(text()).not.toContain('No hay personas guardadas');
+    expect(text()).not.toContain('No hay detecciones marcadas');
 
     const retry: HTMLButtonElement = Array.from<HTMLButtonElement>(
       fixture.nativeElement.querySelectorAll('button')
@@ -229,6 +229,6 @@ describe('Marked', () => {
     api.getMarked.mockReturnValue(of([]));
     await create();
 
-    expect(text()).toContain('No hay personas guardadas');
+    expect(text()).toContain('No hay detecciones marcadas');
   });
 });

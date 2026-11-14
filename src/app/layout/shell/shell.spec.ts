@@ -40,6 +40,8 @@ describe('Shell', () => {
     );
 
     expect(hrefs).toEqual(['/monitor', '/unique-faces', '/reports', '/marked']);
+    expect(element.querySelector('nav')?.textContent).toContain('Rostros detectados');
+    expect(element.querySelector('nav')?.textContent).toContain('Marcados');
   });
 
   it('cierra la sesion y vuelve a la seleccion de vigilante', async () => {

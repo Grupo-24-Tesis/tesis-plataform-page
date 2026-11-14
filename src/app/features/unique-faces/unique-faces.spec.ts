@@ -61,6 +61,10 @@ describe('UniqueFaces', () => {
 
     expect(text()).not.toContain('Cargando...');
     expect(fixture.nativeElement.querySelectorAll('.card').length).toBe(1);
+    expect(text()).toContain('Rostros detectados');
+    expect(text()).toMatch(/1\s+detección/);
+    expect(text()).not.toContain('apariciones');
+    expect(text()).toContain('SIN MARCAR');
   });
 
   it('shows the empty state when there are no results', async () => {

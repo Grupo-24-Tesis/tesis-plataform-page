@@ -94,7 +94,7 @@ export class UniqueFaces implements OnInit {
 
         this.faces.set([]);
         this.loadError.set(
-          apiErrorMessage(err, 'No se pudieron cargar las personas.')
+          apiErrorMessage(err, 'No se pudieron cargar las detecciones.')
         );
         this.loading.set(false);
 

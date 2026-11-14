@@ -122,6 +122,8 @@ describe('MonitorComponent', () => {
     expect(img?.getAttribute('src')).toBe(FACE.frameUrl);
     expect(fixture.nativeElement.textContent).toContain('Entrada');
     expect(fixture.nativeElement.textContent).not.toContain('CAM-01');
+    expect(fixture.nativeElement.querySelector('.cluster-title').textContent)
+      .not.toContain('apariciones');
   });
 
   it('shows the empty text for a completed job without faces', async () => {
