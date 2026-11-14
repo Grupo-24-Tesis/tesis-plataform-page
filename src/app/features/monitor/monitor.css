@@ -20,7 +20,7 @@
 .camera-title > span,
 .section-label {
   color: var(--texto-secundario);
-  font: 11px var(--fuente-mono);
+  font: 11px var(--fuente);
   letter-spacing: 1.5px;
 }
 
@@ -42,7 +42,7 @@
   color: var(--texto-secundario);
   background: transparent;
   border: 0;
-  font: 11px var(--fuente-mono);
+  font: 11px var(--fuente);
   text-decoration: none;
   cursor: pointer;
 }
@@ -126,7 +126,7 @@
 
 .camera-information small {
   color: var(--azul);
-  font: 11px var(--fuente-mono);
+  font: 11px var(--fuente);
 }
 
 .camera-information strong {
@@ -140,7 +140,7 @@
 .camera-status {
   flex-shrink: 0;
   color: var(--verde);
-  font: 11px var(--fuente-mono);
+  font: 11px var(--fuente);
 }
 
 .camera-status.offline {
@@ -151,7 +151,7 @@
 .empty,
 .demo-message {
   color: var(--texto-secundario);
-  font: 11px var(--fuente-mono);
+  font: 11px var(--fuente);
   line-height: 1.5;
 }
 
@@ -188,7 +188,7 @@
   background: var(--superficie-3);
   border: 1px solid var(--borde);
   border-radius: 5px;
-  font: 11px var(--fuente-mono);
+  font: 11px var(--fuente);
 }
 
 .upload-button:disabled {
@@ -261,7 +261,7 @@
   display: block;
   margin-bottom: 8px;
   color: var(--azul);
-  font: 11px var(--fuente-mono);
+  font: 11px var(--fuente);
   letter-spacing: 1.5px;
 }
 
@@ -328,7 +328,7 @@
   min-height: 42px;
   padding: 8px 14px;
   border-radius: 5px;
-  font: 11px var(--fuente-mono);
+  font: 11px var(--fuente);
   cursor: pointer;
 }
 
@@ -381,7 +381,7 @@
 
 .camera-summary small {
   color: var(--texto-secundario);
-  font: 11px var(--fuente-mono);
+  font: 11px var(--fuente);
 }
 
 .upload-button:not(:disabled) {
@@ -426,12 +426,12 @@
 }
 
 .video-header strong {
-  font: 11px var(--fuente-mono);
+  font: 11px var(--fuente);
 }
 
 .video-header > span {
   color: var(--texto-secundario);
-  font: 11px var(--fuente-mono);
+  font: 11px var(--fuente);
 }
 
 .video-status {
@@ -452,7 +452,7 @@
 
 .video-status-label {
   color: var(--texto-secundario);
-  font: 11px var(--fuente-mono);
+  font: 11px var(--fuente);
 }
 
 .video-failure {
@@ -523,12 +523,12 @@
 
 .cluster-title strong {
   color: var(--azul);
-  font: 11px var(--fuente-mono);
+  font: 11px var(--fuente);
 }
 
 .cluster-title > span {
   color: var(--texto-secundario);
-  font: 11px var(--fuente-mono);
+  font: 11px var(--fuente);
 }
 
 .appearance-list {
@@ -544,7 +544,7 @@
   background: var(--superficie-3);
   border: 1px solid var(--borde);
   border-radius: 4px;
-  font: 11px var(--fuente-mono);
+  font: 11px var(--fuente);
 }
 
 .video-dialog {
@@ -581,7 +581,7 @@
 
 .selected-camera span {
   color: var(--texto-secundario);
-  font: 11px var(--fuente-mono);
+  font: 11px var(--fuente);
   letter-spacing: 1px;
 }
 
@@ -672,13 +672,13 @@
 .detail-header span,
 .detail-section > span {
   color: var(--texto-secundario);
-  font: 11px var(--fuente-mono);
+  font: 11px var(--fuente);
   letter-spacing: 1.3px;
 }
 
 .detail-header strong {
   color: var(--azul);
-  font: 12px var(--fuente-mono);
+  font: 12px var(--fuente);
 }
 
 .detail-header button {
@@ -728,7 +728,7 @@
 
 .detail-section small {
   color: var(--texto-secundario);
-  font: 11px var(--fuente-mono);
+  font: 11px var(--fuente);
 }
 
 .detail-appearances {
@@ -771,7 +771,7 @@
 
 .detail-appearances li strong {
   color: var(--azul);
-  font: 11px var(--fuente-mono);
+  font: 11px var(--fuente);
 }
 
 .detail-appearances li span {
@@ -790,7 +790,7 @@
   background: rgba(85, 182, 242, 0.1);
   border: 1px solid rgba(85, 182, 242, 0.45);
   border-radius: 5px;
-  font: 11px var(--fuente-mono);
+  font: 11px var(--fuente);
   cursor: pointer;
 }
 
@@ -806,13 +806,13 @@
   background: transparent;
   border: 1px solid var(--borde);
   border-radius: 5px;
-  font: 11px var(--fuente-mono);
+  font: 11px var(--fuente);
 }
 
 .mark-message {
   margin: 0;
   color: var(--verde);
-  font: 11px var(--fuente-mono);
+  font: 11px var(--fuente);
 }
 
 .mark-message.error {

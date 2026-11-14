@@ -17,7 +17,7 @@
 
 .section-label {
   color: var(--azul);
-  font: 11px var(--fuente-mono);
+  font: 11px var(--fuente);
   letter-spacing: 1.5px;
 }
 
@@ -43,7 +43,7 @@
   background: var(--azul);
   border: 1px solid var(--azul);
   border-radius: 6px;
-  font: 11px var(--fuente-mono);
+  font: 11px var(--fuente);
   font-weight: 600;
   letter-spacing: 0.5px;
   cursor: pointer;
@@ -176,7 +176,7 @@
 
 .report-section-title span {
   color: var(--texto-secundario);
-  font: 11px var(--fuente-mono);
+  font: 11px var(--fuente);
 }
 
 .list {
@@ -235,7 +235,7 @@
 .report-case-id {
   margin-bottom: 10px;
   color: var(--texto-secundario);
-  font: 11px var(--fuente-mono);
+  font: 11px var(--fuente);
 }
 
 .report-case-id strong {
@@ -246,7 +246,7 @@
 .priority-badge {
   padding: 4px 8px;
   border-radius: 5px;
-  font: 11px var(--fuente-mono);
+  font: 11px var(--fuente);
   font-weight: 600;
   text-transform: uppercase;
 }
@@ -289,7 +289,7 @@
 
 .detail-label {
   color: var(--texto-secundario);
-  font: 11px var(--fuente-mono);
+  font: 11px var(--fuente);
   letter-spacing: 0.4px;
   text-transform: uppercase;
 }
@@ -358,7 +358,7 @@
 
 .status-container label {
   color: var(--texto-secundario);
-  font: 11px var(--fuente-mono);
+  font: 11px var(--fuente);
   letter-spacing: 0.5px;
   text-transform: uppercase;
 }
@@ -622,7 +622,7 @@
   min-height: 40px;
   padding: 8px 15px;
   border-radius: 6px;
-  font: 11px var(--fuente-mono);
+  font: 11px var(--fuente);
   font-weight: 600;
   cursor: pointer;
 }
@@ -763,5 +763,5 @@
 .feedback {
   margin: 0 0 16px;
   color: #ff7b72;
-  font: 12px var(--fuente-mono);
+  font: 12px var(--fuente);
 }

@@ -21,8 +21,7 @@
   --morado: #b58cff;
   --enlace: var(--azul);
 
-  --fuente: "Inter", "Segoe UI", sans-serif;
-  --fuente-mono: "JetBrains Mono", Consolas, monospace;
+  --fuente: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
 *,

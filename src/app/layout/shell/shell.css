@@ -62,7 +62,7 @@
 
 .topbar-title span {
   color: var(--azul);
-  font: 11px var(--fuente-mono);
+  font: 11px var(--fuente);
   letter-spacing: 2px;
 }
 
@@ -102,7 +102,7 @@
   color: white;
   background: var(--azul);
   border-radius: 6px;
-  font: 700 14px var(--fuente-mono);
+  font: 700 14px var(--fuente);
   text-decoration: none;
 }
 
@@ -127,7 +127,7 @@
   background: transparent;
   border: 0;
   border-radius: 6px;
-  font: 11px var(--fuente-mono);
+  font: 11px var(--fuente);
   text-decoration: none;
   white-space: nowrap;
 }

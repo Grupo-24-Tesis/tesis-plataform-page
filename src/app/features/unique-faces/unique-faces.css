@@ -31,7 +31,7 @@
 .detail-header span,
 .appearances-section h2 {
   color: var(--texto-secundario);
-  font: 11px var(--fuente-mono);
+  font: 11px var(--fuente);
   letter-spacing: 1.5px;
 }
 
@@ -45,7 +45,7 @@
 .page-header p {
   margin: 0;
   color: var(--texto-secundario);
-  font: 11px var(--fuente-mono);
+  font: 11px var(--fuente);
 }
 
 .filters {
@@ -70,7 +70,7 @@
 
 .filter-field label {
   color: var(--texto-secundario);
-  font: 11px var(--fuente-mono);
+  font: 11px var(--fuente);
   letter-spacing: 1px;
 }
 
@@ -101,7 +101,7 @@
   min-height: 40px;
   padding: 8px 15px;
   border-radius: 5px;
-  font: 11px var(--fuente-mono);
+  font: 11px var(--fuente);
   cursor: pointer;
 }
 
@@ -186,7 +186,7 @@
   background: rgba(8, 10, 15, 0.88);
   border: 1px solid rgba(71, 215, 160, 0.4);
   border-radius: 4px;
-  font: 11px var(--fuente-mono);
+  font: 11px var(--fuente);
 }
 
 .status-badge.is-suspect {
@@ -202,7 +202,7 @@
   display: block;
   overflow: hidden;
   color: var(--azul);
-  font: 11px var(--fuente-mono);
+  font: 11px var(--fuente);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -307,7 +307,7 @@
 .detail-header strong {
   overflow: hidden;
   color: var(--azul);
-  font: 12px var(--fuente-mono);
+  font: 12px var(--fuente);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -366,7 +366,7 @@
 
 .detail-status {
   color: var(--verde);
-  font: 11px var(--fuente-mono);
+  font: 11px var(--fuente);
 }
 
 .detail-status.is-suspect {
@@ -382,7 +382,7 @@
 
 .detail-summary > div span {
   color: var(--texto-secundario);
-  font: 11px var(--fuente-mono);
+  font: 11px var(--fuente);
 }
 
 .detail-summary > div strong {
@@ -439,7 +439,7 @@
 
 .appearance-info strong {
   color: var(--azul);
-  font: 11px var(--fuente-mono);
+  font: 11px var(--fuente);
 }
 
 .appearance-info span {
@@ -450,7 +450,7 @@
 .appearance-info small {
   overflow: hidden;
   color: var(--texto-secundario);
-  font: 11px var(--fuente-mono);
+  font: 11px var(--fuente);
   text-overflow: ellipsis;
   white-space: nowrap;
 }

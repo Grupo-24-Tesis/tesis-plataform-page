@@ -44,14 +44,14 @@
   border-radius: 11px;
   background: var(--azul);
   color: white;
-  font: 700 20px var(--fuente-mono);
+  font: 700 20px var(--fuente);
   box-shadow: 0 0 32px rgba(45, 111, 196, 0.2);
 }
 
 .nombre-marca {
   margin: 0 0 8px;
   color: var(--texto-secundario);
-  font: 12px var(--fuente-mono);
+  font: 12px var(--fuente);
   letter-spacing: 3px;
 }
 
@@ -73,7 +73,7 @@ h1 {
 .tarjeta h2 {
   margin: 0 0 26px;
   color: var(--azul);
-  font: 12px var(--fuente-mono);
+  font: 12px var(--fuente);
   letter-spacing: 1.5px;
 }
 
@@ -123,7 +123,7 @@ h1 {
   border: 1px solid var(--borde);
   border-radius: 50%;
   background: var(--superficie-3);
-  font: 12px var(--fuente-mono);
+  font: 12px var(--fuente);
 }
 
 .seleccionado .avatar {
@@ -147,7 +147,7 @@ h1 {
 
 .informacion small {
   color: var(--texto-secundario);
-  font: 11px var(--fuente-mono);
+  font: 11px var(--fuente);
 }
 
 .indicador {
@@ -167,7 +167,7 @@ h1 {
   background: transparent;
   border: 1px dashed var(--borde);
   border-radius: 6px;
-  font: 11px var(--fuente-mono);
+  font: 11px var(--fuente);
   cursor: pointer;
 }
 
@@ -184,7 +184,7 @@ h1 {
   background: var(--azul);
   border: 0;
   border-radius: 5px;
-  font: 600 14px var(--fuente-mono);
+  font: 600 14px var(--fuente);
   letter-spacing: 1px;
   cursor: pointer;
 }
@@ -203,7 +203,7 @@ h1 {
 .estado,
 .aviso {
   color: var(--texto-secundario);
-  font: 11px var(--fuente-mono);
+  font: 11px var(--fuente);
   line-height: 1.5;
 }
 
@@ -220,7 +220,7 @@ footer {
   margin-top: 28px;
   text-align: center;
   color: var(--texto-secundario);
-  font: 12px var(--fuente-mono);
+  font: 12px var(--fuente);
 }
 
 footer p {
@@ -260,7 +260,7 @@ footer span {
   display: block;
   margin-bottom: 8px;
   color: var(--azul);
-  font: 11px var(--fuente-mono);
+  font: 11px var(--fuente);
   letter-spacing: 1.5px;
 }
 
@@ -336,7 +336,7 @@ footer span {
   min-height: 42px;
   padding: 8px 14px;
   border-radius: 5px;
-  font: 11px var(--fuente-mono);
+  font: 11px var(--fuente);
   cursor: pointer;
 }
 
