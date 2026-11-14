@@ -9,9 +9,7 @@ import { UniqueFace } from '../../core/models/UniqueFace';
 import { MarksService } from '../../shared/services/marks.service';
 import { FaceAppearance } from '../../core/models/face.model';
 import { DetectionDetailComponent } from '../../shared/components/detection-detail/detection-detail';
-
-const FACES_MAX_AGE_MS = 10 * 60 * 1000;
-const FRESHNESS_CHECK_MS = 60 * 1000;
+import { FreshnessTimer, IMAGES_MAX_AGE_MS } from '../../shared/utils/freshness-timer';
 
 interface FaceQuery {
   startDate?: string;
@@ -63,7 +61,7 @@ export class UniqueFaces implements OnInit, OnDestroy {
   private requestToken = 0;
   private loadedAt = 0;
   private refreshing = false;
-  private freshnessTimer: ReturnType<typeof setTimeout> | undefined;
+  private readonly freshness = new FreshnessTimer(() => this.refreshIfStale());
   private activeQuery: FaceQuery = {};
 
   constructor(private api: ApiService, private marks: MarksService) {}
@@ -73,7 +71,7 @@ export class UniqueFaces implements OnInit, OnDestroy {
 
     this.marks.load();
     this.loadFaces();
-    this.scheduleFreshnessCheck();
+    this.freshness.start();
     this.api.getCameras().subscribe({
       next: (cameras) => this.cameras.set(cameras),
       error: (err) => {
@@ -92,7 +90,7 @@ export class UniqueFaces implements OnInit, OnDestroy {
 
 
   ngOnDestroy(): void {
-    clearTimeout(this.freshnessTimer);
+    this.freshness.stop();
     this.requestToken++;
   }
 
@@ -209,25 +207,19 @@ export class UniqueFaces implements OnInit, OnDestroy {
   }
 
 
-  private scheduleFreshnessCheck(): void {
+  private refreshIfStale(): void {
 
-    this.freshnessTimer = setTimeout(() => {
+    const stale =
+      !this.loading() &&
+      !this.refreshing &&
+      !this.loadError() &&
+      Date.now() - this.loadedAt >= IMAGES_MAX_AGE_MS;
 
-      const stale =
-        !this.loading() &&
-        !this.refreshing &&
-        !this.loadError() &&
-        Date.now() - this.loadedAt >= FACES_MAX_AGE_MS;
+    if (stale) {
 
-      if (stale) {
+      this.refreshFaces();
 
-        this.refreshFaces();
-
-      }
-
-      this.scheduleFreshnessCheck();
-
-    }, FRESHNESS_CHECK_MS);
+    }
 
   }
 
