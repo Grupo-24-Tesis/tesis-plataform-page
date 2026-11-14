@@ -1,59 +1,113 @@
-# TesisPlataformPage
+# FaceCluster: frontend
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 22.0.7.
+Interfaz web de FaceCluster, la plataforma que agrupa las apariciones faciales de videos
+de videovigilancia residencial. Desde aquí se cargan los videos, se revisan los rostros
+que entrega el pipeline de visión por computador y se gestionan reportes de incidentes.
 
-## Development server
+Repositorios relacionados: `tesis-plataform-backend` (API) y
+`tesis_face_recognition_pipeline` (pipeline y worker).
 
-To start a local development server, run:
+## Stack
 
-```bash
-ng serve
-```
+| Componente | Versión |
+| --- | --- |
+| Angular | 22 (componentes standalone y rutas con carga diferida) |
+| TypeScript | 6.0 |
+| Node.js | 22 o superior |
+| npm | 11 |
+| Pruebas | Vitest |
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
-
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
-```bash
-ng generate component component-name
-```
-
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+## Ejecución
 
 ```bash
-ng generate --help
+npm ci
+npm start
 ```
 
-## Building
+La aplicación queda en `http://localhost:4200` y se recarga al cambiar el código.
 
-To build the project run:
+Con Docker:
 
 ```bash
-ng build
+docker build -t facecluster-frontend .
+docker run --rm -p 4200:4200 facecluster-frontend
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+| Comando | Uso |
+| --- | --- |
+| `npm start` | Servidor de desarrollo (`ng serve`) |
+| `npm run build` | Compilación de producción en `dist/` |
+| `npm run watch` | Compilación de desarrollo que se repite con cada cambio |
+| `npm test` | Pruebas unitarias |
 
-## Running unit tests
+Las pruebas de este trabajo están en `src/app/core/models/video-job-status.spec.ts` y
+`src/app/features/monitor/monitor.spec.ts`. `app.spec.ts` y `shell.spec.ts` son las que
+generó Angular CLI y fallan.
 
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
+## Conexión con el backend
 
-```bash
-ng test
-```
+Todas las llamadas HTTP pasan por `ApiService`
+(`src/app/core/services/api.service.ts`). La URL base es `http://localhost:8080/api`, así
+que el backend debe estar corriendo en la misma máquina. El backend solo admite
+peticiones desde `http://localhost:4200`.
 
-## Running end-to-end tests
+## Vistas
 
-For end-to-end (e2e) testing, run:
+| Ruta | Contenido |
+| --- | --- |
+| `/guards` | Selección del vigilante que inicia la sesión. Es la ruta inicial |
+| `/monitor` | Cámaras, carga de videos y videos procesados |
+| `/unique-faces` | Personas encontradas, con filtros por fecha, reportes y personas marcadas |
+| `/reports` | Reportes de incidentes: creación, filtros y cambio de estado |
+| `/marked` | Personas marcadas y el motivo |
 
-```bash
-ng e2e
-```
+El vigilante activo se guarda en `localStorage` (`SessionService`).
 
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+## Carga de videos
 
-## Additional Resources
+La carga se hace desde `/monitor` en tres pasos:
 
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+1. `POST /api/videos/upload-url` devuelve una URL prefirmada de S3.
+2. El navegador sube el archivo a S3 con `PUT` y muestra el progreso. El bucket debe
+   permitir en su configuración CORS las peticiones `PUT` desde el origen del frontend.
+3. `POST /api/videos` registra el video en el backend, que lo envía a procesar.
+
+Solo se aceptan archivos de video y hay que elegir la cámara a la que pertenece.
+
+Cada video cargado aparece en `/monitor` con el estado de su trabajo. Mientras el trabajo
+no termina, la vista consulta `GET /api/video-jobs/{jobId}` cada 5 segundos.
+
+| Estado del backend | Texto en pantalla |
+| --- | --- |
+| `UPLOADED` | Registrado |
+| `QUEUED` | En cola |
+| `PROCESSING` | Procesando |
+| `COMPLETED` | Completado |
+| `FAILED` | Fallido, con el motivo que envía el backend |
+| `QUEUE_ERROR` | No se pudo enviar a la cola |
+
+Cuando el trabajo llega a `COMPLETED`, la vista carga los rostros de ese video: las
+apariciones cuyo `faceId` empieza por el `jobId`. La lista de videos se guarda en
+`localStorage`.
+
+## Imágenes de rostros
+
+Las imágenes llegan como URL prefirmadas de S3 que expiran y pueden borrarse del bucket.
+La directiva `ImageFallbackDirective` oculta la imagen que no carga y muestra en su lugar
+el mismo marcador que se usa cuando no hay imagen. El marcador recibe el mismo atributo de
+encapsulación que la imagen para que le aplique el CSS del componente.
+
+`timestamp` es la posición del rostro dentro del video, con el formato `00:01:23`.
+
+## Estructura
+
+| Carpeta | Contenido |
+| --- | --- |
+| `src/app/core/services` | `ApiService` y `SessionService` |
+| `src/app/core/models` | Tipos de los datos del backend |
+| `src/app/features` | Una carpeta por vista |
+| `src/app/layout/shell` | Barra superior y menú lateral |
+| `src/app/shared` | Directivas y modelos compartidos |
+
+`features/upload`, `features/results` y `core/services/mock-model.ts` no están conectados
+a ninguna ruta.
