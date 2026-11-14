@@ -121,10 +121,6 @@ endDate: string = '';
   let endDate: string | undefined;
 
 
-  // =================================
-  // DÍA ESPECÍFICO
-  // =================================
-
   if (
     this.dateFilter === 'dia' &&
     this.selectedDate
@@ -134,10 +130,6 @@ endDate: string = '';
 
   }
 
-
-  // =================================
-  // MES
-  // =================================
 
   else if (
     this.dateFilter === 'mes' &&
@@ -163,10 +155,6 @@ endDate: string = '';
   }
 
 
-  // =================================
-  // AÑO
-  // =================================
-
   else if (
     this.dateFilter === 'ano' &&
     this.selectedYear
@@ -181,10 +169,6 @@ endDate: string = '';
   }
 
 
-  // =================================
-  // RANGO
-  // =================================
-
   else if (
     this.dateFilter === 'rango' &&
     this.startDate &&
@@ -197,10 +181,6 @@ endDate: string = '';
 
   }
 
-
-  // =================================
-  // CONSULTAR BACKEND
-  // =================================
 
   this.api.getFilteredReports(
     this.statusFilter || undefined,

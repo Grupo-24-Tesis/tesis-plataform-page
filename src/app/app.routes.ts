@@ -1,20 +1,17 @@
 import { Routes } from '@angular/router';
 
 export const routes: Routes = [
-  // Ruta inicial
   {
     path: '',
     redirectTo: '/guards',
     pathMatch: 'full'
   },
-  // Selección de vigilante
   {
     path: 'guards',
     loadComponent: () =>
       import('./features/guards/guards').then(m => m.Guards)
   },
 
-  // Aplicación principal
   {
     path: '',
     loadComponent: () =>
@@ -45,7 +42,6 @@ export const routes: Routes = [
 
   
 
-  // Cualquier ruta desconocida
   {
     path: '**',
     redirectTo: 'guards'

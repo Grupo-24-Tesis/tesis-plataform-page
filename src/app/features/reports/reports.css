@@ -7,10 +7,6 @@
   box-sizing: border-box;
 }
 
-/* ========================= */
-/* ENCABEZADO */
-/* ========================= */
-
 .page-header {
   display: flex;
   align-items: flex-start;
@@ -39,10 +35,6 @@
   line-height: 1.5;
 }
 
-/* ========================= */
-/* BOTÓN NUEVO REPORTE */
-/* ========================= */
-
 .new-report-btn {
   min-height: 40px;
   flex-shrink: 0;
@@ -66,10 +58,6 @@
   border-color: var(--azul);
   transform: translateY(-1px);
 }
-
-/* ========================= */
-/* FILTROS */
-/* ========================= */
 
 .filters {
   display: flex;
@@ -172,10 +160,6 @@
   background: var(--superficie-3);
   border-color: var(--texto-secundario);
 }
-
-/* ========================= */
-/* LISTA DE REPORTES */
-/* ========================= */
 
 .report-section + .report-section {
   margin-top: 30px;
@@ -310,10 +294,6 @@
   text-transform: uppercase;
 }
 
-/* ========================= */
-/* PERSONAS INVOLUCRADAS */
-/* ========================= */
-
 .involved-section {
   margin-top: 16px;
 }
@@ -344,10 +324,6 @@
   object-fit: cover;
 }
 
-/* ========================= */
-/* INFORMACIÓN DE RESOLUCIÓN */
-/* ========================= */
-
 .resolution-info {
   margin-top: 16px;
   padding: 11px 13px;
@@ -371,10 +347,6 @@
   margin: 5px 0 0;
   line-height: 1.5;
 }
-
-/* ========================= */
-/* ESTADO */
-/* ========================= */
 
 .status-container {
   display: flex;
@@ -411,10 +383,6 @@
   border-color: var(--azul);
 }
 
-/* ========================= */
-/* FONDO DE LOS MODALES */
-/* ========================= */
-
 .modal-overlay {
   position: fixed;
   z-index: 1000;
@@ -426,10 +394,6 @@
   background: rgba(2, 6, 14, 0.78);
   backdrop-filter: blur(3px);
 }
-
-/* ========================= */
-/* MODAL */
-/* ========================= */
 
 .modal {
   width: min(760px, 100%);
@@ -493,10 +457,6 @@
   color: var(--texto);
 }
 
-/* ========================= */
-/* CAMPOS DEL MODAL */
-/* ========================= */
-
 .field {
   display: flex;
   flex-direction: column;
@@ -545,10 +505,6 @@
 .field textarea {
   resize: vertical;
 }
-
-/* ========================= */
-/* PERSONAS DEL MODAL */
-/* ========================= */
 
 .people-section {
   margin: 20px 0 18px;
@@ -650,10 +606,6 @@
   color: var(--azul);
 }
 
-/* ========================= */
-/* ACCIONES DEL MODAL */
-/* ========================= */
-
 .modal-actions {
   display: flex;
   justify-content: flex-end;
@@ -695,10 +647,6 @@
   border-color: var(--azul);
 }
 
-/* ========================= */
-/* SCROLL DEL MODAL */
-/* ========================= */
-
 .modal {
   scrollbar-width: thin;
   scrollbar-color: var(--borde) var(--superficie);
@@ -716,10 +664,6 @@
   background: var(--borde);
   border-radius: 10px;
 }
-
-/* ========================= */
-/* RESPONSIVE */
-/* ========================= */
 
 @media (max-width: 800px) {
   :host {

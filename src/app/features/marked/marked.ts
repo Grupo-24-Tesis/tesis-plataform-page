@@ -45,7 +45,6 @@ export class Marked implements OnInit {
   ngOnInit(): void {
     this.loadLocalMarked();
 
-    // Cargar personas marcadas
     this.api.getMarked().subscribe({
       next: (data) => {
         console.log('MARKED API =>', data);
@@ -67,7 +66,6 @@ export class Marked implements OnInit {
       }
     });
 
-    // Cargar apariciones para obtener las personas únicas
    this.api.getFaceAppearances().subscribe({
     next: (data) => {
     const map = new Map<string, FaceAppearance>();

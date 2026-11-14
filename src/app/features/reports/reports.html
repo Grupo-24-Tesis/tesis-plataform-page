@@ -1,7 +1,3 @@
-<!-- ========================= -->
-<!-- BOTÓN NUEVO REPORTE -->
-<!-- ========================= -->
-
 <header class="page-header">
   <div>
     <span class="section-label">GESTIÓN DE INCIDENTES</span>
@@ -20,13 +16,7 @@
   </button>
 </header>
 
-<!-- ========================= -->
-<!-- FILTROS -->
-<!-- ========================= -->
-
 <div class="filters">
-
-  <!-- ESTADO -->
 
   <div class="filter-group">
 
@@ -56,8 +46,6 @@
   </div>
 
 
-  <!-- TIPO DE FECHA -->
-
   <div class="filter-group">
 
     <label for="dateType">
@@ -81,8 +69,6 @@
 
   </div>
 
-
-  <!-- TIPO DE FILTRO -->
 
   <div class="filter-group">
 
@@ -120,8 +106,6 @@
   </div>
 
 
-  <!-- DÍA -->
-
   <div
     class="filter-group"
     *ngIf="dateFilter === 'dia'"
@@ -140,8 +124,6 @@
   </div>
 
 
-  <!-- MES -->
-
   <div
     class="filter-group"
     *ngIf="dateFilter === 'mes'"
@@ -159,8 +141,6 @@
 
   </div>
 
-
-  <!-- AÑO -->
 
   <div
     class="filter-group"
@@ -182,8 +162,6 @@
 
   </div>
 
-
-  <!-- RANGO -->
 
   <ng-container
     *ngIf="dateFilter === 'rango'"
@@ -221,8 +199,6 @@
   </ng-container>
 
 
-  <!-- BOTONES -->
-
   <div class="filter-actions">
 
     <button
@@ -248,10 +224,6 @@
 
 
 
-<!-- ========================= -->
-<!-- LISTA DE REPORTES -->
-<!-- ========================= -->
-
 <section
   class="report-section"
   *ngFor="let section of reportSections"
@@ -267,8 +239,6 @@
       *ngFor="let r of getReportsByStatus(section.status)"
       class="item"
     >
-
-    <!-- INFORMACIÓN PRINCIPAL -->
 
     <div class="report-info">
 
@@ -291,8 +261,6 @@
   {{ r.description }}
 </p>
 
-      <!-- FECHA DEL INCIDENTE -->
-
       <div class="report-detail">
 
         <span class="detail-label">
@@ -305,8 +273,6 @@
 
       </div>
 
-
-      <!-- PERSONAS INVOLUCRADAS -->
 
       <div
         class="involved-section"
@@ -340,8 +306,6 @@
 
       </div>
 
-
-      <!-- INFORMACIÓN DE RESOLUCIÓN -->
 
       <div
         class="resolution-info"
@@ -381,8 +345,6 @@
     </div>
 
 
-    <!-- ESTADO -->
-
     <div class="status-container">
 
       <label>
@@ -411,10 +373,6 @@
 </section>
 
 
-<!-- ========================= -->
-<!-- MODAL NUEVO REPORTE -->
-<!-- ========================= -->
-
 <div
   class="modal-overlay"
   *ngIf="showModal"
@@ -425,8 +383,6 @@
     class="modal"
     (click)="$event.stopPropagation()"
   >
-
-    <!-- ENCABEZADO -->
 
     <div class="modal-header">
 
@@ -445,8 +401,6 @@
     </div>
 
 
-    <!-- TÍTULO -->
-
     <div class="field">
 
       <label for="title">
@@ -462,8 +416,6 @@
 
     </div>
 
-
-    <!-- DESCRIPCIÓN -->
 
     <div class="field">
 
@@ -481,8 +433,6 @@
     </div>
 
 
-    <!-- FECHA DEL INCIDENTE -->
-
     <div class="field">
 
       <label for="incidentDate">
@@ -497,8 +447,6 @@
 
     </div>
 
-
-    <!-- PRIORIDAD -->
 
     <div class="field">
 
@@ -528,8 +476,6 @@
     </div>
 
 
-    <!-- ESTADO -->
-
     <div class="field">
 
       <label for="status">
@@ -553,10 +499,6 @@
 
     </div>
 
-
-    <!-- ========================= -->
-    <!-- PERSONAS INVOLUCRADAS -->
-    <!-- ========================= -->
 
     <div class="people-section">
 
@@ -587,8 +529,6 @@
               [alt]="person.faceId"
             >
 
-            <!-- CHECK DE SELECCIÓN -->
-
             <div
               class="selection-check"
               *ngIf="isFaceSelected(person.faceId)"
@@ -605,8 +545,6 @@
 
       </div>
 
-
-      <!-- INFORMACIÓN DE SELECCIÓN -->
 
       <div
         class="selected-info"
@@ -625,8 +563,6 @@
 
     </div>
 
-
-    <!-- BOTONES -->
 
     <div class="modal-actions">
 
@@ -651,9 +587,6 @@
   </div>
 
 </div>
-<!-- ========================= -->
-<!-- POPUP RESOLVER REPORTE -->
-<!-- ========================= -->
 
 <div
   class="modal-overlay"
@@ -665,8 +598,6 @@
     class="modal"
     (click)="$event.stopPropagation()"
   >
-
-    <!-- ENCABEZADO -->
 
     <div class="modal-header">
 
@@ -685,8 +616,6 @@
     </div>
 
 
-    <!-- REPORTE -->
-
     <p class="modal-description">
 
       Está resolviendo:
@@ -697,8 +626,6 @@
 
     </p>
 
-
-    <!-- FECHA DE RESOLUCIÓN -->
 
     <div class="field">
 
@@ -715,8 +642,6 @@
     </div>
 
 
-    <!-- DESCRIPCIÓN -->
-
     <div class="field">
 
       <label for="resolutionDescription">
@@ -732,8 +657,6 @@
 
     </div>
 
-
-    <!-- BOTONES -->
 
     <div class="modal-actions">
 

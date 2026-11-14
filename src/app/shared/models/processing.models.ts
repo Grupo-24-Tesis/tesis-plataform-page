@@ -1,6 +1,6 @@
 export interface FaceAppearance {
   faceId: string;
-  timestamp: string; // "00:01:23"
+  timestamp: string;
   cameraId: string;
   frameUrl?: string;
 }

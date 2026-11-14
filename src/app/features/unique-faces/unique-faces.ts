@@ -19,20 +19,12 @@ import { UniqueFace } from '../../core/models/UniqueFace';
 })
 export class UniqueFaces implements OnInit {
 
-  // ==========================================
-  // DATOS
-  // ==========================================
-
   faces = signal<UniqueFace[]>([]);
   cameras = signal<Camera[]>([]);
 
   selected = signal<UniqueFace | null>(null);
   detailClosing = false;
 
-
-  // ==========================================
-  // FILTROS
-  // ==========================================
 
   startDate: string = '';
 
@@ -45,10 +37,6 @@ export class UniqueFaces implements OnInit {
 
   constructor(private api: ApiService) {}
 
-
-  // ==========================================
-  // INICIO
-  // ==========================================
 
   ngOnInit(): void {
 
@@ -64,10 +52,6 @@ export class UniqueFaces implements OnInit {
       ?? 'Cámara no identificada';
   }
 
-
-  // ==========================================
-  // CARGAR CARAS
-  // ==========================================
 
   loadFaces(): void {
 
@@ -115,10 +99,6 @@ export class UniqueFaces implements OnInit {
   }
 
 
-  // ==========================================
-  // APLICAR FILTROS
-  // ==========================================
-
   applyFilters(): void {
 
     this.selected.set(null);
@@ -127,10 +107,6 @@ export class UniqueFaces implements OnInit {
 
   }
 
-
-  // ==========================================
-  // LIMPIAR FILTROS
-  // ==========================================
 
   clearFilters(): void {
 
@@ -149,10 +125,6 @@ export class UniqueFaces implements OnInit {
   }
 
 
-  // ==========================================
-  // SELECCIONAR CARA
-  // ==========================================
-
   selectFace(face: UniqueFace): void {
 
     if (
@@ -170,10 +142,6 @@ export class UniqueFaces implements OnInit {
 
   }
 
-
-  // ==========================================
-  // CERRAR DETALLE
-  // ==========================================
 
   closeDetail(): void {
 

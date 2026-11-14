@@ -1,10 +1,5 @@
 import { Directive, ElementRef, HostListener, Renderer2 } from '@angular/core';
 
-/**
- * Las imágenes de rostros son URLs prefirmadas de S3 que expiran y pueden
- * borrarse del bucket. Si una falla al cargar, se oculta y se muestra el
- * mismo marcador (♙) que se usa cuando no hay imagen.
- */
 @Directive({
   selector: 'img[appImageFallback]',
   standalone: true
@@ -32,8 +27,6 @@ export class ImageFallbackDirective {
     this.renderer.setAttribute(placeholder, 'aria-hidden', 'true');
     this.renderer.appendChild(placeholder, this.renderer.createText('♙'));
 
-    // Mismo atributo de encapsulación que el <img> para que aplique el CSS
-    // del componente a .image-placeholder.
     for (const attr of Array.from(img.attributes)) {
       if (attr.name.startsWith('_ngcontent')) {
         this.renderer.setAttribute(placeholder, attr.name, '');

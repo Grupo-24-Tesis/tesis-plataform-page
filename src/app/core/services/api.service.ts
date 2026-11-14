@@ -16,16 +16,13 @@ export class ApiService {
   private base = 'http://localhost:8080/api';
   constructor(private http: HttpClient) {}
 
-  //Estas son las apis de guardias
   getGuards() { return this.http.get<Guard[]>(`${this.base}/guards`); }
   createGuard(payload: Omit<Guard, 'id'>) { return this.http.post<Guard>(`${this.base}/guards`, payload); }
 
-  //Estas son las apis de camaras
   getCameras() { return this.http.get<Camera[]>(`${this.base}/cameras`); }
   createCamera(payload: Omit<Camera, 'id'>) { return this.http.post<Camera>(`${this.base}/cameras`, payload); }
 
 
-  // Estas son las apis de apariciones de caras
  getFaceAppearances() {
   return this.http.get<FaceAppearance[]>(
     `${this.base}/face-appearances`
@@ -70,7 +67,6 @@ getUniqueFaces(
   );
 }
 
-  // Estas son las apis de reportes
   getReports() { return this.http.get<ReportItem[]>(`${this.base}/reports`); }
   getFilteredReports(
   status?: string,
@@ -124,8 +120,6 @@ getUniqueFaces(
   );
 }
 
-  // Estan son las apis de marked
-  // Aunque tambien se usa la de aparaciones unicas para obtener las personas unicas xd
  getMarked() {
   return this.http.get<MarkedPerson[]>(`${this.base}/marked`);
 }
@@ -143,7 +137,6 @@ deleteMarked(id: string) {
   );
 }
 
-//api para el cargue del video
 requestVideoUploadUrl(
   payload: PresignedUploadRequest
 ) {

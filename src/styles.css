@@ -67,8 +67,6 @@ textarea:focus-visible {
   outline-offset: 3px;
 }
 
-/* Transiciones entre rutas */
-
 ::view-transition-old(root),
 ::view-transition-new(root),
 ::view-transition-old(app-shell),
@@ -204,8 +202,6 @@ html.guard-enter-transition::view-transition-new(guard-screen) {
     opacity: 0;
   }
 }
-
-/* Apertura y cierre de popups */
 
 dialog {
   opacity: 0;

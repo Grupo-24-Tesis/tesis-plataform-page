@@ -234,8 +234,6 @@
   line-height: 1.6;
 }
 
-/* Popup de cámara */
-
 .camera-dialog {
   width: min(440px, calc(100vw - 32px));
   margin: auto;
@@ -373,8 +371,6 @@
   }
 }
 
-/* Videos procesados */
-
 .camera-summary {
   display: flex;
   flex-shrink: 0;
@@ -509,8 +505,6 @@
   font: 11px var(--fuente-mono);
 }
 
-/* Popup de video */
-
 .video-dialog {
   width: min(520px, calc(100vw - 32px));
   margin: auto;
@@ -586,7 +580,6 @@
     grid-template-columns: 1fr;
   }
 }
-/* Selección y detalle de personas */
 
 .monitor-page.with-detail {
   grid-template-columns: 320px minmax(0, 1fr) 360px;

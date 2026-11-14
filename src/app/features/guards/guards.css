@@ -231,8 +231,6 @@ footer span {
   font-size: 11px;
 }
 
-/* Popup de registro */
-
 .modal-guardia {
   width: min(440px, calc(100vw - 32px));
   max-height: calc(100dvh - 48px);

@@ -250,7 +250,6 @@
     opacity: 1;
   }
 }
-/* Barra completamente oculta cuando está cerrada en escritorio */
 
 @media (min-width: 721px) {
   .app-shell {

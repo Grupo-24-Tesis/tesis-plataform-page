@@ -18,7 +18,6 @@ export class Results implements OnInit {
     if (raw) this.result = JSON.parse(raw);
   }
 
-  // Simula guardado exitoso (sin backend)
   saveMock(): void {
     if (!this.result) return;
     this.message = 'Resultado guardado (simulado)';
