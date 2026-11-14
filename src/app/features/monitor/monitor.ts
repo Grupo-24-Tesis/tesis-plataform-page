@@ -518,7 +518,7 @@ export class MonitorComponent implements OnInit, OnDestroy {
         this.markBusy.set(false);
         this.reportMark(
           cluster,
-          apiErrorMessage(error, 'No se pudo guardar la detección.'),
+          apiErrorMessage(error, 'No se pudo marcar la detección.'),
           true
         );
       }

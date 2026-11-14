@@ -142,7 +142,7 @@ describe('Marked', () => {
     fixture.detectChanges();
 
     expect(fixture.nativeElement.querySelector('.modal .feedback').textContent)
-      .toContain('Selecciona una persona.');
+      .toContain('Selecciona una detección.');
     expect(alertSpy).not.toHaveBeenCalled();
   });
 

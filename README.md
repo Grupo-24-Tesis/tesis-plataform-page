@@ -1,6 +1,6 @@
 # FaceCluster: frontend
 
-Interfaz web de FaceCluster, la plataforma que agrupa las apariciones faciales de videos
+Interfaz web de FaceCluster, la plataforma que detecta rostros por video en grabaciones
 de videovigilancia residencial. Desde aquí se cargan los videos, se revisan los rostros
 que entrega el pipeline de visión por computador y se gestionan reportes de incidentes.
 

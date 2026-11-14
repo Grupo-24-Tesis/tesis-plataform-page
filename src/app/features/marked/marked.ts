@@ -136,7 +136,7 @@ export class Marked implements OnInit {
     const person = this.selectedPerson();
 
     if (!person) {
-      this.modalMessage.set('Selecciona una persona.');
+      this.modalMessage.set('Selecciona una detección.');
       return;
     }
 
@@ -168,7 +168,7 @@ export class Marked implements OnInit {
         this.selectedPerson.set(null);
         this.loadMarked();
         this.modalMessage.set(
-          apiErrorMessage(error, 'No se pudo guardar la persona.')
+          apiErrorMessage(error, 'No se pudo marcar la detección.')
         );
       }
     });

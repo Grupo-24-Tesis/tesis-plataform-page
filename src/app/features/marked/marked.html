@@ -14,7 +14,7 @@
       type="button"
       (click)="openModal()"
     >
-      + AGREGAR PERSONA
+      + MARCAR DETECCIÓN
     </button>
   </header>
 
@@ -169,7 +169,7 @@
     </p>
 
     <section class="people-section">
-      <span class="section-label">SELECCIONAR PERSONA</span>
+      <span class="section-label">SELECCIONAR DETECCIÓN</span>
 
       <div class="people-grid">
         <button
@@ -210,7 +210,7 @@
       class="selected-info"
       *ngIf="selectedPerson() as person"
     >
-      <span>PERSONA SELECCIONADA</span>
+      <span>DETECCIÓN SELECCIONADA</span>
     </div>
 
     <div class="reason-container">
@@ -250,7 +250,7 @@
         [disabled]="busy()"
         (click)="createMarked()"
       >
-        GUARDAR PERSONA
+        MARCAR DETECCIÓN
       </button>
     </footer>
   </div>

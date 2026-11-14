@@ -359,7 +359,7 @@ describe('MonitorComponent', () => {
 
     expect(api.deleteMarked).toHaveBeenCalledWith('m1');
     expect(api.createMarked).not.toHaveBeenCalled();
-    expect(markButton().textContent).toContain('GUARDAR');
+    expect(markButton().textContent).toContain('MARCAR');
   });
 
   it('shows the backend message and reloads marks on a 409', async () => {
