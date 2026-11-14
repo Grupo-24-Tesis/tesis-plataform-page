@@ -21,6 +21,7 @@ import {
 } from '../../core/services/api.service';
 import { PresignedUploadResponse, VideoJobMetrics, VideoJobResponse } from '../../core/models/uploadVideo';
 import { describeVideoTimings, formatDuration } from '../../core/models/duration-format';
+import { MetricsStripComponent } from './metrics-strip';
 import { FaceAppearance } from '../../core/models/face.model';
 import { ImageFallbackDirective } from '../../shared/directives/image-fallback.directive';
 import {
@@ -67,7 +68,7 @@ interface SelectedCluster {
 @Component({
   selector: 'app-monitor',
   standalone: true,
-  imports: [CommonModule, FormsModule, ImageFallbackDirective],
+  imports: [CommonModule, FormsModule, ImageFallbackDirective, MetricsStripComponent],
   templateUrl: './monitor.html',
   styleUrl: './monitor.css',
 })

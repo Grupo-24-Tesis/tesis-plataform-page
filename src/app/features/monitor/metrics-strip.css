@@ -1,0 +1,33 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+
+.metrics-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 0 0 18px;
+}
+
+.metric-item {
+  display: flex;
+  min-width: 120px;
+  flex: 1 1 120px;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 14px;
+  background: var(--superficie-2);
+  border: 1px solid var(--borde);
+  border-radius: 8px;
+  overflow-wrap: anywhere;
+}
+
+.metric-item small {
+  color: var(--texto-secundario);
+  font: 11px var(--fuente);
+}
+
+.metric-item strong {
+  font: 600 14px var(--fuente);
+}

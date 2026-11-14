@@ -450,25 +450,9 @@
   background: var(--rojo);
 }
 
-.metric-item small,
 .video-status-label {
   color: var(--texto-secundario);
   font: 11px var(--fuente);
-}
-
-.metrics-strip {
-  display: flex;
-  gap: 12px;
-  margin: 0 0 18px;
-}
-
-.metric-item {
-  flex: 1;
-  padding: 10px;
-}
-
-.metric-item * {
-  display: block;
 }
 
 .video-failure {

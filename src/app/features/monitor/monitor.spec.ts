@@ -133,15 +133,62 @@ describe('MonitorComponent', () => {
   it('shows the summary strip with the metrics of the camera', async () => {
     await create();
 
-    const text = fixture.nativeElement.textContent;
+    const values = new Map<string, string>(
+      Array.from<HTMLElement>(
+        fixture.nativeElement.querySelectorAll('.metric-item')
+      ).map(item => [
+        item.querySelector('small')!.textContent!.trim(),
+        item.querySelector('strong')!.textContent!.trim()
+      ])
+    );
+
     expect(api.getVideoJobMetrics).toHaveBeenCalledWith('CAM-01');
-    expect(text).toContain('Tasa de fallo');
-    expect(text).toContain('25 %');
-    expect(text).toContain('Espera media');
-    expect(text).toContain('12 s');
-    expect(text).toContain('1 min 20 s');
-    expect(text).toContain('Detecciones totales');
-    expect(text).toContain('9');
+    expect(values.get('Videos')).toBe('5');
+    expect(values.get('Completados')).toBe('3');
+    expect(values.get('Fallidos')).toBe('1');
+    expect(values.get('Tasa de fallo')).toBe('25 %');
+    expect(values.get('Espera media')).toBe('12 s');
+    expect(values.get('Procesamiento medio')).toBe('1 min 20 s');
+    expect(values.get('Detecciones totales')).toBe('9');
+  });
+
+  it('ignores a slow metrics response of a camera that is no longer selected', async () => {
+    const slowA = new Subject<VideoJobMetrics>();
+    api.getVideoJobMetrics
+      .mockReturnValueOnce(slowA)
+      .mockReturnValue(of({ ...METRICS, total: 2 }));
+
+    await create();
+    component.selectCamera({ id: 'CAM-02', name: 'Garaje', active: true });
+    slowA.next({ ...METRICS, total: 99 });
+    await fixture.whenStable();
+
+    expect(component.metrics()?.total).toBe(2);
+  });
+
+  it('reloads the list and the metrics when retrying after a metrics error', async () => {
+    api.getVideoJobMetrics
+      .mockReturnValueOnce(
+        throwError(() => new HttpErrorResponse({
+          status: 500,
+          error: { message: 'No se pudieron calcular las métricas' }
+        }))
+      )
+      .mockReturnValue(of(METRICS));
+    await create();
+    api.getVideoJobs.mockClear();
+    api.getVideoJobMetrics.mockClear();
+
+    const retry = Array.from<HTMLButtonElement>(
+      fixture.nativeElement.querySelectorAll('button')
+    ).find(button => button.textContent?.trim() === 'Reintentar')!;
+    retry.click();
+    await fixture.whenStable();
+
+    expect(api.getVideoJobs).toHaveBeenCalledTimes(1);
+    expect(api.getVideoJobMetrics).toHaveBeenCalledTimes(1);
+    expect(component.metricsErrorMsg()).toBe('');
+    expect(component.metrics()?.total).toBe(5);
   });
 
   it('shows the backend message when the metrics fail and keeps the list', async () => {

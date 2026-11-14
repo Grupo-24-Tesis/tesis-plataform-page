@@ -75,12 +75,7 @@
     </header>
 
     <section class="camera-preview" *ngIf="selectedCamera()">
-      <div class="metrics-strip" *ngIf="metricItems().length > 0">
-        <div class="video-block metric-item" *ngFor="let item of metricItems()">
-          <small>{{ item.label }}</small>
-          <strong>{{ item.value }}</strong>
-        </div>
-      </div>
+      <app-metrics-strip [items]="metricItems()" />
 
       <p class="video-failure" *ngIf="metricsErrorMsg()">
         {{ metricsErrorMsg() }}
