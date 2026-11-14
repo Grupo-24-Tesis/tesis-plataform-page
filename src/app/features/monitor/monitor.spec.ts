@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpErrorResponse, HttpEventType } from '@angular/common/http';
-import { of, throwError } from 'rxjs';
+import { Subject, of, throwError } from 'rxjs';
 
 import { ApiService } from '../../core/services/api.service';
 import { VideoJobResponse } from '../../core/models/uploadVideo';
@@ -183,6 +183,104 @@ describe('MonitorComponent', () => {
 
     expect(api.getVideoJobFaces).toHaveBeenCalledTimes(2);
     expect(fixture.nativeElement.querySelector('.face-preview img')).not.toBeNull();
+  });
+
+  it('refetches the faces once their urls are older than ten minutes', async () => {
+    vi.useFakeTimers();
+    const freshFace = { ...FACE, frameUrl: 'https://cubo.s3.amazonaws.com/nueva?firma' };
+    api.getVideoJobs.mockReturnValue(of([job('COMPLETED')]));
+    api.getVideoJobFaces
+      .mockReturnValueOnce(of([FACE]))
+      .mockReturnValue(of([freshFace]));
+
+    await create();
+    vi.advanceTimersByTime(9 * 60 * 1000);
+    await fixture.whenStable();
+    expect(api.getVideoJobFaces).toHaveBeenCalledTimes(1);
+
+    vi.advanceTimersByTime(90 * 1000);
+    await fixture.whenStable();
+
+    expect(api.getVideoJobFaces).toHaveBeenCalledTimes(2);
+    const img: HTMLImageElement | null =
+      fixture.nativeElement.querySelector('.face-preview img');
+    expect(img?.getAttribute('src')).toBe(freshFace.frameUrl);
+  });
+
+  it('keeps the old cards while the refetched faces are pending', async () => {
+    vi.useFakeTimers();
+    const pending = new Subject<unknown[]>();
+    api.getVideoJobs.mockReturnValue(of([job('COMPLETED')]));
+    api.getVideoJobFaces
+      .mockReturnValueOnce(of([FACE]))
+      .mockReturnValue(pending);
+
+    await create();
+    vi.advanceTimersByTime(10 * 60 * 1000);
+    await fixture.whenStable();
+
+    expect(api.getVideoJobFaces).toHaveBeenCalledTimes(2);
+    expect(fixture.nativeElement.querySelector('.face-preview img')).not.toBeNull();
+  });
+
+  it('uses the idle interval when every job is terminal', async () => {
+    vi.useFakeTimers();
+    api.getVideoJobs.mockReturnValue(of([job('COMPLETED')]));
+
+    await create();
+    vi.advanceTimersByTime(5000);
+    expect(api.getVideoJobs).toHaveBeenCalledTimes(1);
+
+    vi.advanceTimersByTime(25000);
+    expect(api.getVideoJobs).toHaveBeenCalledTimes(2);
+  });
+
+  it('ignores a slow list response of a camera that is no longer selected', async () => {
+    const slowA = new Subject<VideoJobResponse[]>();
+    api.getVideoJobs
+      .mockReturnValueOnce(slowA)
+      .mockReturnValue(of([job('QUEUED', null, 'job-b')]));
+
+    await create();
+    component.selectCamera({ id: 'CAM-02', name: 'Garaje', active: true });
+    slowA.next([job('QUEUED', null, 'job-a')]);
+    await fixture.whenStable();
+
+    expect(component.videos().map(video => video.jobId)).toEqual(['job-b']);
+    expect(component.cameraVideoCountLabel('CAM-01')).toBe('');
+  });
+
+  it('ignores the response of the first visit when the same camera is selected again', async () => {
+    const firstA = new Subject<VideoJobResponse[]>();
+    const secondA = new Subject<VideoJobResponse[]>();
+    api.getVideoJobs
+      .mockReturnValueOnce(firstA)
+      .mockReturnValueOnce(of([]))
+      .mockReturnValueOnce(secondA);
+
+    await create();
+    component.selectCamera({ id: 'CAM-02', name: 'Garaje', active: true });
+    component.selectCamera({ id: 'CAM-01', name: 'Entrada', active: true });
+    firstA.next([job('QUEUED', null, 'job-viejo')]);
+    expect(component.videos()).toEqual([]);
+
+    secondA.next([job('QUEUED', null, 'job-nuevo')]);
+    expect(component.videos().map(video => video.jobId)).toEqual(['job-nuevo']);
+  });
+
+  it('does not schedule another refresh from a stale response', async () => {
+    vi.useFakeTimers();
+    const slowA = new Subject<VideoJobResponse[]>();
+    api.getVideoJobs
+      .mockReturnValueOnce(slowA)
+      .mockReturnValue(of([job('COMPLETED', null, 'job-b')]));
+
+    await create();
+    component.selectCamera({ id: 'CAM-02', name: 'Garaje', active: true });
+    slowA.next([job('QUEUED', null, 'job-a')]);
+    vi.advanceTimersByTime(30000);
+
+    expect(api.getVideoJobs).toHaveBeenCalledTimes(3);
   });
 
   it('reloads the list when the camera changes', async () => {

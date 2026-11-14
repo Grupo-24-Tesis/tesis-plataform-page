@@ -29,6 +29,7 @@ import {
 
 const ACTIVE_REFRESH_MS = 5000;
 const IDLE_REFRESH_MS = 30000;
+const FACES_MAX_AGE_MS = 10 * 60 * 1000;
 const ACTIVE_STATUSES = ['UPLOADED', 'QUEUED', 'PROCESSING'];
 
 interface MonitorVideo {
@@ -40,6 +41,7 @@ interface MonitorVideo {
   jobId?: string;
   failureReason?: string;
   facesLoaded: boolean;
+  facesLoadedAt: number;
   clusters: Array<{
     clusterId: string;
     appearances: Array<{
@@ -105,6 +107,7 @@ export class MonitorComponent implements OnInit, OnDestroy {
   videoSuccessMsg = signal('');
 
   private refreshTimer?: ReturnType<typeof setTimeout>;
+  private requestToken = 0;
   private readonly loadingFaceJobs = new Set<string>();
 
   constructor(
@@ -160,6 +163,7 @@ export class MonitorComponent implements OnInit, OnDestroy {
 
   private showCamera(camera: Camera | null): void {
     this.stopRefresh();
+    this.requestToken++;
     this.selectedCamera.set(camera);
     this.selectedCluster.set(null);
     this.videos.set([]);
@@ -198,10 +202,12 @@ export class MonitorComponent implements OnInit, OnDestroy {
     }
 
     this.stopRefresh();
+    const token = ++this.requestToken;
+    this.loadingFaceJobs.clear();
 
     this.api.getVideoJobs(camera.id).subscribe({
       next: jobs => {
-        if (this.selectedCamera()?.id !== camera.id) {
+        if (token !== this.requestToken) {
           return;
         }
 
@@ -220,14 +226,14 @@ export class MonitorComponent implements OnInit, OnDestroy {
 
         for (const job of jobs) {
           if (job.status === 'COMPLETED') {
-            this.loadJobFaces(job.jobId, camera.id);
+            this.loadJobFaces(job.jobId, token);
           }
         }
 
         this.scheduleRefresh();
       },
       error: error => {
-        if (this.selectedCamera()?.id !== camera.id) {
+        if (token !== this.requestToken) {
           return;
         }
 
@@ -259,14 +265,23 @@ export class MonitorComponent implements OnInit, OnDestroy {
       status: job.status,
       failureReason: job.failureReason ?? undefined,
       facesLoaded: keepFaces,
+      facesLoadedAt: keepFaces ? previous.facesLoadedAt : 0,
       clusters: keepFaces ? previous.clusters : []
     };
   }
 
-  private loadJobFaces(jobId: string, cameraId: string): void {
+  private loadJobFaces(jobId: string, token: number): void {
     const video = this.videos().find(item => item.jobId === jobId);
 
-    if (!video || video.facesLoaded || this.loadingFaceJobs.has(jobId)) {
+    if (!video || this.loadingFaceJobs.has(jobId)) {
+      return;
+    }
+
+    const facesAreFresh =
+      video.facesLoaded &&
+      Date.now() - video.facesLoadedAt < FACES_MAX_AGE_MS;
+
+    if (facesAreFresh) {
       return;
     }
 
@@ -274,21 +289,26 @@ export class MonitorComponent implements OnInit, OnDestroy {
 
     this.api.getVideoJobFaces(jobId).subscribe({
       next: appearances => {
-        this.loadingFaceJobs.delete(jobId);
-
-        if (this.selectedCamera()?.id !== cameraId) {
+        if (token !== this.requestToken) {
           return;
         }
+
+        this.loadingFaceJobs.delete(jobId);
 
         this.updateVideo(jobId, current => ({
           ...current,
           facesLoaded: true,
+          facesLoadedAt: Date.now(),
           clusters: appearances.map(appearance =>
             this.toCluster(appearance)
           )
         }));
       },
       error: error => {
+        if (token !== this.requestToken) {
+          return;
+        }
+
         this.loadingFaceJobs.delete(jobId);
         console.warn(
           'No se pudieron cargar los rostros del video',
