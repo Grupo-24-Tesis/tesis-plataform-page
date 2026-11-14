@@ -224,6 +224,14 @@
 
 
 
+<p
+  class="feedback"
+  role="alert"
+  *ngIf="statusError()"
+>
+  {{ statusError() }}
+</p>
+
 <div
   class="empty-state"
   role="status"
@@ -386,6 +394,7 @@
       <select
         [id]="'status-' + r.id"
         [value]="r.status"
+        [disabled]="statusSaving()"
         (change)="updateStatus(r, $event)"
       >
 
@@ -583,6 +592,14 @@
         Seleccione una o varias detecciones relacionadas con el incidente.
       </p>
 
+      <p
+        class="feedback"
+        role="alert"
+        *ngIf="appearancesError()"
+      >
+        {{ appearancesError() }}
+      </p>
+
 
       <div class="people-grid" role="group" aria-labelledby="people-title">
 
@@ -755,6 +772,22 @@
     </div>
 
 
+    <div
+      class="form-errors"
+      role="alert"
+      *ngIf="resolutionErrors().length > 0"
+    >
+
+      <p
+        class="feedback"
+        *ngFor="let error of resolutionErrors()"
+      >
+        {{ error }}
+      </p>
+
+    </div>
+
+
     <div class="modal-actions">
 
       <button
@@ -768,6 +801,7 @@
       <button
         type="button"
         class="confirm-button"
+        [disabled]="statusSaving()"
         (click)="confirmResolution()"
       >
         Resolver reporte

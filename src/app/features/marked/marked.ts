@@ -1,4 +1,4 @@
-import { Component, OnInit, computed, signal } from '@angular/core';
+import { Component, HostListener, OnInit, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ImageFallbackDirective } from '../../shared/directives/image-fallback.directive';
@@ -22,6 +22,8 @@ export class Marked implements OnInit {
   marked = signal<MarkedPerson[]>([]);
 
   people = signal<Person[]>([]);
+
+  peopleError = signal('');
 
   markedFaceIds = computed(
     () => new Set(this.marked().map(item => item.faceId))
@@ -70,10 +72,9 @@ export class Marked implements OnInit {
         );
       },
       error: error => {
-        this.showMessage(
-          apiErrorMessage(error, 'No se pudieron cargar las detecciones.'),
-          true
-        );
+        const message = apiErrorMessage(error, 'No se pudieron cargar las detecciones.');
+        this.peopleError.set(message);
+        this.showMessage(message, true);
       }
     });
   }
@@ -113,7 +114,18 @@ export class Marked implements OnInit {
     this.showModal.set(true);
   }
 
+  @HostListener('document:keydown.escape')
+  closeModalOnEscape(): void {
+    if (this.showModal()) {
+      this.closeModal();
+    }
+  }
+
   closeModal(): void {
+    if (this.busy()) {
+      return;
+    }
+
     this.showModal.set(false);
     this.selectedPerson.set(null);
     this.reason.set('');

@@ -115,7 +115,7 @@ describe('Marked', () => {
     api.createMarked.mockReturnValue(
       throwError(() => new HttpErrorResponse({
         status: 409,
-        error: { status: 409, message: 'La deteccion ya esta marcada' }
+        error: { status: 409, message: 'La detección ya está marcada' }
       }))
     );
     await create();
@@ -127,7 +127,7 @@ describe('Marked', () => {
     await fixture.whenStable();
 
     expect(fixture.nativeElement.querySelector('.modal .feedback').textContent)
-      .toContain('La deteccion ya esta marcada');
+      .toContain('La detección ya está marcada');
     expect(component.selectedPerson()).toBeNull();
     expect(alertSpy).not.toHaveBeenCalled();
   });
@@ -231,4 +231,69 @@ describe('Marked', () => {
 
     expect(text()).toContain('No hay detecciones marcadas');
   });
+
+  async function openPendingCreate(): Promise<Subject<unknown>> {
+    const pending = new Subject<unknown>();
+    api.createMarked.mockReturnValue(pending);
+    await create();
+
+    component.openModal();
+    component.selectPerson(component.people()[1]);
+    component.reason.set('Motivo');
+    component.createMarked();
+    await fixture.whenStable();
+    return pending;
+  }
+
+  it('closes the modal with Escape', async () => {
+    await create();
+    component.openModal();
+    await fixture.whenStable();
+
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    await fixture.whenStable();
+
+    expect(component.showModal()).toBe(false);
+    expect(fixture.nativeElement.querySelector('.modal')).toBeNull();
+  });
+
+  it('keeps the modal open on Escape while the mark is being saved', async () => {
+    await openPendingCreate();
+
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    await fixture.whenStable();
+
+    expect(component.showModal()).toBe(true);
+    expect(fixture.nativeElement.querySelector('.modal')).not.toBeNull();
+  });
+
+  it('ignores a click on the overlay while the mark is being saved', async () => {
+    const pending = await openPendingCreate();
+
+    click('.modal-overlay');
+    await fixture.whenStable();
+    expect(component.showModal()).toBe(true);
+
+    pending.next({ id: 'm2', faceId: 'job-1_2', reason: 'Motivo' });
+    await fixture.whenStable();
+    expect(component.showModal()).toBe(false);
+  });
+
+  it('shows the appearances load error in the picker instead of the empty text', async () => {
+    api.getFaceAppearances.mockReturnValue(
+      throwError(() => new HttpErrorResponse({
+        status: 500,
+        error: { status: 500, message: 'Fallo al listar las detecciones' }
+      }))
+    );
+    await create();
+
+    component.openModal();
+    await fixture.whenStable();
+
+    const picker = fixture.nativeElement.querySelector('.modal .people-section').textContent;
+    expect(picker).toContain('Fallo al listar las detecciones');
+    expect(picker).not.toContain('No hay detecciones disponibles para seleccionar.');
+  });
 });
+

@@ -199,7 +199,15 @@
 
         <p
           class="no-people"
-          *ngIf="people().length === 0"
+          role="alert"
+          *ngIf="peopleError()"
+        >
+          {{ peopleError() }}
+        </p>
+
+        <p
+          class="no-people"
+          *ngIf="!peopleError() && people().length === 0"
         >
           No hay detecciones disponibles para seleccionar.
         </p>

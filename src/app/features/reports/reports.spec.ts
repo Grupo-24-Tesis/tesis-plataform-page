@@ -244,4 +244,138 @@ describe('Reports', () => {
     expect(component.showModal()).toBe(false);
     expect(fixture.nativeElement.querySelector('.modal')).toBeNull();
   });
+
+  const SOLVED = {
+    ...REPORT,
+    status: 'solucionado',
+    resolvedAt: '2026-01-03T10:00:00',
+    resolutionDescription: 'Resuelto'
+  };
+
+  function changeStatus(value: string): HTMLSelectElement {
+    const select: HTMLSelectElement =
+      fixture.nativeElement.querySelector('#status-r1');
+    select.value = value;
+    select.dispatchEvent(new Event('change'));
+    return select;
+  }
+
+  async function openResolution(): Promise<void> {
+    await create();
+    changeStatus('solucionado');
+    await fixture.whenStable();
+  }
+
+  function resolutionModal(): HTMLElement {
+    return fixture.nativeElement.querySelector('[aria-labelledby="resolve-report-title"]');
+  }
+
+  it('sends one status request on a double change and disables the select meanwhile', async () => {
+    const pending = new Subject<unknown>();
+    api.getReports.mockReturnValue(of([SOLVED]));
+    api.updateReportStatus.mockReturnValue(pending);
+    await create();
+
+    changeStatus('investigacion');
+    changeStatus('investigacion');
+    await fixture.whenStable();
+
+    expect(api.updateReportStatus).toHaveBeenCalledTimes(1);
+    expect(fixture.nativeElement.querySelector('#status-r1').disabled).toBe(true);
+
+    pending.next({ ...REPORT });
+    await fixture.whenStable();
+
+    expect(component.statusSaving()).toBe(false);
+    expect(fixture.nativeElement.querySelector('#status-r1').disabled).toBe(false);
+  });
+
+  it('shows the backend message when the status cannot be changed', async () => {
+    api.getReports.mockReturnValue(of([SOLVED]));
+    api.updateReportStatus.mockReturnValue(
+      throwError(() => new HttpErrorResponse({
+        status: 404,
+        error: { status: 404, message: 'Reporte no encontrado' }
+      }))
+    );
+    await create();
+
+    const select = changeStatus('investigacion');
+    await fixture.whenStable();
+
+    expect(text()).toContain('Reporte no encontrado');
+    expect(select.value).toBe('solucionado');
+    expect(component.statusSaving()).toBe(false);
+  });
+
+  it('lists the missing resolution fields inside the modal without calling the api', async () => {
+    await openResolution();
+
+    component.confirmResolution();
+    await fixture.whenStable();
+
+    expect(api.updateReportStatus).not.toHaveBeenCalled();
+    expect(resolutionModal().textContent).toContain('Falta la fecha de resolución.');
+    expect(resolutionModal().textContent).toContain('Falta la descripción de la resolución.');
+  });
+
+  it('shows the backend message inside the resolution modal and keeps it open', async () => {
+    api.updateReportStatus.mockReturnValue(
+      throwError(() => new HttpErrorResponse({
+        status: 400,
+        error: { status: 400, message: 'Un reporte solucionado necesita fecha de solución' }
+      }))
+    );
+    await openResolution();
+
+    component.resolutionData.resolvedAt = '2026-01-03T10:00';
+    component.resolutionData.resolutionDescription = 'Resuelto';
+    component.confirmResolution();
+    await fixture.whenStable();
+
+    expect(component.resolutionModal()).toBe(true);
+    expect(resolutionModal().textContent)
+      .toContain('Un reporte solucionado necesita fecha de solución');
+    expect(resolutionModal().querySelector<HTMLButtonElement>('.confirm-button')?.disabled)
+      .toBe(false);
+  });
+
+  it('sends one resolution request on a double click and disables the button meanwhile', async () => {
+    const pending = new Subject<unknown>();
+    api.updateReportStatus.mockReturnValue(pending);
+    await openResolution();
+
+    component.resolutionData.resolvedAt = '2026-01-03T10:00';
+    component.resolutionData.resolutionDescription = 'Resuelto';
+    component.confirmResolution();
+    component.confirmResolution();
+    await fixture.whenStable();
+
+    expect(api.updateReportStatus).toHaveBeenCalledTimes(1);
+    expect(resolutionModal().querySelector<HTMLButtonElement>('.confirm-button')?.disabled)
+      .toBe(true);
+
+    pending.next(SOLVED);
+    await fixture.whenStable();
+
+    expect(component.resolutionModal()).toBe(false);
+    expect(component.statusSaving()).toBe(false);
+  });
+
+  it('shows the appearances load error inside the face picker', async () => {
+    api.getFaceAppearances.mockReturnValue(
+      throwError(() => new HttpErrorResponse({
+        status: 500,
+        error: { status: 500, message: 'Fallo al listar las detecciones' }
+      }))
+    );
+    await create();
+
+    component.openModal();
+    await fixture.whenStable();
+
+    expect(fixture.nativeElement.querySelector('.people-section').textContent)
+      .toContain('Fallo al listar las detecciones');
+  });
 });
+

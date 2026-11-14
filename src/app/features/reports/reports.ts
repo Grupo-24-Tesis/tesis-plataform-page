@@ -41,6 +41,8 @@ getReportsByStatus(status: ReportItem['status']): ReportItem[] {
 
   appearances = signal<FaceAppearance[]>([]);
 
+  appearancesError = signal('');
+
   statusFilter: string = '';
 
 dateType: string = 'incidente';
@@ -81,6 +83,12 @@ endDate: string = '';
   resolutionModal = signal(false);
 
   selectedReport = signal<ReportItem | null>(null);
+
+  statusSaving = signal(false);
+
+  statusError = signal('');
+
+  resolutionErrors = signal<string[]>([]);
 
   resolutionData = {
     resolvedAt: '',
@@ -407,7 +415,17 @@ endDate: string = '';
       select.value as ReportItem['status'];
 
 
-   
+    if (this.statusSaving()) {
+
+      select.value = report.status;
+
+      return;
+
+    }
+
+
+    this.statusError.set('');
+
 
     if (newStatus === 'solucionado') {
 
@@ -421,6 +439,8 @@ endDate: string = '';
 
       };
 
+      this.resolutionErrors.set([]);
+
       this.resolutionModal.set(true);
 
      
@@ -432,6 +452,8 @@ endDate: string = '';
 
 
 
+    this.statusSaving.set(true);
+
     this.api.updateReportStatus(
 
       report.id,
@@ -441,6 +463,8 @@ endDate: string = '';
     ).subscribe({
 
       next: (updatedReport) => {
+
+        this.statusSaving.set(false);
 
         this.reports.update(
 
@@ -470,6 +494,12 @@ endDate: string = '';
 
         );
 
+        this.statusSaving.set(false);
+
+        this.statusError.set(
+          apiErrorMessage(err, 'No se pudo actualizar el estado del reporte.')
+        );
+
         select.value = report.status;
 
       }
@@ -487,6 +517,8 @@ endDate: string = '';
 
         this.appearances.set(data);
 
+        this.appearancesError.set('');
+
       },
 
       error: (err) => {
@@ -494,6 +526,10 @@ endDate: string = '';
         console.error(
           'Error al cargar las apariciones de rostros',
           err
+        );
+
+        this.appearancesError.set(
+          apiErrorMessage(err, 'No se pudieron cargar las detecciones.')
         );
 
       }
@@ -610,6 +646,8 @@ endDate: string = '';
 
     this.selectedReport.set(null);
 
+    this.resolutionErrors.set([]);
+
     this.resolutionData = {
 
       resolvedAt: '',
@@ -626,27 +664,33 @@ endDate: string = '';
 
     const reportToResolve = this.selectedReport();
 
-    if (!reportToResolve) {
+    if (!reportToResolve || this.statusSaving()) {
 
       return;
 
     }
 
 
-    if (
+    const errors: string[] = [];
 
-      !this.resolutionData.resolvedAt ||
+    if (!this.resolutionData.resolvedAt) {
+      errors.push('Falta la fecha de resolución.');
+    }
 
-      !this.resolutionData
-        .resolutionDescription
-        .trim()
+    if (!this.resolutionData.resolutionDescription.trim()) {
+      errors.push('Falta la descripción de la resolución.');
+    }
 
-    ) {
+    this.resolutionErrors.set(errors);
+
+    if (errors.length > 0) {
 
       return;
 
     }
 
+
+    this.statusSaving.set(true);
 
     this.api.updateReportStatus(
 
@@ -662,6 +706,8 @@ endDate: string = '';
     ).subscribe({
 
       next: (updatedReport) => {
+
+        this.statusSaving.set(false);
 
         this.reports.update(
 
@@ -692,6 +738,12 @@ endDate: string = '';
           err
 
         );
+
+        this.statusSaving.set(false);
+
+        this.resolutionErrors.set([
+          apiErrorMessage(err, 'No se pudo resolver el reporte.')
+        ]);
 
       }
 

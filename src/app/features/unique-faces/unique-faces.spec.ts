@@ -79,12 +79,12 @@ describe('UniqueFaces', () => {
     api.getUniqueFaces.mockReturnValueOnce(
       throwError(() => new HttpErrorResponse({
         status: 400,
-        error: { status: 400, message: 'Fecha invalida' }
+        error: { status: 400, message: 'Fecha inválida' }
       }))
     );
     await create();
 
-    expect(text()).toContain('Fecha invalida');
+    expect(text()).toContain('Fecha inválida');
     expect(text()).not.toContain('No hay resultados que coincidan');
 
     const retry: HTMLButtonElement = Array.from<HTMLButtonElement>(
@@ -94,7 +94,7 @@ describe('UniqueFaces', () => {
     fixture.detectChanges();
 
     expect(api.getUniqueFaces).toHaveBeenCalledTimes(2);
-    expect(text()).not.toContain('Fecha invalida');
+    expect(text()).not.toContain('Fecha inválida');
     expect(fixture.nativeElement.querySelectorAll('.card').length).toBe(1);
   });
 
@@ -125,4 +125,21 @@ describe('UniqueFaces', () => {
       undefined
     );
   });
+
+  it('shows the camera load error and still renders the cards', async () => {
+    api.getCameras.mockReturnValue(
+      throwError(() => new HttpErrorResponse({
+        status: 500,
+        error: { status: 500, message: 'Fallo al listar las cámaras' }
+      }))
+    );
+    await create();
+    await fixture.whenStable();
+
+    expect(fixture.nativeElement.querySelector('.cameras-error').textContent)
+      .toContain('Fallo al listar las cámaras');
+    expect(fixture.nativeElement.querySelectorAll('.card').length).toBe(1);
+    expect(component.getCameraName('CAM-01')).toBe('Cámara no identificada');
+  });
 });
+

@@ -22,6 +22,7 @@ export class UniqueFaces implements OnInit {
 
   faces = signal<UniqueFace[]>([]);
   cameras = signal<Camera[]>([]);
+  camerasError = signal('');
 
   selected = signal<UniqueFace | null>(null);
   detailClosing = signal(false);
@@ -48,7 +49,12 @@ export class UniqueFaces implements OnInit {
     this.loadFaces();
         this.api.getCameras().subscribe({
       next: (cameras) => this.cameras.set(cameras),
-      error: (err) => console.error('Error al cargar las cámaras', err)
+      error: (err) => {
+        console.error('Error al cargar las cámaras', err);
+        this.camerasError.set(
+          apiErrorMessage(err, 'No se pudieron cargar las cámaras.')
+        );
+      }
     });
 
   }

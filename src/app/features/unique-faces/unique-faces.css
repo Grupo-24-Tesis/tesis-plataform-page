@@ -61,6 +61,12 @@
   border-radius: 8px;
 }
 
+.cameras-error {
+  margin: 20px 0 0;
+  color: var(--rojo);
+  font: 13px var(--fuente);
+}
+
 .filter-field {
   display: flex;
   min-width: 0;

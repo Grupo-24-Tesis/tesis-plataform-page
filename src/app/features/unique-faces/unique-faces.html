@@ -77,6 +77,14 @@
       </div>
     </section>
 
+    <p
+      class="cameras-error"
+      role="alert"
+      *ngIf="camerasError()"
+    >
+      {{ camerasError() }}
+    </p>
+
     <div class="grid">
       <button
         type="button"
