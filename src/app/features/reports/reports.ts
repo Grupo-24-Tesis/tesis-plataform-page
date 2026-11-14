@@ -455,6 +455,12 @@ endDate: string = '';
 
         this.saving.set(false);
 
+        if (this.session.endIfGuardMissing(err)) {
+
+          return;
+
+        }
+
         this.formErrors.set([
           apiErrorMessage(err, 'No se pudo crear el reporte.')
         ]);

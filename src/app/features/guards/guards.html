@@ -9,6 +9,10 @@
     <section class="tarjeta" aria-labelledby="question">
       <h2 id="question">¿QUIÉN ENTRA A REVISAR?</h2>
 
+      <p class="aviso sesion-terminada" role="alert" *ngIf="sessionNotice()">
+        {{ sessionNotice() }}
+      </p>
+
       <p class="estado" *ngIf="loading()">
         Buscando vigilantes registrados...
       </p>

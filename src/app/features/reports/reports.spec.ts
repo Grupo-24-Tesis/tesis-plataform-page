@@ -31,6 +31,7 @@ describe('Reports', () => {
 
   let queryParams: Record<string, string> = {};
   let navigate: ReturnType<typeof vi.fn>;
+  let navigateByUrl: ReturnType<typeof vi.fn>;
 
   async function create(): Promise<void> {
     await TestBed.configureTestingModule({
@@ -41,7 +42,7 @@ describe('Reports', () => {
           provide: ActivatedRoute,
           useValue: { snapshot: { queryParamMap: convertToParamMap(queryParams) } }
         },
-        { provide: Router, useValue: { navigate } }
+        { provide: Router, useValue: { navigate, navigateByUrl } }
       ]
     }).compileComponents();
 
@@ -65,6 +66,7 @@ describe('Reports', () => {
   beforeEach(() => {
     queryParams = {};
     navigate = vi.fn(() => Promise.resolve(true));
+    navigateByUrl = vi.fn(() => Promise.resolve(true));
     api = {
       getReports: vi.fn(() => of([REPORT])),
       getFilteredReports: vi.fn(() => of([REPORT])),
@@ -229,6 +231,27 @@ describe('Reports', () => {
     expect(component.saving()).toBe(false);
     expect(fixture.nativeElement.querySelector('.modal').textContent)
       .toContain('La fecha de resolución es obligatoria');
+  });
+
+  it('ends the session and goes to the guard selection when the guard no longer exists', async () => {
+    api.createReport.mockReturnValue(
+      throwError(() => new HttpErrorResponse({
+        status: 400,
+        error: { status: 400, message: 'El vigilante no existe' }
+      }))
+    );
+    await create();
+    const session = TestBed.inject(SessionService);
+    session.setActiveGuard({ id: 'g-borrado', name: 'Marta' });
+
+    fillBase();
+    component.createReport();
+    await fixture.whenStable();
+
+    expect(session.getActiveGuard()).toBeNull();
+    expect(session.notice()).toContain('Selecciona de nuevo el vigilante');
+    expect(navigateByUrl).toHaveBeenCalledWith('/guards');
+    expect(component.saving()).toBe(false);
   });
 
   it('sends a single create request on a double click', async () => {
@@ -435,8 +458,8 @@ describe('Reports', () => {
   });
 
   it('sends the active guard id when creating a report', async () => {
-    new SessionService().setActiveGuard({ id: 'g1', name: 'Marta' });
     await create();
+    TestBed.inject(SessionService).setActiveGuard({ id: 'g1', name: 'Marta' });
 
     fillBase();
     component.createReport();

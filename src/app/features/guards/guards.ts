@@ -45,6 +45,10 @@ export class Guards implements OnInit {
     });
   }
 
+  sessionNotice(): string {
+    return this.session.notice();
+  }
+
   initials(name: string): string {
     return name
       .trim()

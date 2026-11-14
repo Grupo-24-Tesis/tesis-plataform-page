@@ -1,5 +1,6 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { Router } from '@angular/router';
 import { Subject, of, throwError } from 'rxjs';
 
 import { ApiService } from '../../core/services/api.service';
@@ -326,9 +327,9 @@ describe('Marked', () => {
   });
 
   it('sends the active guard id when creating a mark', async () => {
-    new SessionService().setActiveGuard({ id: 'g1', name: 'Marta' });
     api.createMarked.mockReturnValue(of({ id: 'm2', faceId: 'job-1_2', reason: 'Motivo' }));
     await create();
+    TestBed.inject(SessionService).setActiveGuard({ id: 'g1', name: 'Marta' });
 
     component.openModal();
     component.selectedPerson.set({ faceId: 'job-1_2', appearance: FACES[1] });
@@ -340,6 +341,32 @@ describe('Marked', () => {
       reason: 'Motivo',
       createdByGuardId: 'g1'
     });
+  });
+
+  it('ends the session and goes to the guard selection when the guard no longer exists', async () => {
+    api.createMarked.mockReturnValue(
+      throwError(() => new HttpErrorResponse({
+        status: 400,
+        error: { status: 400, message: 'El vigilante no existe' }
+      }))
+    );
+    await create();
+    const navigateByUrl = vi
+      .spyOn(TestBed.inject(Router), 'navigateByUrl')
+      .mockResolvedValue(true);
+    const session = TestBed.inject(SessionService);
+    session.setActiveGuard({ id: 'g-borrado', name: 'Marta' });
+
+    component.openModal();
+    component.selectedPerson.set({ faceId: 'job-1_2', appearance: FACES[1] });
+    component.reason.set('Motivo');
+    component.createMarked();
+    await fixture.whenStable();
+
+    expect(session.getActiveGuard()).toBeNull();
+    expect(session.notice()).toContain('Selecciona de nuevo el vigilante');
+    expect(navigateByUrl).toHaveBeenCalledWith('/guards');
+    expect(component.busy()).toBe(false);
   });
 
   it('refetches the detection images after ten minutes keeping the current ones, and stops on destroy', async () => {

@@ -75,7 +75,10 @@ export class MarksService {
         error: error => {
           if (error instanceof HttpErrorResponse && error.status === 409) {
             this.load();
+            return;
           }
+
+          this.session.endIfGuardMissing(error);
         }
       })
     );

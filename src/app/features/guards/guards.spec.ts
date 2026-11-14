@@ -1,9 +1,10 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { Router, provideRouter } from '@angular/router';
 import { Subject, of, throwError } from 'rxjs';
 
 import { ApiService, Guard } from '../../core/services/api.service';
+import { SessionService } from '../../core/services/session.service';
 import { Guards } from './guards';
 
 describe('Guards', () => {
@@ -123,5 +124,27 @@ describe('Guards', () => {
     expect(fixture.nativeElement.querySelector('.modal-guardia .error').textContent)
       .toContain('El registro ya existe');
     expect(fixture.nativeElement.querySelector('.aviso')).toBeNull();
+  });
+
+  it('shows inline why the guard must be selected again and clears it when a shift starts', async () => {
+    api.getGuards.mockReturnValue(of([{ id: 'g2', name: 'Marta', shift: '', schedule: '' }]));
+    await create();
+    vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
+    const session = TestBed.inject(SessionService);
+
+    session.endIfGuardMissing(new HttpErrorResponse({
+      status: 400,
+      error: { status: 400, message: 'El vigilante no existe' }
+    }));
+    await fixture.whenStable();
+
+    expect(fixture.nativeElement.querySelector('.sesion-terminada').textContent)
+      .toContain('Selecciona de nuevo el vigilante');
+
+    component.selectGuard(component.guards()[0]);
+    component.startShift();
+    await fixture.whenStable();
+
+    expect(fixture.nativeElement.querySelector('.sesion-terminada')).toBeNull();
   });
 });
