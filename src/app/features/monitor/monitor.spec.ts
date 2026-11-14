@@ -56,6 +56,7 @@ describe('MonitorComponent', () => {
     requestVideoUploadUrl: ReturnType<typeof vi.fn>;
     uploadVideoToS3: ReturnType<typeof vi.fn>;
     notifyVideoUploaded: ReturnType<typeof vi.fn>;
+    retryVideoJob: ReturnType<typeof vi.fn>;
     getMarked: ReturnType<typeof vi.fn>;
     createMarked: ReturnType<typeof vi.fn>;
     deleteMarked: ReturnType<typeof vi.fn>;
@@ -90,6 +91,7 @@ describe('MonitorComponent', () => {
       requestVideoUploadUrl: vi.fn(),
       uploadVideoToS3: vi.fn(),
       notifyVideoUploaded: vi.fn(),
+      retryVideoJob: vi.fn(),
       getMarked: vi.fn(() => of([])),
       createMarked: vi.fn(),
       deleteMarked: vi.fn(),
@@ -729,6 +731,68 @@ describe('MonitorComponent', () => {
     expect(component.savingCamera()).toBe(false);
     expect(fixture.nativeElement.querySelector('.camera-dialog').textContent)
       .toContain('La cámara ya existe');
+  });
+
+  function retryButtons(): HTMLButtonElement[] {
+    return Array.from(fixture.nativeElement.querySelectorAll('.video-retry'));
+  }
+
+  it('shows the retry button only on failed and queue error videos', async () => {
+    api.getVideoJobs.mockReturnValue(of([
+      job('FAILED', 'tiempo agotado', 'job-1'),
+      job('QUEUE_ERROR', null, 'job-2'),
+      job('QUEUED', null, 'job-3'),
+      job('PROCESSING', null, 'job-4'),
+      job('COMPLETED', null, 'job-5')
+    ]));
+    await create();
+
+    expect(retryButtons().length).toBe(2);
+    expect(retryButtons()[0].textContent).toContain('Reintentar');
+  });
+
+  it('sends one retry request on a double click and reloads the list after success', async () => {
+    const pending = new Subject<VideoJobResponse>();
+    api.retryVideoJob.mockReturnValue(pending);
+    api.getVideoJobs
+      .mockReturnValueOnce(of([job('FAILED', 'tiempo agotado')]))
+      .mockReturnValue(of([job('QUEUED')]));
+    await create();
+
+    const [button] = retryButtons();
+    button.click();
+    button.click();
+    await fixture.whenStable();
+
+    expect(api.retryVideoJob).toHaveBeenCalledTimes(1);
+    expect(api.retryVideoJob).toHaveBeenCalledWith('job-1');
+    expect(retryButtons()[0].disabled).toBe(true);
+
+    pending.next(job('QUEUED'));
+    await fixture.whenStable();
+
+    expect(api.getVideoJobs).toHaveBeenCalledTimes(2);
+    expect(retryButtons().length).toBe(0);
+    expect(fixture.nativeElement.textContent).toContain('En cola');
+  });
+
+  it('shows the backend message and re-enables the retry button when it fails', async () => {
+    api.getVideoJobs.mockReturnValue(of([job('FAILED', 'tiempo agotado')]));
+    api.retryVideoJob.mockReturnValue(
+      throwError(() => new HttpErrorResponse({
+        status: 409,
+        error: { status: 409, message: 'Solo se pueden reintentar videos fallidos' }
+      }))
+    );
+    await create();
+
+    retryButtons()[0].click();
+    await fixture.whenStable();
+
+    expect(fixture.nativeElement.textContent)
+      .toContain('Solo se pueden reintentar videos fallidos');
+    expect(retryButtons()[0].disabled).toBe(false);
+    expect(api.getVideoJobs).toHaveBeenCalledTimes(1);
   });
 
   const EMPTY_CAMERA_TEXT = 'Esta cámara todavía no tiene videos procesados.';

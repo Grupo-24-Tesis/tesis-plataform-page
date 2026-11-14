@@ -456,11 +456,21 @@
 }
 
 .video-failure {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
   margin: 0;
   padding: 10px 16px;
   border-bottom: 1px solid var(--borde);
   color: var(--rojo);
   font-size: 12px;
+}
+
+.video-retry {
+  padding: 2px 10px;
+  color: inherit;
+  background: none;
+  border: 1px solid var(--borde);
 }
 
 .video-timings,

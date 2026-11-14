@@ -169,6 +169,13 @@ notifyVideoUploaded(
   );
 }
 
+retryVideoJob(jobId: string) {
+  return this.http.post<VideoJobResponse>(
+    `${this.base}/video-jobs/${encodeURIComponent(jobId)}/retry`,
+    {}
+  );
+}
+
 getVideoJobs(cameraId?: string) {
   return this.http.get<VideoJobResponse[]>(
     `${this.base}/video-jobs`,

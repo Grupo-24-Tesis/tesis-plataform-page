@@ -128,6 +128,8 @@ export class MonitorComponent implements OnInit, OnDestroy {
   markError = signal(false);
   markBusy = signal(false);
   cameraVideoCounts = signal<Record<string, number>>({});
+  retryingJobs = signal<ReadonlySet<string>>(new Set());
+  retryErrors = signal<Record<string, string>>({});
 
   selectedFile = signal<File | null>(null);
   processingVideo = signal(false);
@@ -318,6 +320,43 @@ export class MonitorComponent implements OnInit, OnDestroy {
 
   retryLoad(): void {
     this.loadVideos();
+  }
+
+  canRetry(video: MonitorVideo): boolean {
+    return video.status === 'FAILED' || video.status === 'QUEUE_ERROR';
+  }
+
+  retryVideo(video: MonitorVideo): void {
+    const jobId = video.jobId;
+
+    if (!jobId || this.retryingJobs().has(jobId)) {
+      return;
+    }
+
+    this.retryingJobs.update(jobs => new Set(jobs).add(jobId));
+    this.retryErrors.update(errors => ({ ...errors, [jobId]: '' }));
+
+    this.api.retryVideoJob(jobId).subscribe({
+      next: () => {
+        this.finishRetry(jobId);
+        this.loadVideos();
+      },
+      error: error => {
+        this.finishRetry(jobId);
+        this.retryErrors.update(errors => ({
+          ...errors,
+          [jobId]: apiErrorMessage(error, 'No se pudo reintentar el video')
+        }));
+      }
+    });
+  }
+
+  private finishRetry(jobId: string): void {
+    this.retryingJobs.update(jobs => {
+      const next = new Set(jobs);
+      next.delete(jobId);
+      return next;
+    });
   }
 
   private toVideo(
