@@ -30,12 +30,11 @@ export class Guards implements OnInit {
   ngOnInit(): void {
     this.api.getGuards().subscribe({
       next: (data) => {
-        console.log('GUARDS API =>', data);
         this.guards.set(data);
         this.loading.set(false);
       },
       error: (err) => {
-        console.error('Error loading guards', err);
+        console.error('Error al cargar los vigilantes', err);
         this.guards.set([]);
         this.errorMsg.set('No se pudieron cargar los vigilantes.');
         this.loading.set(false);
@@ -64,11 +63,7 @@ export class Guards implements OnInit {
       return;
     }
 
-    this.session.setActiveGuard(guard.id);
-    localStorage.setItem(
-      'facecluster-active-guard',
-      JSON.stringify(guard)
-    );
+    this.session.setActiveGuard({ id: guard.id, name: guard.name });
 
     this.router.navigateByUrl('/monitor');
   }
@@ -120,7 +115,7 @@ export class Guards implements OnInit {
         this.closeGuardDialog();
       },
       error: (err) => {
-        console.error('Error creating guard', err);
+        console.error('Error al registrar el vigilante', err);
         this.errorMsg.set('No se pudo registrar el vigilante.');
       }
     });

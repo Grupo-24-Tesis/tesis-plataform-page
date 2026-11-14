@@ -20,17 +20,10 @@ export class Shell implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    const savedGuard = localStorage.getItem('facecluster-active-guard');
+    const name = this.session.getActiveGuard()?.name;
 
-    if (!savedGuard) {
-      return;
-    }
-
-    try {
-      const guard = JSON.parse(savedGuard);
-      this.guardName.set(guard.name ?? 'Vigilante');
-    } catch {
-      console.warn('No fue posible recuperar el vigilante activo.');
+    if (name) {
+      this.guardName.set(name);
     }
   }
 

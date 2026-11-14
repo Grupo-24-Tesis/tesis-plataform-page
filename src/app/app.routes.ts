@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { activeGuardGuard } from './core/guards/active-guard.guard';
 
 export const routes: Routes = [
   {
@@ -14,6 +15,7 @@ export const routes: Routes = [
 
   {
     path: '',
+    canActivate: [activeGuardGuard],
     loadComponent: () =>
       import('./layout/shell/shell').then(m => m.Shell),
     children: [

@@ -1,22 +1,55 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { Router, provideRouter } from '@angular/router';
 
 import { Shell } from './shell';
+import { SessionService } from '../../core/services/session.service';
 
 describe('Shell', () => {
-  let component: Shell;
   let fixture: ComponentFixture<Shell>;
+  let session: SessionService;
+
+  async function render(): Promise<HTMLElement> {
+    fixture = TestBed.createComponent(Shell);
+    await fixture.whenStable();
+    return fixture.nativeElement as HTMLElement;
+  }
 
   beforeEach(async () => {
+    localStorage.clear();
     await TestBed.configureTestingModule({
       imports: [Shell],
+      providers: [provideRouter([])],
     }).compileComponents();
-
-    fixture = TestBed.createComponent(Shell);
-    component = fixture.componentInstance;
-    await fixture.whenStable();
+    session = TestBed.inject(SessionService);
   });
 
-  it('should create', () => {
-    expect(component).toBeTruthy();
+  afterEach(() => localStorage.clear());
+
+  it('muestra el nombre del vigilante activo', async () => {
+    session.setActiveGuard({ id: 'g1', name: 'Laura Martinez' });
+
+    const element = await render();
+
+    expect(element.querySelector('.guard')?.textContent).toContain('Laura Martinez');
+  });
+
+  it('muestra los cuatro enlaces de navegacion', async () => {
+    const element = await render();
+    const hrefs = Array.from(element.querySelectorAll('nav a')).map(link =>
+      link.getAttribute('href')
+    );
+
+    expect(hrefs).toEqual(['/monitor', '/unique-faces', '/reports', '/marked']);
+  });
+
+  it('cierra la sesion y vuelve a la seleccion de vigilante', async () => {
+    session.setActiveGuard({ id: 'g1', name: 'Laura Martinez' });
+    const navigate = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
+    const element = await render();
+
+    (element.querySelector('.logout') as HTMLButtonElement).click();
+
+    expect(session.getActiveGuard()).toBeNull();
+    expect(navigate).toHaveBeenCalledWith('/guards');
   });
 });
