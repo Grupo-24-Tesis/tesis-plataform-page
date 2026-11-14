@@ -60,7 +60,8 @@ peticiones desde `http://localhost:4200`.
 | Ruta | Contenido |
 | --- | --- |
 | `/guards` | Selección del vigilante activo. Es la ruta inicial |
-| `/monitor` | Cámaras, carga de videos, videos procesados y rostros de cada video, con opción de marcarlos |
+| `/monitor` | Cámaras, carga de videos, franja de métricas de procesamiento, videos procesados con el botón `Reintentar` en los fallidos y rostros de cada video, con opción de marcarlos |
+| `/activity` | Actividad por hora: detecciones por hora del día y por cámara, con filtros de cámara y fechas |
 | `/unique-faces` | Rostros detectados, con filtros por fecha, reportes y detecciones marcadas |
 | `/reports` | Reportes de incidentes: creación, filtros y cambio de estado. Cada tarjeta abre su detalle |
 | `/reports/:id` | Detalle de un reporte: autor, fechas, descripción, solución y detecciones involucradas con imagen, cámara, hora y posición. El botón `Imprimir` abre el diálogo de impresión con una hoja de estilos propia |
@@ -68,7 +69,9 @@ peticiones desde `http://localhost:4200`.
 
 Todas las rutas salvo `/guards` pasan por `activeGuardGuard`, que redirige a `/guards` si no hay un vigilante activo. El vigilante activo es lo único que se guarda en `localStorage` (`SessionService`). No es un inicio de sesión: ver Limitaciones conocidas.
 
-Las vistas `/unique-faces`, `/marked` y `/reports` muestran estados de carga, de lista vacía y de error, y este último ofrece el botón Reintentar. `/monitor` muestra el error de carga y vuelve a consultar solo con el ciclo de actualización. El formulario de `/reports` valida el título, la descripción y la fecha del incidente, y exige la fecha y la descripción de la resolución cuando el estado es `solucionado`. Las marcas se guardan únicamente en el backend (`/api/marked`); en `/monitor`, un 409 al marcar una detección ya marcada vuelve a cargar la lista de marcas.
+Si al crear un reporte o una marca el backend responde 400 con `El vigilante no existe`, `SessionService` cierra la sesión y lleva a `/guards`, que explica en la misma vista que hay que seleccionar de nuevo el vigilante.
+
+Las vistas `/unique-faces`, `/marked`, `/reports`, `/reports/:id` y `/activity` muestran estados de carga, de lista vacía y de error, y este último ofrece el botón Reintentar. `/monitor` muestra el error de carga y vuelve a consultar solo con el ciclo de actualización. El formulario de `/reports` valida el título, la descripción y la fecha del incidente, y exige la fecha y la descripción de la resolución cuando el estado es `solucionado`. Las marcas se guardan únicamente en el backend (`/api/marked`) y su estado vive solo en `MarksService` (`shared/services/marks.service.ts`), que leen todas las vistas. Las acciones Marcar, Quitar marca y Crear reporte de una detección están en el detalle compartido (`shared/components/detection-detail`), que usan `/monitor` y `/unique-faces`; un 409 al marcar una detección ya marcada hace que `MarksService` vuelva a cargar la lista de marcas.
 
 ## Carga de videos
 
@@ -82,6 +85,8 @@ La carga se hace desde `/monitor` en tres pasos:
 Solo se aceptan archivos de video y hay que elegir la cámara a la que pertenece.
 
 `/monitor` carga los videos de la cámara seleccionada desde el backend con `GET /api/video-jobs?cameraId=`; no guarda la lista en el navegador. La vista se actualiza sola: cada 5 segundos mientras algún trabajo está en `UPLOADED`, `QUEUED` o `PROCESSING`, y cada 30 segundos en caso contrario.
+
+Sobre la lista, una franja de métricas (`GET /api/metrics/video-jobs?cameraId=`) muestra los videos, completados, fallidos, la tasa de fallo, la espera media en cola, el procesamiento medio y las detecciones totales de la cámara. Un video `FAILED` o `QUEUE_ERROR` muestra el botón `Reintentar` (`POST /api/video-jobs/{jobId}/retry`), que se desactiva y dice `Reintentando...` mientras la petición está pendiente; si falla, muestra el mensaje del backend junto al video.
 
 | Estado del backend | Texto en pantalla |
 | --- | --- |
@@ -114,7 +119,7 @@ encapsulación que la imagen para que le aplique el CSS del componente.
 | `src/app/core/models` | Tipos de los datos del backend y el texto de cada estado de un trabajo |
 | `src/app/features` | Una carpeta por vista |
 | `src/app/layout/shell` | Barra superior y menú lateral |
-| `src/app/shared` | Directivas compartidas |
+| `src/app/shared` | Detalle de una detección, `MarksService`, `VideoNamesService`, `FreshnessTimer` y directivas compartidas |
 
 ## Limitaciones conocidas
 
