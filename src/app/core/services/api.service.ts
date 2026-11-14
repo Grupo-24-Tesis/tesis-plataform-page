@@ -30,13 +30,6 @@ export class ApiService {
   );
 }
 
-createFaceAppearance(payload: FaceAppearance) {
-  return this.http.post<FaceAppearance>(
-    `${this.base}/face-appearances`,
-    payload
-  );
-}
-
 getUniqueFaces(
   startDate?: string,
   endDate?: string,

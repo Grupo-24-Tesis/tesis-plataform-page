@@ -57,9 +57,9 @@ peticiones desde `http://localhost:4200`.
 | --- | --- |
 | `/guards` | Selección del vigilante que inicia la sesión. Es la ruta inicial |
 | `/monitor` | Cámaras, carga de videos y videos procesados |
-| `/unique-faces` | Personas encontradas, con filtros por fecha, reportes y personas marcadas |
+| `/unique-faces` | Rostros detectados, con filtros por fecha, reportes y detecciones marcadas |
 | `/reports` | Reportes de incidentes: creación, filtros y cambio de estado |
-| `/marked` | Personas marcadas y el motivo |
+| `/marked` | Detecciones marcadas y el motivo |
 
 El vigilante activo se guarda en `localStorage` (`SessionService`).
 
@@ -107,7 +107,4 @@ encapsulación que la imagen para que le aplique el CSS del componente.
 | `src/app/core/models` | Tipos de los datos del backend |
 | `src/app/features` | Una carpeta por vista |
 | `src/app/layout/shell` | Barra superior y menú lateral |
-| `src/app/shared` | Directivas y modelos compartidos |
-
-`features/upload`, `features/results` y `core/services/mock-model.ts` no están conectados
-a ninguna ruta.
+| `src/app/shared` | Directivas compartidas |
