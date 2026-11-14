@@ -83,14 +83,24 @@
         >
           <header class="video-header">
             <div>
-              <span class="video-status"></span>
+              <span
+                class="video-status"
+                [attr.data-tone]="statusTone(video.status)"
+              ></span>
               <strong>{{ video.fileName }}</strong>
+              <span class="video-status-label">
+                {{ statusLabel(video.status) }}
+              </span>
             </div>
 
             <span>
               {{ video.processedAt | date:'yyyy-MM-dd · HH:mm' }}
             </span>
           </header>
+
+          <p class="video-failure" *ngIf="video.failureReason">
+            {{ video.failureReason }}
+          </p>
 
           <div class="cluster-grid">
             <button

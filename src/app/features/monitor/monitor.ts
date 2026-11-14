@@ -1,6 +1,7 @@
 import {
   Component,
   ElementRef,
+  OnDestroy,
   OnInit,
   ViewChild,
   computed,
@@ -9,12 +10,22 @@ import {
 import { CommonModule } from '@angular/common';
 import { HttpEventType } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
+import { Subscription, interval } from 'rxjs';
 
 import {
   ApiService,
   Camera
 } from '../../core/services/api.service';
 import { PresignedUploadResponse, VideoJobResponse } from '../../core/models/uploadVideo';
+import { FaceAppearance } from '../../core/models/face.model';
+import {
+  VideoStatusTone,
+  isTerminalStatus,
+  videoStatusLabel,
+  videoStatusTone
+} from '../../core/models/video-job-status';
+
+const JOB_STATUS_POLL_MS = 5000;
 
 interface MonitorVideo {
   id: string;
@@ -23,6 +34,7 @@ interface MonitorVideo {
   processedAt: string;
   status: string;
   jobId?: string;
+  failureReason?: string;
   clusters: Array<{
     clusterId: string;
     appearances: Array<{
@@ -49,7 +61,7 @@ interface SelectedCluster {
   templateUrl: './monitor.html',
   styleUrl: './monitor.css',
 })
-export class MonitorComponent implements OnInit {
+export class MonitorComponent implements OnInit, OnDestroy {
   @ViewChild('cameraDialog')
   cameraDialog?: ElementRef<HTMLDialogElement>;
 
@@ -89,6 +101,8 @@ export class MonitorComponent implements OnInit {
   private readonly savedClustersStorageKey =
     'facecluster-saved-clusters-v1';
 
+  private jobStatusPolling?: Subscription;
+
   constructor(
     private api: ApiService
   ) {}
@@ -96,6 +110,11 @@ export class MonitorComponent implements OnInit {
   ngOnInit(): void {
     this.loadLocalVideos();
     this.loadSavedClusters();
+
+    this.refreshPendingVideos();
+    this.jobStatusPolling = interval(JOB_STATUS_POLL_MS).subscribe(
+      () => this.refreshPendingVideos()
+    );
 
     this.api.getCameras().subscribe({
       next: (data) => {
@@ -114,6 +133,98 @@ export class MonitorComponent implements OnInit {
         this.loading = false;
       }
     });
+  }
+
+  ngOnDestroy(): void {
+    this.jobStatusPolling?.unsubscribe();
+  }
+
+  statusLabel(status: string): string {
+    return videoStatusLabel(status);
+  }
+
+  statusTone(status: string): VideoStatusTone {
+    return videoStatusTone(status);
+  }
+
+  refreshPendingVideos(): void {
+    for (const video of this.videos()) {
+      if (!video.jobId || isTerminalStatus(video.status)) {
+        continue;
+      }
+
+      this.api.getVideoJob(video.jobId).subscribe({
+        next: job => this.applyJobStatus(job),
+        error: error => {
+          console.warn(
+            'No se pudo consultar el estado del video',
+            error
+          );
+        }
+      });
+    }
+  }
+
+  private applyJobStatus(job: VideoJobResponse): void {
+    this.updateVideo(job.jobId, video => ({
+      ...video,
+      status: job.status,
+      failureReason: job.failureReason ?? undefined
+    }));
+
+    if (job.status === 'COMPLETED') {
+      this.loadJobFaces(job.jobId);
+    }
+  }
+
+  private loadJobFaces(jobId: string): void {
+    this.api.getFaceAppearances().subscribe({
+      next: appearances => {
+        const clusters = appearances
+          .filter(appearance =>
+            appearance.faceId.startsWith(`${jobId}_`)
+          )
+          .map(appearance => this.toCluster(appearance));
+
+        this.updateVideo(jobId, video => ({
+          ...video,
+          clusters
+        }));
+      },
+      error: error => {
+        console.warn(
+          'No se pudieron cargar los rostros del video',
+          error
+        );
+      }
+    });
+  }
+
+  private toCluster(appearance: FaceAppearance): MonitorCluster {
+    return {
+      clusterId: appearance.faceId,
+      appearances: [
+        {
+          faceId: appearance.faceId,
+          timestamp: appearance.timestamp,
+          cameraId: appearance.cameraId,
+          capturedAt: appearance.capturedAt
+        }
+      ]
+    };
+  }
+
+  private updateVideo(
+    jobId: string,
+    change: (video: MonitorVideo) => MonitorVideo
+  ): void {
+    this.videos.update(currentVideos =>
+      currentVideos.map(video =>
+        video.jobId === jobId ? change(video) : video
+      )
+    );
+
+    this.saveLocalVideos();
   }
 
   selectCamera(camera: Camera): void {

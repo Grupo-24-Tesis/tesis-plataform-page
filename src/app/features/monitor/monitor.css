@@ -442,6 +442,27 @@
   background: var(--azul);
 }
 
+.video-status[data-tone='ok'] {
+  background: var(--verde);
+}
+
+.video-status[data-tone='error'] {
+  background: var(--rojo);
+}
+
+.video-status-label {
+  color: var(--texto-secundario);
+  font: 11px var(--fuente-mono);
+}
+
+.video-failure {
+  margin: 0;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--borde);
+  color: var(--rojo);
+  font-size: 12px;
+}
+
 .cluster-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

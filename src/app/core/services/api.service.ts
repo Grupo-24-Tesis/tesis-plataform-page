@@ -172,5 +172,11 @@ notifyVideoUploaded(
     payload
   );
 }
+
+getVideoJob(jobId: string) {
+  return this.http.get<VideoJobResponse>(
+    `${this.base}/video-jobs/${jobId}`
+  );
+}
  
 }

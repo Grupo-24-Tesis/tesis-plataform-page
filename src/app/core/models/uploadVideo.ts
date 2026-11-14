@@ -27,4 +27,6 @@ export interface VideoJobResponse {
   cameraId: string;
   status: string;
   createdAt: string;
+  updatedAt?: string;
+  failureReason?: string | null;
 }
