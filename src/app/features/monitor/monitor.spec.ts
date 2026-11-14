@@ -43,6 +43,9 @@ describe('MonitorComponent', () => {
     requestVideoUploadUrl: ReturnType<typeof vi.fn>;
     uploadVideoToS3: ReturnType<typeof vi.fn>;
     notifyVideoUploaded: ReturnType<typeof vi.fn>;
+    getMarked: ReturnType<typeof vi.fn>;
+    createMarked: ReturnType<typeof vi.fn>;
+    deleteMarked: ReturnType<typeof vi.fn>;
   };
 
   async function create(): Promise<void> {
@@ -70,7 +73,10 @@ describe('MonitorComponent', () => {
       getVideoJobFaces: vi.fn(() => of([])),
       requestVideoUploadUrl: vi.fn(),
       uploadVideoToS3: vi.fn(),
-      notifyVideoUploaded: vi.fn()
+      notifyVideoUploaded: vi.fn(),
+      getMarked: vi.fn(() => of([])),
+      createMarked: vi.fn(),
+      deleteMarked: vi.fn()
     };
   });
 
@@ -304,16 +310,84 @@ describe('MonitorComponent', () => {
     expect(api.getVideoJobs).toHaveBeenCalledTimes(1);
   });
 
-  it('does not write to localStorage', async () => {
-    const setItem = vi.spyOn(Storage.prototype, 'setItem');
+  async function openDetail(): Promise<void> {
     api.getVideoJobs.mockReturnValue(of([job('COMPLETED')]));
     api.getVideoJobFaces.mockReturnValue(of([FACE]));
-
     await create();
     component.selectCluster(component.videos()[0], component.videos()[0].clusters[0]);
-    component.toggleSavedCluster(component.videos()[0], component.videos()[0].clusters[0]);
+    fixture.detectChanges();
+    await fixture.whenStable();
+  }
+
+  function markButton(): HTMLButtonElement {
+    return fixture.nativeElement.querySelector('.detail-actions button');
+  }
+
+  it('marks the detection with the typed reason', async () => {
+    api.createMarked.mockReturnValue(of({ id: 'm1', faceId: 'job-1_4', reason: 'Merodeo' }));
+    await openDetail();
+
+    component.markReason.set('Merodeo');
+    markButton().click();
+    await fixture.whenStable();
+
+    expect(api.createMarked).toHaveBeenCalledWith({ faceId: 'job-1_4', reason: 'Merodeo' });
+    expect(markButton().textContent).toContain('QUITAR');
+  });
+
+  it('marks the detection with Sin motivo when the reason is empty', async () => {
+    api.createMarked.mockReturnValue(of({ id: 'm1', faceId: 'job-1_4', reason: 'Sin motivo' }));
+    await openDetail();
+
+    markButton().click();
+    await fixture.whenStable();
+
+    expect(api.createMarked).toHaveBeenCalledWith({ faceId: 'job-1_4', reason: 'Sin motivo' });
+  });
+
+  it('offers to remove the mark of an already marked face', async () => {
+    api.getMarked.mockReturnValue(of([{ id: 'm1', faceId: 'job-1_4', reason: 'x' }]));
+    api.deleteMarked.mockReturnValue(of(undefined));
+    await openDetail();
+
+    expect(markButton().textContent).toContain('QUITAR');
+
+    markButton().click();
+    await fixture.whenStable();
+
+    expect(api.deleteMarked).toHaveBeenCalledWith('m1');
+    expect(api.createMarked).not.toHaveBeenCalled();
+    expect(markButton().textContent).toContain('GUARDAR');
+  });
+
+  it('shows the backend message and reloads marks on a 409', async () => {
+    api.createMarked.mockReturnValue(
+      throwError(() => new HttpErrorResponse({
+        status: 409,
+        error: { status: 409, message: 'La deteccion ya esta marcada' }
+      }))
+    );
+    await openDetail();
+
+    markButton().click();
+    await fixture.whenStable();
+
+    expect(api.getMarked).toHaveBeenCalledTimes(2);
+    expect(fixture.nativeElement.querySelector('.mark-message').textContent)
+      .toContain('La deteccion ya esta marcada');
+  });
+
+  it('does not use localStorage', async () => {
+    const setItem = vi.spyOn(Storage.prototype, 'setItem');
+    const getItem = vi.spyOn(Storage.prototype, 'getItem');
+    api.createMarked.mockReturnValue(of({ id: 'm1', faceId: 'job-1_4', reason: 'Sin motivo' }));
+    await openDetail();
+
+    markButton().click();
+    await fixture.whenStable();
 
     expect(setItem).not.toHaveBeenCalled();
+    expect(getItem).not.toHaveBeenCalled();
   });
 
   function selectFile(file: File): void {

@@ -18,6 +18,15 @@
     </button>
   </header>
 
+  <p
+    class="feedback"
+    [class.error]="messageIsError()"
+    role="status"
+    *ngIf="message()"
+  >
+    {{ message() }}
+  </p>
+
   <div class="list">
     <article
       *ngFor="let markedPerson of marked()"
@@ -58,12 +67,33 @@
 
         <footer>
           <button
+            *ngIf="pendingDeleteId() !== markedPerson.id"
             type="button"
             class="delete-button"
-            (click)="deleteMarked(markedPerson)"
+            (click)="askDelete(markedPerson)"
           >
             QUITAR DE GUARDADOS
           </button>
+
+          <ng-container *ngIf="pendingDeleteId() === markedPerson.id">
+            <span class="confirm-text">¿Quitar esta marca?</span>
+
+            <button
+              type="button"
+              class="delete-button confirm-delete"
+              (click)="confirmDelete(markedPerson)"
+            >
+              CONFIRMAR
+            </button>
+
+            <button
+              type="button"
+              class="cancel-button"
+              (click)="cancelDelete()"
+            >
+              CANCELAR
+            </button>
+          </ng-container>
         </footer>
       </div>
     </article>
@@ -123,6 +153,8 @@
           class="person-option"
           *ngFor="let person of people()"
           [class.selected]="selectedPerson()?.faceId === person.faceId"
+          [disabled]="isMarked(person.faceId)"
+          [attr.title]="isMarked(person.faceId) ? 'Ya está marcada' : null"
           (click)="selectPerson(person)"
         >
           <div class="person-image-container">
@@ -163,7 +195,8 @@
 
       <textarea
         id="reason"
-        [(ngModel)]="reason"
+        [ngModel]="reason()"
+        (ngModelChange)="reason.set($event)"
         placeholder="Describe por qué esta persona debe quedar guardada..."
         rows="4"
       ></textarea>

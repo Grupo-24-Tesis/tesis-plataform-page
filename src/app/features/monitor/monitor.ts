@@ -8,7 +8,7 @@ import {
   signal
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { HttpEventType } from '@angular/common/http';
+import { HttpErrorResponse, HttpEventType } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 
 import { apiErrorMessage } from '../../core/services/api-error';
@@ -16,7 +16,8 @@ import { videoContentType } from '../../core/models/video-content-type';
 
 import {
   ApiService,
-  Camera
+  Camera,
+  MarkedPerson
 } from '../../core/services/api.service';
 import { PresignedUploadResponse, VideoJobResponse } from '../../core/models/uploadVideo';
 import { FaceAppearance } from '../../core/models/face.model';
@@ -97,7 +98,11 @@ export class MonitorComponent implements OnInit, OnDestroy {
 
   videos = signal<MonitorVideo[]>([]);
   selectedCluster = signal<SelectedCluster | null>(null);
-  savedClusterIds = signal<string[]>([]);
+  marks = signal<MarkedPerson[]>([]);
+  markReason = signal('');
+  markMsg = signal('');
+  markError = signal(false);
+  markBusy = signal(false);
   cameraVideoCounts = signal<Record<string, number>>({});
 
   selectedFile = signal<File | null>(null);
@@ -115,6 +120,8 @@ export class MonitorComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
+    this.loadMarks();
+
     this.api.getCameras().subscribe({
       next: (data) => {
         this.cameras.set(data);
@@ -422,6 +429,8 @@ export class MonitorComponent implements OnInit, OnDestroy {
       return;
     }
 
+    this.markReason.set('');
+    this.setMarkMessage('', false);
     this.selectedCluster.set({
       video,
       cluster
@@ -432,31 +441,89 @@ export class MonitorComponent implements OnInit, OnDestroy {
     this.selectedCluster.set(null);
   }
 
-  isClusterSaved(
-    video: MonitorVideo,
-    cluster: MonitorCluster
-  ): boolean {
-    return this.savedClusterIds().includes(
-      this.getClusterKey(video, cluster)
-    );
+  private loadMarks(): void {
+    this.api.getMarked().subscribe({
+      next: marks => this.marks.set(marks),
+      error: error => {
+        console.warn('No se pudieron cargar las marcas', error);
+        this.setMarkMessage(
+          apiErrorMessage(error, 'No se pudieron cargar las marcas.'),
+          true
+        );
+      }
+    });
   }
 
-  toggleSavedCluster(
-    video: MonitorVideo,
-    cluster: MonitorCluster
-  ): void {
-    const key = this.getClusterKey(video, cluster);
+  private setMarkMessage(message: string, isError: boolean): void {
+    this.markMsg.set(message);
+    this.markError.set(isError);
+  }
 
-    if (this.savedClusterIds().includes(key)) {
-      this.savedClusterIds.update(ids =>
-        ids.filter(currentId => currentId !== key)
-      );
-    } else {
-      this.savedClusterIds.update(ids => [
-        ...ids,
-        key
-      ]);
+  markFor(cluster: MonitorCluster): MarkedPerson | undefined {
+    return this.marks().find(mark => mark.faceId === cluster.clusterId);
+  }
+
+  toggleMark(cluster: MonitorCluster): void {
+    if (this.markBusy()) {
+      return;
     }
+
+    const existing = this.markFor(cluster);
+
+    if (existing?.id) {
+      this.removeMark(existing.id);
+      return;
+    }
+
+    this.addMark(cluster);
+  }
+
+  private addMark(cluster: MonitorCluster): void {
+    this.markBusy.set(true);
+    this.setMarkMessage('', false);
+
+    this.api.createMarked({
+      faceId: cluster.clusterId,
+      reason: this.markReason().trim() || 'Sin motivo'
+    }).subscribe({
+      next: created => {
+        this.marks.update(marks => [...marks, created]);
+        this.markReason.set('');
+        this.setMarkMessage('Detección guardada.', false);
+        this.markBusy.set(false);
+      },
+      error: error => {
+        if (error instanceof HttpErrorResponse && error.status === 409) {
+          this.loadMarks();
+        }
+
+        this.setMarkMessage(
+          apiErrorMessage(error, 'No se pudo guardar la detección.'),
+          true
+        );
+        this.markBusy.set(false);
+      }
+    });
+  }
+
+  private removeMark(id: string): void {
+    this.markBusy.set(true);
+    this.setMarkMessage('', false);
+
+    this.api.deleteMarked(id).subscribe({
+      next: () => {
+        this.marks.update(marks => marks.filter(mark => mark.id !== id));
+        this.setMarkMessage('Marca eliminada.', false);
+        this.markBusy.set(false);
+      },
+      error: error => {
+        this.setMarkMessage(
+          apiErrorMessage(error, 'No se pudo quitar la marca.'),
+          true
+        );
+        this.markBusy.set(false);
+      }
+    });
   }
 
   getCameraVideos(): MonitorVideo[] {
@@ -658,12 +725,5 @@ export class MonitorComponent implements OnInit, OnDestroy {
         this.processingVideo.set(false);
       }
     });
-  }
-
-  private getClusterKey(
-    video: MonitorVideo,
-    cluster: MonitorCluster
-  ): string {
-    return `${video.id}:${cluster.clusterId}`;
   }
 }

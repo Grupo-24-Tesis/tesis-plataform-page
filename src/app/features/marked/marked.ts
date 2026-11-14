@@ -1,284 +1,188 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ImageFallbackDirective } from '../../shared/directives/image-fallback.directive';
-import {ApiService, MarkedPerson, } from '../../core/services/api.service';
+import { ApiService, MarkedPerson } from '../../core/services/api.service';
+import { apiErrorMessage } from '../../core/services/api-error';
 import { FaceAppearance } from '../../core/models/face.model';
+
 interface Person {
   faceId: string;
   appearance: FaceAppearance;
 }
 
-interface LocalMonitorVideo {
-  id: string;
-  cameraId: string;
-  fileName: string;
-  processedAt: string;
-  clusters: {
-    clusterId: string;
-    appearances: FaceAppearance[];
-  }[];
-}
-
 @Component({
   selector: 'app-marked',
   standalone: true,
- imports: [CommonModule, FormsModule, ImageFallbackDirective],
+  imports: [CommonModule, FormsModule, ImageFallbackDirective],
   templateUrl: './marked.html',
   styleUrl: './marked.css',
 })
 export class Marked implements OnInit {
-  
-
   marked = signal<MarkedPerson[]>([]);
 
   people = signal<Person[]>([]);
+
+  markedFaceIds = computed(
+    () => new Set(this.marked().map(item => item.faceId))
+  );
 
   showModal = signal(false);
 
   selectedPerson = signal<Person | null>(null);
 
-  reason = '';
+  reason = signal('');
+
+  message = signal('');
+
+  messageIsError = signal(false);
+
+  pendingDeleteId = signal<string | null>(null);
 
   constructor(private api: ApiService) {}
 
   ngOnInit(): void {
-    this.loadLocalMarked();
+    this.loadMarked();
 
-    this.api.getMarked().subscribe({
-      next: (data) => {
-        console.log('MARKED API =>', data);
-        this.marked.update(current => {
-          const localMarked = current.filter(
-            marked => marked.id?.startsWith('LOCAL:')
-          );
+    this.api.getFaceAppearances().subscribe({
+      next: data => {
+        const map = new Map<string, FaceAppearance>();
 
-          const apiIds = new Set(data.map(marked => marked.id));
-
-          return [
-            ...data,
-            ...localMarked.filter(marked => !apiIds.has(marked.id))
-          ];
-        });
-      },
-      error: (err) => {
-        console.error('Error loading marked people', err);
-      }
-    });
-
-   this.api.getFaceAppearances().subscribe({
-    next: (data) => {
-    const map = new Map<string, FaceAppearance>();
-
-    for (const appearance of data) {
-      if (!map.has(appearance.faceId)) {
-        map.set(appearance.faceId, appearance);
-      }
-    }
-
-    const people = Array.from(map.entries()).map(
-      ([faceId, appearance]) => ({
-        faceId,
-        appearance
-      })
-    );
-
-    console.log('PEOPLE =>', people);
-
-    this.people.update(current => {
-      const merged = [...people];
-
-      current.forEach(localPerson => {
-        const exists = merged.some(
-          person => person.faceId === localPerson.faceId
-        );
-
-        if (!exists) {
-          merged.push(localPerson);
+        for (const appearance of data) {
+          if (!map.has(appearance.faceId)) {
+            map.set(appearance.faceId, appearance);
+          }
         }
-      });
 
-      return merged;
+        this.people.set(
+          Array.from(map.entries()).map(([faceId, appearance]) => ({
+            faceId,
+            appearance
+          }))
+        );
+      },
+      error: error => {
+        this.showMessage(
+          apiErrorMessage(error, 'No se pudieron cargar las detecciones.'),
+          true
+        );
+      }
     });
-  },
-  error: (err) => {
-    console.error('Error loading people', err);
   }
-});}
-  
-  openModal() {
-    this.reason = '';
+
+  private loadMarked(): void {
+    this.api.getMarked().subscribe({
+      next: data => this.marked.set(data),
+      error: error => {
+        this.showMessage(
+          apiErrorMessage(error, 'No se pudieron cargar las marcas.'),
+          true
+        );
+      }
+    });
+  }
+
+  private showMessage(text: string, isError: boolean): void {
+    this.message.set(text);
+    this.messageIsError.set(isError);
+  }
+
+  isMarked(faceId: string): boolean {
+    return this.markedFaceIds().has(faceId);
+  }
+
+  openModal(): void {
+    this.reason.set('');
     this.selectedPerson.set(null);
+    this.showMessage('', false);
     this.showModal.set(true);
   }
 
-  closeModal() {
+  closeModal(): void {
     this.showModal.set(false);
     this.selectedPerson.set(null);
-    this.reason = '';
+    this.reason.set('');
   }
 
-  selectPerson(person: Person) {
+  selectPerson(person: Person): void {
+    if (this.isMarked(person.faceId)) {
+      return;
+    }
+
     this.selectedPerson.set(person);
   }
 
-  createMarked() {
-
+  createMarked(): void {
     const person = this.selectedPerson();
 
     if (!person) {
-      alert('Seleccione una persona');
+      this.showMessage('Selecciona una persona.', true);
       return;
     }
 
-    if (!this.reason.trim()) {
-      alert('Ingrese una razón');
+    if (this.isMarked(person.faceId)) {
+      this.showMessage('La detección ya está marcada.', true);
       return;
     }
 
-    const newMarked: MarkedPerson = {
+    if (!this.reason().trim()) {
+      this.showMessage('Ingresa una razón.', true);
+      return;
+    }
+
+    this.api.createMarked({
       faceId: person.faceId,
-      reason: this.reason.trim()
-    };
-
-    this.api.createMarked(newMarked).subscribe({
-      next: (created) => {
-
-        console.log('MARKED CREATED =>', created);
-
-        this.marked.update(current => [
-          ...current,
-          created
-        ]);
-
+      reason: this.reason().trim()
+    }).subscribe({
+      next: created => {
+        this.marked.update(current => [...current, created]);
         this.closeModal();
+        this.showMessage('Persona guardada.', false);
       },
-
-      error: (err) => {
-        console.error('Error creating marked person', err);
+      error: error => {
+        this.loadMarked();
+        this.showMessage(
+          apiErrorMessage(error, 'No se pudo guardar la persona.'),
+          true
+        );
       }
     });
   }
-  private loadLocalMarked(): void {
-    try {
-      const savedIdsContent = localStorage.getItem(
-        'facecluster-saved-clusters-v1'
-      );
-
-      const videosContent = localStorage.getItem(
-        'facecluster-monitor-videos-v1'
-      );
-
-      if (!savedIdsContent || !videosContent) {
-        return;
-      }
-
-      const savedIds: string[] = JSON.parse(savedIdsContent);
-      const videos: LocalMonitorVideo[] = JSON.parse(videosContent);
-
-      if (!Array.isArray(savedIds) || !Array.isArray(videos)) {
-        return;
-      }
-
-      const localMarked: MarkedPerson[] = [];
-      const localPeople: Person[] = [];
-
-      savedIds.forEach(savedId => {
-        const separatorPosition = savedId.indexOf(':');
-
-        if (separatorPosition === -1) {
-          return;
-        }
-
-        const videoId = savedId.slice(0, separatorPosition);
-        const clusterId = savedId.slice(separatorPosition + 1);
-
-        const video = videos.find(item => item.id === videoId);
-        const cluster = video?.clusters.find(
-          item => item.clusterId === clusterId
-        );
-
-        if (!video || !cluster || cluster.appearances.length === 0) {
-          return;
-        }
-
-        localMarked.push({
-          id: `LOCAL:${savedId}`,
-          faceId: cluster.clusterId,
-          reason: `Detección guardada desde ${video.fileName}`
-        });
-
-        localPeople.push({
-          faceId: cluster.clusterId,
-          appearance: cluster.appearances[0]
-        });
-      });
-
-      this.marked.set(localMarked);
-      this.people.set(localPeople);
-    } catch {
-      console.warn(
-        'No fue posible recuperar las detecciones guardadas localmente.'
-      );
-    }
-  }
 
   getPersonImage(faceId: string): string | undefined {
-  return this.people().find(
-    person => person.faceId === faceId
-  )?.appearance.frameUrl;
-}
-deleteMarked(marked: MarkedPerson) {
-    if (marked.id?.startsWith('LOCAL:')) {
-    const savedId = marked.id.replace('LOCAL:', '');
-
-    try {
-      const content = localStorage.getItem(
-        'facecluster-saved-clusters-v1'
-      );
-
-      const savedIds: string[] = content
-        ? JSON.parse(content)
-        : [];
-
-      localStorage.setItem(
-        'facecluster-saved-clusters-v1',
-        JSON.stringify(
-          savedIds.filter(currentId => currentId !== savedId)
-        )
-      );
-
-      this.marked.update(list =>
-        list.filter(item => item.id !== marked.id)
-      );
-    } catch {
-      console.warn(
-        'No fue posible eliminar la detección guardada.'
-      );
-    }
-
-    return;
+    return this.people().find(
+      person => person.faceId === faceId
+    )?.appearance.frameUrl;
   }
 
-  if (!marked.id) {
-    console.error('El marcado no tiene ID');
-    return;
+  askDelete(item: MarkedPerson): void {
+    this.pendingDeleteId.set(item.id ?? null);
   }
 
-  this.api.deleteMarked(marked.id).subscribe({
-    next: () => {
+  cancelDelete(): void {
+    this.pendingDeleteId.set(null);
+  }
 
-      console.log('Marcado eliminado:', marked.id);
-
-      this.marked.update(list =>
-        list.filter(m => m.id !== marked.id)
-      );
-
-    },
-
-    error: err => {
-      console.error('Error eliminando marcado', err);
+  confirmDelete(item: MarkedPerson): void {
+    if (!item.id) {
+      return;
     }
-  });
-}
+
+    const id = item.id;
+
+    this.api.deleteMarked(id).subscribe({
+      next: () => {
+        this.marked.update(list => list.filter(current => current.id !== id));
+        this.pendingDeleteId.set(null);
+        this.showMessage('Marca eliminada.', false);
+      },
+      error: error => {
+        this.pendingDeleteId.set(null);
+        this.showMessage(
+          apiErrorMessage(error, 'No se pudo eliminar la marca.'),
+          true
+        );
+      }
+    });
+  }
 }

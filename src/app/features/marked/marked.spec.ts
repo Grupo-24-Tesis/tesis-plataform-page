@@ -1,25 +1,143 @@
-import { provideHttpClient } from '@angular/common/http';
-import { provideHttpClientTesting } from '@angular/common/http/testing';
+import { HttpErrorResponse } from '@angular/common/http';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { of, throwError } from 'rxjs';
 
+import { ApiService } from '../../core/services/api.service';
 import { Marked } from './marked';
 
-describe('Marked', () => {
-  let component: Marked;
-  let fixture: ComponentFixture<Marked>;
+const FACES = [
+  { id: 'a', faceId: 'job-1_1', timestamp: '00:00:01', cameraId: 'CAM-01', frameUrl: 'https://x/1.jpg' },
+  { id: 'b', faceId: 'job-1_2', timestamp: '00:00:02', cameraId: 'CAM-01', frameUrl: 'https://x/2.jpg' }
+];
 
-  beforeEach(async () => {
+describe('Marked', () => {
+  let fixture: ComponentFixture<Marked>;
+  let component: Marked;
+  let api: {
+    getMarked: ReturnType<typeof vi.fn>;
+    getFaceAppearances: ReturnType<typeof vi.fn>;
+    createMarked: ReturnType<typeof vi.fn>;
+    deleteMarked: ReturnType<typeof vi.fn>;
+  };
+  let alertSpy: ReturnType<typeof vi.spyOn>;
+
+  async function create(): Promise<void> {
     await TestBed.configureTestingModule({
       imports: [Marked],
-      providers: [provideHttpClient(), provideHttpClientTesting()]
+      providers: [{ provide: ApiService, useValue: api }]
     }).compileComponents();
 
     fixture = TestBed.createComponent(Marked);
     component = fixture.componentInstance;
+    fixture.detectChanges();
     await fixture.whenStable();
+  }
+
+  function text(): string {
+    return fixture.nativeElement.textContent;
+  }
+
+  function click(selector: string): void {
+    fixture.nativeElement.querySelector(selector).click();
+  }
+
+  beforeEach(() => {
+    alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => undefined);
+    api = {
+      getMarked: vi.fn(() => of([{ id: 'm1', faceId: 'job-1_1', reason: 'Merodeo' }])),
+      getFaceAppearances: vi.fn(() => of(FACES)),
+      createMarked: vi.fn(),
+      deleteMarked: vi.fn()
+    };
   });
 
-  it('should create', () => {
-    expect(component).toBeTruthy();
+  afterEach(() => {
+    fixture?.destroy();
+    vi.restoreAllMocks();
+  });
+
+  it('lists only the marks returned by the backend and never reads localStorage', async () => {
+    const getItem = vi.spyOn(Storage.prototype, 'getItem');
+
+    await create();
+
+    expect(component.marked().length).toBe(1);
+    expect(text()).toContain('Merodeo');
+    expect(getItem).not.toHaveBeenCalled();
+  });
+
+  it('does not let an already marked face be picked again', async () => {
+    await create();
+    component.openModal();
+    fixture.detectChanges();
+
+    const options: HTMLButtonElement[] = Array.from(
+      fixture.nativeElement.querySelectorAll('.person-option')
+    );
+
+    expect(options[0].disabled).toBe(true);
+    expect(options[1].disabled).toBe(false);
+
+    component.selectPerson(component.people()[0]);
+    expect(component.selectedPerson()).toBeNull();
+  });
+
+  it('asks for confirmation before deleting', async () => {
+    api.deleteMarked.mockReturnValue(of(undefined));
+    await create();
+
+    click('.delete-button');
+    fixture.detectChanges();
+
+    expect(api.deleteMarked).not.toHaveBeenCalled();
+    expect(text()).toContain('¿Quitar esta marca?');
+
+    click('.confirm-delete');
+    await fixture.whenStable();
+
+    expect(api.deleteMarked).toHaveBeenCalledWith('m1');
+    expect(component.marked().length).toBe(0);
+  });
+
+  it('cancels the deletion without calling the backend', async () => {
+    await create();
+
+    click('.delete-button');
+    fixture.detectChanges();
+    click('.cancel-button');
+    fixture.detectChanges();
+
+    expect(api.deleteMarked).not.toHaveBeenCalled();
+    expect(component.marked().length).toBe(1);
+  });
+
+  it('renders the backend error message', async () => {
+    api.createMarked.mockReturnValue(
+      throwError(() => new HttpErrorResponse({
+        status: 409,
+        error: { status: 409, message: 'La deteccion ya esta marcada' }
+      }))
+    );
+    await create();
+
+    component.openModal();
+    component.selectPerson(component.people()[1]);
+    component.reason.set('Motivo');
+    component.createMarked();
+    await fixture.whenStable();
+
+    expect(text()).toContain('La deteccion ya esta marcada');
+    expect(alertSpy).not.toHaveBeenCalled();
+  });
+
+  it('shows validation feedback inline instead of alert', async () => {
+    await create();
+
+    component.openModal();
+    component.createMarked();
+    await fixture.whenStable();
+
+    expect(text()).toContain('Selecciona una persona.');
+    expect(alertSpy).not.toHaveBeenCalled();
   });
 });

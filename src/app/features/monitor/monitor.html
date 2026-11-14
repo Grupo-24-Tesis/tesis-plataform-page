@@ -230,17 +230,38 @@
     </div>
 
     <footer class="detail-actions">
+      <input
+        *ngIf="!markFor(selected.cluster)"
+        type="text"
+        class="mark-reason"
+        aria-label="Motivo del marcado"
+        placeholder="Motivo (opcional)"
+        maxlength="200"
+        [ngModel]="markReason()"
+        (ngModelChange)="markReason.set($event)"
+      >
+
       <button
         type="button"
-        [class.saved]="isClusterSaved(selected.video, selected.cluster)"
-        (click)="toggleSavedCluster(selected.video, selected.cluster)"
+        [class.saved]="markFor(selected.cluster)"
+        [disabled]="markBusy()"
+        (click)="toggleMark(selected.cluster)"
       >
         {{
-          isClusterSaved(selected.video, selected.cluster)
-            ? '✓ DETECCIÓN GUARDADA'
+          markFor(selected.cluster)
+            ? 'DETECCIÓN GUARDADA - QUITAR'
             : '+ GUARDAR DETECCIÓN'
         }}
       </button>
+
+      <p
+        class="mark-message"
+        [class.error]="markError()"
+        role="status"
+        *ngIf="markMsg()"
+      >
+        {{ markMsg() }}
+      </p>
     </footer>
   </aside>
 </section>

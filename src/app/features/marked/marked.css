@@ -444,3 +444,22 @@
     width: 100%;
   }
 }
+
+.feedback {
+  margin: 0 0 16px;
+  color: var(--verde);
+  font: 12px var(--fuente-mono);
+}
+
+.feedback.error {
+  color: #ff7b72;
+}
+
+.confirm-text {
+  font: 11px var(--fuente-mono);
+}
+
+.person-option:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}

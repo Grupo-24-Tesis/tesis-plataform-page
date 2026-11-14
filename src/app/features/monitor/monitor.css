@@ -794,6 +794,36 @@
   cursor: pointer;
 }
 
+.detail-actions {
+  display: grid;
+  gap: 10px;
+}
+
+.mark-reason {
+  min-height: 38px;
+  padding: 0 12px;
+  color: inherit;
+  background: transparent;
+  border: 1px solid var(--borde);
+  border-radius: 5px;
+  font: 11px var(--fuente-mono);
+}
+
+.mark-message {
+  margin: 0;
+  color: var(--verde);
+  font: 11px var(--fuente-mono);
+}
+
+.mark-message.error {
+  color: #ff7b72;
+}
+
+.detail-actions button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
 .detail-actions button.saved {
   color: var(--verde);
   background: rgba(71, 215, 160, 0.1);
