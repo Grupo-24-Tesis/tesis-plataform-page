@@ -463,3 +463,9 @@
   opacity: 0.4;
   cursor: not-allowed;
 }
+
+.marked-by {
+  margin: 8px 0 0;
+  color: var(--texto-secundario);
+  font: 12px var(--fuente);
+}

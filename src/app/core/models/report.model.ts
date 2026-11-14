@@ -12,4 +12,5 @@ export interface ReportItem {
   resolvedAt?: string;
 
   faceIds: string[];
+  createdByGuardId?: string;
 }

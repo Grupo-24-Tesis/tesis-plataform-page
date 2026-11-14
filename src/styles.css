@@ -252,3 +252,38 @@ dialog[open]::backdrop {
     transition-duration: 0.01ms !important;
   }
 }
+
+@media print {
+  :root {
+    --fondo: #fff;
+    --superficie: #fff;
+    --superficie-2: #fff;
+    --superficie-3: #fff;
+    --borde: #000;
+    --texto: #000;
+    --texto-secundario: #000;
+    --texto-terciario: #000;
+    --azul: #000;
+    --enlace: #000;
+    color-scheme: light;
+  }
+
+  html,
+  body {
+    color: #000;
+    background: #fff;
+  }
+
+  .topbar,
+  .drawer,
+  .overlay,
+  button {
+    display: none !important;
+  }
+
+  .app-shell {
+    padding: 0 !important;
+    color: #000;
+    background: #fff;
+  }
+}

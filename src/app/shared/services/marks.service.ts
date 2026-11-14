@@ -5,6 +5,7 @@ import { tap } from 'rxjs/operators';
 
 import { ApiService, MarkedPerson } from '../../core/services/api.service';
 import { apiErrorMessage } from '../../core/services/api-error';
+import { SessionService } from '../../core/services/session.service';
 
 export interface MarkOutcome {
   message: string;
@@ -15,6 +16,7 @@ export interface MarkOutcome {
 @Injectable({ providedIn: 'root' })
 export class MarksService {
   private readonly api = inject(ApiService);
+  private readonly session = inject(SessionService);
 
   readonly marks = signal<MarkedPerson[]>([]);
   readonly busy = signal(false);
@@ -65,7 +67,9 @@ export class MarksService {
   }
 
   create(faceId: string, reason: string): Observable<MarkedPerson> {
-    return this.api.createMarked({ faceId, reason }).pipe(
+    const createdByGuardId = this.session.getActiveGuard()?.id;
+
+    return this.api.createMarked({ faceId, reason, createdByGuardId }).pipe(
       tap({
         next: created => this.marks.update(marks => [...marks, created]),
         error: error => {

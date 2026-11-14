@@ -14,4 +14,10 @@ describe('routes', () => {
     expect(paths).toContain('activity');
     expect(routes.some(route => route.path === 'activity')).toBe(false);
   });
+
+  it('registra el detalle de un reporte dentro del shell protegido', () => {
+    const paths = shell?.children?.map(route => route.path);
+
+    expect(paths).toContain('reports/:id');
+  });
 });

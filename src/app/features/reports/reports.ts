@@ -1,4 +1,4 @@
-import { Component, HostListener, OnInit, signal } from '@angular/core';
+import { Component, HostListener, OnDestroy, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -9,6 +9,8 @@ import { Observable } from 'rxjs';
 import { ApiService } from '../../core/services/api.service';
 import { apiErrorMessage } from '../../core/services/api-error';
 import { ReportItem } from '../../core/models/report.model';
+import { SessionService } from '../../core/services/session.service';
+import { FreshnessTimer, IMAGES_MAX_AGE_MS } from '../../shared/utils/freshness-timer';
 
 import { FaceAppearance } from '../../core/models/face.model';
 
@@ -19,7 +21,7 @@ import { FaceAppearance } from '../../core/models/face.model';
   templateUrl: './reports.html',
   styleUrl: './reports.css',
 })
-export class Reports implements OnInit {
+export class Reports implements OnInit, OnDestroy {
 
 
 
@@ -100,13 +102,42 @@ endDate: string = '';
   constructor(
     private api: ApiService,
     private route: ActivatedRoute,
-    private router: Router
+    private router: Router,
+    private session: SessionService
   ) {}
+
+  private appearancesToken = 0;
+
+  private appearancesLoadedAt = 0;
+
+  private appearancesRefreshing = false;
+
+  private readonly freshness = new FreshnessTimer(() => this.refreshAppearancesIfStale());
 
   ngOnInit(): void {
     this.loadReports();
     this.loadAppearances();
+    this.freshness.start();
     this.openForRequestedDetection();
+  }
+
+  ngOnDestroy(): void {
+    this.freshness.stop();
+    this.appearancesToken++;
+  }
+
+  openDetail(report: ReportItem): void {
+    void this.router.navigate(['/reports', report.id]);
+  }
+
+  private refreshAppearancesIfStale(): void {
+    const stale =
+      !this.appearancesRefreshing &&
+      Date.now() - this.appearancesLoadedAt >= IMAGES_MAX_AGE_MS;
+
+    if (stale) {
+      this.loadAppearances(true);
+    }
   }
 
 
@@ -395,6 +426,8 @@ endDate: string = '';
 
       ...this.newReport,
 
+      createdByGuardId: this.session.getActiveGuard()?.id,
+
       resolvedAt: isResolved ? this.newReport.resolvedAt : undefined,
 
       resolutionDescription: isResolved
@@ -539,11 +572,25 @@ endDate: string = '';
   }
 
 
-  loadAppearances(): void {
+  loadAppearances(keepCurrent = false): void {
+
+    const token = ++this.appearancesToken;
+
+    this.appearancesRefreshing = keepCurrent;
 
     this.api.getFaceAppearances().subscribe({
 
       next: (data) => {
+
+        if (token !== this.appearancesToken) {
+
+          return;
+
+        }
+
+        this.appearancesRefreshing = false;
+
+        this.appearancesLoadedAt = Date.now();
 
         this.appearances.set(data);
 
@@ -552,6 +599,20 @@ endDate: string = '';
       },
 
       error: (err) => {
+
+        if (token !== this.appearancesToken) {
+
+          return;
+
+        }
+
+        this.appearancesRefreshing = false;
+
+        if (keepCurrent) {
+
+          return;
+
+        }
 
         console.error(
           'Error al cargar las apariciones de rostros',

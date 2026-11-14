@@ -540,7 +540,7 @@ describe('MonitorComponent', () => {
       .toContain('La marca no existe');
   });
 
-  it('does not use localStorage', async () => {
+  it('only reads the active guard from localStorage and never writes', async () => {
     const setItem = vi.spyOn(Storage.prototype, 'setItem');
     const getItem = vi.spyOn(Storage.prototype, 'getItem');
     api.createMarked.mockReturnValue(of({ id: 'm1', faceId: 'job-1_4', reason: 'Sin motivo' }));
@@ -550,7 +550,7 @@ describe('MonitorComponent', () => {
     await fixture.whenStable();
 
     expect(setItem).not.toHaveBeenCalled();
-    expect(getItem).not.toHaveBeenCalled();
+    expect(getItem.mock.calls.every(call => call[0] === 'activeGuard')).toBe(true);
   });
 
   function selectFile(file: File): void {

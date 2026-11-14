@@ -3,6 +3,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Subject, of, throwError } from 'rxjs';
 
 import { ApiService } from '../../core/services/api.service';
+import { SessionService } from '../../core/services/session.service';
 import { Marked } from './marked';
 
 const FACES = [
@@ -16,6 +17,7 @@ describe('Marked', () => {
   let api: {
     getMarked: ReturnType<typeof vi.fn>;
     getFaceAppearances: ReturnType<typeof vi.fn>;
+    getGuards: ReturnType<typeof vi.fn>;
     createMarked: ReturnType<typeof vi.fn>;
     deleteMarked: ReturnType<typeof vi.fn>;
   };
@@ -46,6 +48,7 @@ describe('Marked', () => {
     api = {
       getMarked: vi.fn(() => of([{ id: 'm1', faceId: 'job-1_1', reason: 'Merodeo' }])),
       getFaceAppearances: vi.fn(() => of(FACES)),
+      getGuards: vi.fn(() => of([{ id: 'g1', name: 'Marta', shift: '', schedule: '' }])),
       createMarked: vi.fn(),
       deleteMarked: vi.fn()
     };
@@ -53,6 +56,8 @@ describe('Marked', () => {
 
   afterEach(() => {
     fixture?.destroy();
+    vi.useRealTimers();
+    localStorage.clear();
     vi.restoreAllMocks();
   });
 
@@ -295,5 +300,66 @@ describe('Marked', () => {
     expect(picker).toContain('Fallo al listar las detecciones');
     expect(picker).not.toContain('No hay detecciones disponibles para seleccionar.');
   });
-});
 
+  it('shows who created the mark when the guard is known', async () => {
+    api.getMarked.mockReturnValue(of([
+      { id: 'm1', faceId: 'job-1_1', reason: 'Merodeo', createdByGuardId: 'g1' }
+    ]));
+    await create();
+
+    expect(text()).toContain('Marcado por Marta');
+  });
+
+  it('shows a fallback when the guard of the mark no longer exists', async () => {
+    api.getMarked.mockReturnValue(of([
+      { id: 'm1', faceId: 'job-1_1', reason: 'Merodeo', createdByGuardId: 'g-borrado' }
+    ]));
+    await create();
+
+    expect(text()).toContain('Marcado por un vigilante sin registro');
+  });
+
+  it('shows no author line for old marks without a guard', async () => {
+    await create();
+
+    expect(text()).not.toContain('Marcado por');
+  });
+
+  it('sends the active guard id when creating a mark', async () => {
+    new SessionService().setActiveGuard({ id: 'g1', name: 'Marta' });
+    api.createMarked.mockReturnValue(of({ id: 'm2', faceId: 'job-1_2', reason: 'Motivo' }));
+    await create();
+
+    component.openModal();
+    component.selectedPerson.set({ faceId: 'job-1_2', appearance: FACES[1] });
+    component.reason.set('Motivo');
+    component.createMarked();
+
+    expect(api.createMarked).toHaveBeenCalledWith({
+      faceId: 'job-1_2',
+      reason: 'Motivo',
+      createdByGuardId: 'g1'
+    });
+  });
+
+  it('refetches the detection images after ten minutes keeping the current ones, and stops on destroy', async () => {
+    vi.useFakeTimers();
+    await create();
+    expect(api.getFaceAppearances).toHaveBeenCalledTimes(1);
+
+    const pending = new Subject<unknown[]>();
+    api.getFaceAppearances.mockReturnValue(pending);
+
+    await vi.advanceTimersByTimeAsync(11 * 60 * 1000);
+    expect(api.getFaceAppearances).toHaveBeenCalledTimes(2);
+    expect(component.people().length).toBe(2);
+
+    pending.next([FACES[0]]);
+    pending.complete();
+    expect(component.people().length).toBe(1);
+
+    fixture.destroy();
+    await vi.advanceTimersByTimeAsync(30 * 60 * 1000);
+    expect(api.getFaceAppearances).toHaveBeenCalledTimes(2);
+  });
+});

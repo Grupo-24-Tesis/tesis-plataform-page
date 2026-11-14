@@ -1,11 +1,12 @@
-import { Component, HostListener, OnInit, inject, signal } from '@angular/core';
+import { Component, HostListener, OnDestroy, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ImageFallbackDirective } from '../../shared/directives/image-fallback.directive';
-import { ApiService, MarkedPerson } from '../../core/services/api.service';
+import { ApiService, Guard, MarkedPerson } from '../../core/services/api.service';
 import { MarksService } from '../../shared/services/marks.service';
 import { apiErrorMessage } from '../../core/services/api-error';
 import { FaceAppearance } from '../../core/models/face.model';
+import { FreshnessTimer, IMAGES_MAX_AGE_MS } from '../../shared/utils/freshness-timer';
 
 interface Person {
   faceId: string;
@@ -19,7 +20,7 @@ interface Person {
   templateUrl: './marked.html',
   styleUrl: './marked.css',
 })
-export class Marked implements OnInit {
+export class Marked implements OnInit, OnDestroy {
   private readonly api = inject(ApiService);
 
   private readonly marks = inject(MarksService);
@@ -50,13 +51,58 @@ export class Marked implements OnInit {
 
   pendingDeleteId = signal<string | null>(null);
 
+  guards = signal<Guard[]>([]);
+
+  private peopleToken = 0;
+
+  private peopleLoadedAt = 0;
+
+  private peopleRefreshing = false;
+
+  private readonly freshness = new FreshnessTimer(() => this.refreshPeopleIfStale());
+
 
 
   ngOnInit(): void {
     this.loadMarked();
+    this.loadPeople(false);
+    this.freshness.start();
+
+    this.api.getGuards().subscribe({
+      next: guards => this.guards.set(guards),
+      error: () => this.guards.set([])
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.freshness.stop();
+    this.peopleToken++;
+  }
+
+  private refreshPeopleIfStale(): void {
+    const stale =
+      !this.peopleRefreshing &&
+      Date.now() - this.peopleLoadedAt >= IMAGES_MAX_AGE_MS;
+
+    if (stale) {
+      this.loadPeople(true);
+    }
+  }
+
+  private loadPeople(keepCurrent: boolean): void {
+    const token = ++this.peopleToken;
+    this.peopleRefreshing = keepCurrent;
 
     this.api.getFaceAppearances().subscribe({
       next: data => {
+        if (token !== this.peopleToken) {
+          return;
+        }
+
+        this.peopleRefreshing = false;
+        this.peopleLoadedAt = Date.now();
+        this.peopleError.set('');
+
         const map = new Map<string, FaceAppearance>();
 
         for (const appearance of data) {
@@ -73,11 +119,27 @@ export class Marked implements OnInit {
         );
       },
       error: error => {
+        if (token !== this.peopleToken) {
+          return;
+        }
+
+        this.peopleRefreshing = false;
+
+        if (keepCurrent) {
+          return;
+        }
+
         const message = apiErrorMessage(error, 'No se pudieron cargar las detecciones.');
         this.peopleError.set(message);
         this.showMessage(message, true);
       }
     });
+  }
+
+  markedByLabel(guardId: string): string {
+    const name = this.guards().find(guard => guard.id === guardId)?.name;
+
+    return name ? `Marcado por ${name}` : 'Marcado por un vigilante sin registro';
   }
 
   loadMarked(): void {

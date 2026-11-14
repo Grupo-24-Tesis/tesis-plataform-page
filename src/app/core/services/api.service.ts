@@ -11,7 +11,7 @@ export interface Guard { id?: string; name: string; shift: string; schedule: str
 export interface Camera { id: string; name: string; active: boolean; }
 
 
-export interface MarkedPerson { id?: string; faceId: string; reason: string; }
+export interface MarkedPerson { id?: string; faceId: string; reason: string; createdByGuardId?: string; }
 
 @Injectable({ providedIn: 'root' })
 export class ApiService {
@@ -61,6 +61,17 @@ getUniqueFaces(
     { params }
   );
 }
+
+  getReport(id: string) {
+    return this.http.get<ReportItem>(`${this.base}/reports/${encodeURIComponent(id)}`);
+  }
+
+  getFaceAppearancesByIds(faceIds: string[]) {
+    return this.http.get<FaceAppearance[]>(
+      `${this.base}/face-appearances/by-ids`,
+      { params: { faceIds: faceIds.join(',') } }
+    );
+  }
 
   getReports() { return this.http.get<ReportItem[]>(`${this.base}/reports`); }
   getFilteredReports(

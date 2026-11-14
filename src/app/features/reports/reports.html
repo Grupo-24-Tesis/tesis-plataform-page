@@ -387,6 +387,14 @@
 
     <div class="status-container">
 
+      <button
+        type="button"
+        class="clear-filter-btn"
+        (click)="openDetail(r)"
+      >
+        Ver detalle
+      </button>
+
       <label [attr.for]="'status-' + r.id">
         Estado
       </label>

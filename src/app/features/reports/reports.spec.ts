@@ -4,6 +4,7 @@ import { ActivatedRoute, Router, convertToParamMap } from '@angular/router';
 import { Subject, of, throwError } from 'rxjs';
 
 import { ApiService } from '../../core/services/api.service';
+import { SessionService } from '../../core/services/session.service';
 import { Reports } from './reports';
 
 const REPORT = {
@@ -75,6 +76,8 @@ describe('Reports', () => {
 
   afterEach(() => {
     fixture?.destroy();
+    vi.useRealTimers();
+    localStorage.clear();
   });
 
   it('shows the loading state and then the reports', async () => {
@@ -418,5 +421,64 @@ describe('Reports', () => {
     expect(component.showModal()).toBe(false);
     expect(navigate).not.toHaveBeenCalled();
   });
-});
 
+  it('opens the detail route from a report card', async () => {
+    await create();
+
+    const button = Array.from<HTMLButtonElement>(
+      fixture.nativeElement.querySelectorAll('.item button')
+    ).find(candidate => candidate.textContent?.trim() === 'Ver detalle');
+
+    button!.click();
+
+    expect(navigate).toHaveBeenCalledWith(['/reports', 'r1']);
+  });
+
+  it('sends the active guard id when creating a report', async () => {
+    new SessionService().setActiveGuard({ id: 'g1', name: 'Marta' });
+    await create();
+
+    fillBase();
+    component.createReport();
+
+    expect(api.createReport.mock.calls[0][0].createdByGuardId).toBe('g1');
+  });
+
+  it('refetches the appearances after ten minutes keeping the current ones, and stops on destroy', async () => {
+    vi.useFakeTimers();
+    api.getFaceAppearances.mockReturnValue(of([
+      { faceId: 'job-1_1', timestamp: '00:00:01', cameraId: 'CAM-01', frameUrl: 'https://x/1.jpg' }
+    ]));
+    await create();
+    expect(api.getFaceAppearances).toHaveBeenCalledTimes(1);
+
+    const pending = new Subject<unknown[]>();
+    api.getFaceAppearances.mockReturnValue(pending);
+
+    await vi.advanceTimersByTimeAsync(11 * 60 * 1000);
+    expect(api.getFaceAppearances).toHaveBeenCalledTimes(2);
+    expect(component.appearances().length).toBe(1);
+
+    pending.next([]);
+    pending.complete();
+    expect(component.appearances().length).toBe(0);
+
+    fixture.destroy();
+    await vi.advanceTimersByTimeAsync(30 * 60 * 1000);
+    expect(api.getFaceAppearances).toHaveBeenCalledTimes(2);
+  });
+
+  it('keeps the current appearances when a refresh fails', async () => {
+    vi.useFakeTimers();
+    api.getFaceAppearances.mockReturnValue(of([
+      { faceId: 'job-1_1', timestamp: '00:00:01', cameraId: 'CAM-01', frameUrl: 'https://x/1.jpg' }
+    ]));
+    await create();
+
+    api.getFaceAppearances.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 500 })));
+    await vi.advanceTimersByTimeAsync(11 * 60 * 1000);
+
+    expect(component.appearances().length).toBe(1);
+    expect(component.appearancesError()).toBe('');
+  });
+});

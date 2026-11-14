@@ -62,8 +62,9 @@ peticiones desde `http://localhost:4200`.
 | `/guards` | Selección del vigilante activo. Es la ruta inicial |
 | `/monitor` | Cámaras, carga de videos, videos procesados y rostros de cada video, con opción de marcarlos |
 | `/unique-faces` | Rostros detectados, con filtros por fecha, reportes y detecciones marcadas |
-| `/reports` | Reportes de incidentes: creación, filtros y cambio de estado |
-| `/marked` | Detecciones marcadas y el motivo |
+| `/reports` | Reportes de incidentes: creación, filtros y cambio de estado. Cada tarjeta abre su detalle |
+| `/reports/:id` | Detalle de un reporte: autor, fechas, descripción, solución y detecciones involucradas con imagen, cámara, hora y posición. El botón `Imprimir` abre el diálogo de impresión con una hoja de estilos propia |
+| `/marked` | Detecciones marcadas, el motivo y el vigilante que las marcó |
 
 Todas las rutas salvo `/guards` pasan por `activeGuardGuard`, que redirige a `/guards` si no hay un vigilante activo. El vigilante activo es lo único que se guarda en `localStorage` (`SessionService`). No es un inicio de sesión: ver Limitaciones conocidas.
 

@@ -40,6 +40,11 @@ export const routes: Routes = [
           import('./features/reports/reports').then(m => m.Reports)
       },
       {
+        path: 'reports/:id',
+        loadComponent: () =>
+          import('./features/report-detail/report-detail').then(m => m.ReportDetail)
+      },
+      {
         path: 'marked',
         loadComponent: () =>
           import('./features/marked/marked').then(m => m.Marked)

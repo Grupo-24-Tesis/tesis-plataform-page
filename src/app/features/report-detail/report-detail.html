@@ -1,0 +1,116 @@
+<section class="report-detail-page">
+  <div class="toolbar no-print">
+    <button type="button" class="link-button" (click)="back()">Volver</button>
+
+    @if (report()) {
+      <button type="button" class="print-button" (click)="print()">Imprimir</button>
+    }
+  </div>
+
+  @if (loading()) {
+    <div class="state" role="status">
+      <strong>Cargando...</strong>
+    </div>
+  } @else if (loadError()) {
+    <div class="state" role="alert">
+      <strong>{{ loadError() }}</strong>
+      <button type="button" class="print-button no-print" (click)="loadReport()">Reintentar</button>
+    </div>
+  } @else if (report(); as r) {
+    <header class="report-head">
+      <span class="section-label">REPORTE DE INCIDENTE</span>
+      <h1>{{ r.title }}</h1>
+    </header>
+
+    <dl class="facts">
+      <div>
+        <dt>ESTADO</dt>
+        <dd class="fact-status">{{ r.status === 'solucionado' ? 'Solucionado' : 'En investigación' }}</dd>
+      </div>
+      <div>
+        <dt>PRIORIDAD</dt>
+        <dd class="fact-priority">{{ r.priority }}</dd>
+      </div>
+      <div>
+        <dt>FECHA DEL INCIDENTE</dt>
+        <dd class="fact-incident">{{ r.incidentDate | date:'dd/MM/yyyy HH:mm' }}</dd>
+      </div>
+      <div>
+        <dt>FECHA DE CREACIÓN</dt>
+        <dd class="fact-created">{{ r.createdAt | date:'dd/MM/yyyy HH:mm' }}</dd>
+      </div>
+      <div>
+        <dt>CREADO POR</dt>
+        <dd class="fact-author">{{ authorName() }}</dd>
+      </div>
+      @if (r.status === 'solucionado') {
+        <div>
+          <dt>FECHA DE RESOLUCIÓN</dt>
+          <dd class="fact-resolved">{{ r.resolvedAt | date:'dd/MM/yyyy HH:mm' }}</dd>
+        </div>
+      }
+    </dl>
+
+    <section class="block">
+      <h2>Descripción</h2>
+      <p class="description">{{ r.description }}</p>
+    </section>
+
+    @if (r.status === 'solucionado' && r.resolutionDescription) {
+      <section class="block">
+        <h2>Solución</h2>
+        <p class="resolution">{{ r.resolutionDescription }}</p>
+      </section>
+    }
+
+    <section class="block">
+      <h2>Detecciones involucradas</h2>
+
+      @if (appearancesLoading()) {
+        <p role="status">Cargando...</p>
+      } @else if (appearancesError()) {
+        <div role="alert">
+          <p>{{ appearancesError() }}</p>
+          <button type="button" class="print-button no-print" (click)="loadAppearances(false)">Reintentar</button>
+        </div>
+      } @else if (detections().length === 0) {
+        <p class="empty">Este reporte no tiene detecciones involucradas.</p>
+      } @else {
+        <div class="detections">
+          @for (detection of detections(); track detection.faceId) {
+            <article class="detection">
+              <div class="detection-image">
+                @if (detection.appearance?.frameUrl; as image) {
+                  <img appImageFallback [src]="image" [alt]="'Detección ' + detection.faceId">
+                } @else {
+                  <span class="image-missing">Sin imagen</span>
+                }
+              </div>
+
+              @if (detection.appearance; as appearance) {
+                <dl>
+                  <div>
+                    <dt>CÁMARA</dt>
+                    <dd class="detection-camera">{{ cameraLabel(appearance.cameraId) }}</dd>
+                  </div>
+                  <div>
+                    <dt>FECHA Y HORA</dt>
+                    <dd class="detection-date">
+                      {{ appearance.capturedAt ? (appearance.capturedAt | date:'dd/MM/yyyy HH:mm:ss') : 'Sin fecha' }}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>POSICIÓN EN EL VIDEO</dt>
+                    <dd class="detection-position">{{ appearance.timestamp }}</dd>
+                  </div>
+                </dl>
+              } @else {
+                <p class="empty">Detección no disponible.</p>
+              }
+            </article>
+          }
+        </div>
+      }
+    </section>
+  }
+</section>

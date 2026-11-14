@@ -63,6 +63,10 @@
           <p class="reason">
             {{ markedPerson.reason }}
           </p>
+
+          <p class="marked-by" *ngIf="markedPerson.createdByGuardId">
+            {{ markedByLabel(markedPerson.createdByGuardId) }}
+          </p>
         </section>
 
         <footer>
