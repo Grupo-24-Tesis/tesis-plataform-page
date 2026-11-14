@@ -211,75 +211,10 @@
       </button>
     </header>
 
-    <div class="detail-content">
-      <div class="detail-preview">
-        <img
-          appImageFallback
-          *ngIf="selected.cluster.appearances[0]?.frameUrl as image; else detailPlaceholder"
-          [src]="image"
-          [alt]="selected.cluster.clusterId"
-        >
-
-        <ng-template #detailPlaceholder>
-          <span aria-hidden="true">♙</span>
-        </ng-template>
-      </div>
-
-      <section class="detail-section">
-        <span>VIDEO DE ORIGEN</span>
-        <strong>{{ selected.video.fileName }}</strong>
-        <small>
-          {{ selected.video.processedAt | date:'yyyy-MM-dd · HH:mm' }}
-        </small>
-      </section>
-
-      <section class="detail-section">
-        <span>APARICIÓN EN EL VIDEO</span>
-
-        <ol class="detail-appearances">
-          <li *ngFor="let appearance of selected.cluster.appearances">
-            <strong>{{ appearance.timestamp }}</strong>
-            <span>{{ cameraName(appearance.cameraId) }}</span>
-            <small>{{ appearance.faceId }}</small>
-          </li>
-        </ol>
-      </section>
-    </div>
-
-    <footer class="detail-actions">
-      <input
-        *ngIf="!markFor(selected.cluster)"
-        type="text"
-        class="mark-reason"
-        aria-label="Motivo del marcado"
-        placeholder="Motivo (opcional)"
-        maxlength="200"
-        [ngModel]="markReason()"
-        (ngModelChange)="markReason.set($event)"
-      >
-
-      <button
-        type="button"
-        [class.saved]="markFor(selected.cluster)"
-        [disabled]="markBusy()"
-        (click)="toggleMark(selected.cluster)"
-      >
-        {{
-          markFor(selected.cluster)
-            ? 'DETECCIÓN MARCADA - QUITAR'
-            : '+ MARCAR DETECCIÓN'
-        }}
-      </button>
-
-      <p
-        class="mark-message"
-        [class.error]="markError()"
-        role="status"
-        *ngIf="markMsg()"
-      >
-        {{ markMsg() }}
-      </p>
-    </footer>
+    <app-detection-detail
+      [appearance]="selected.cluster.appearances[0]"
+      [cameras]="cameras()"
+    />
   </aside>
 </section>
 

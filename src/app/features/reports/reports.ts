@@ -1,6 +1,7 @@
 import { Component, HostListener, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
 import { ImageFallbackDirective } from '../../shared/directives/image-fallback.directive';
 
 import { Observable } from 'rxjs';
@@ -96,11 +97,40 @@ endDate: string = '';
   };
 
 
-  constructor(private api: ApiService) {}
+  constructor(
+    private api: ApiService,
+    private route: ActivatedRoute,
+    private router: Router
+  ) {}
 
   ngOnInit(): void {
     this.loadReports();
     this.loadAppearances();
+    this.openForRequestedDetection();
+  }
+
+
+  private openForRequestedDetection(): void {
+
+    const faceId = this.route.snapshot.queryParamMap.get('faceId');
+
+    if (!faceId) {
+
+      return;
+
+    }
+
+    this.openModal();
+
+    this.newReport.faceIds = [faceId];
+
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { faceId: null },
+      queryParamsHandling: 'merge',
+      replaceUrl: true
+    });
+
   }
 
 

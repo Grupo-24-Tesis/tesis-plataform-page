@@ -176,6 +176,12 @@ retryVideoJob(jobId: string) {
   );
 }
 
+getVideoJob(jobId: string) {
+  return this.http.get<VideoJobResponse>(
+    `${this.base}/video-jobs/${encodeURIComponent(jobId)}`
+  );
+}
+
 getVideoJobs(cameraId?: string) {
   return this.http.get<VideoJobResponse[]>(
     `${this.base}/video-jobs`,

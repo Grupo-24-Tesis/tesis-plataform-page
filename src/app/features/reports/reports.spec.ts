@@ -1,5 +1,6 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ActivatedRoute, Router, convertToParamMap } from '@angular/router';
 import { Subject, of, throwError } from 'rxjs';
 
 import { ApiService } from '../../core/services/api.service';
@@ -27,10 +28,20 @@ describe('Reports', () => {
     updateReportStatus: ReturnType<typeof vi.fn>;
   };
 
+  let queryParams: Record<string, string> = {};
+  let navigate: ReturnType<typeof vi.fn>;
+
   async function create(): Promise<void> {
     await TestBed.configureTestingModule({
       imports: [Reports],
-      providers: [{ provide: ApiService, useValue: api }]
+      providers: [
+        { provide: ApiService, useValue: api },
+        {
+          provide: ActivatedRoute,
+          useValue: { snapshot: { queryParamMap: convertToParamMap(queryParams) } }
+        },
+        { provide: Router, useValue: { navigate } }
+      ]
     }).compileComponents();
 
     fixture = TestBed.createComponent(Reports);
@@ -51,6 +62,8 @@ describe('Reports', () => {
   }
 
   beforeEach(() => {
+    queryParams = {};
+    navigate = vi.fn(() => Promise.resolve(true));
     api = {
       getReports: vi.fn(() => of([REPORT])),
       getFilteredReports: vi.fn(() => of([REPORT])),
@@ -376,6 +389,29 @@ describe('Reports', () => {
 
     expect(fixture.nativeElement.querySelector('.people-section').textContent)
       .toContain('Fallo al listar las detecciones');
+  });
+
+  it('opens the create modal with the detection from the query param and clears the param', async () => {
+    queryParams = { faceId: 'job-1_4' };
+    await create();
+
+    expect(component.showModal()).toBe(true);
+    expect(component.newReport.faceIds).toEqual(['job-1_4']);
+    expect(navigate).toHaveBeenCalledWith(
+      [],
+      expect.objectContaining({
+        queryParams: { faceId: null },
+        queryParamsHandling: 'merge',
+        replaceUrl: true
+      })
+    );
+  });
+
+  it('does not open the create modal without the query param', async () => {
+    await create();
+
+    expect(component.showModal()).toBe(false);
+    expect(navigate).not.toHaveBeenCalled();
   });
 });
 

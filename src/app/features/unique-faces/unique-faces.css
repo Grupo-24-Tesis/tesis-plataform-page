@@ -28,8 +28,7 @@
 }
 
 .page-header span,
-.detail-header span,
-.appearances-section h2 {
+.detail-header span {
   color: var(--texto-secundario);
   font: 11px var(--fuente);
   letter-spacing: 1.5px;
@@ -333,132 +332,6 @@
 
 .detail-header button:hover {
   color: var(--texto);
-}
-
-.detail-content {
-  flex: 1;
-  padding: 20px;
-  overflow-y: auto;
-}
-
-.detail-main-image {
-  display: grid;
-  width: 100%;
-  height: 220px;
-  place-items: center;
-  overflow: hidden;
-  color: var(--azul);
-  background: #05070c;
-  border: 1px solid var(--borde);
-  border-radius: 6px;
-  font-size: 48px;
-}
-
-.detail-main-image img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.detail-summary {
-  display: grid;
-  grid-template-columns: 1fr auto auto;
-  gap: 12px;
-  align-items: center;
-  padding: 18px 0;
-  border-bottom: 1px solid var(--borde);
-}
-
-.detail-status {
-  color: var(--verde);
-  font: 11px var(--fuente);
-}
-
-.detail-status.is-suspect {
-  color: var(--rojo);
-}
-
-.detail-summary > div {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  text-align: right;
-}
-
-.detail-summary > div span {
-  color: var(--texto-secundario);
-  font: 11px var(--fuente);
-}
-
-.detail-summary > div strong {
-  font-size: 14px;
-}
-
-.appearances-section {
-  padding-top: 20px;
-}
-
-.appearances-section h2 {
-  margin: 0 0 14px;
-  font-weight: 400;
-}
-
-.appearances {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.appearance {
-  display: grid;
-  grid-template-columns: 76px minmax(0, 1fr);
-  overflow: hidden;
-  background: var(--superficie-2);
-  border: 1px solid var(--borde);
-  border-radius: 6px;
-}
-
-.appearance-image-container {
-  display: grid;
-  min-height: 76px;
-  place-items: center;
-  overflow: hidden;
-  background: #05070c;
-}
-
-.appearance-image {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.appearance-info {
-  display: flex;
-  min-width: 0;
-  flex-direction: column;
-  justify-content: center;
-  gap: 5px;
-  padding: 10px 12px;
-}
-
-.appearance-info strong {
-  color: var(--azul);
-  font: 11px var(--fuente);
-}
-
-.appearance-info span {
-  color: var(--texto);
-  font-size: 12px;
-}
-
-.appearance-info small {
-  overflow: hidden;
-  color: var(--texto-secundario);
-  font: 11px var(--fuente);
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 @media (max-width: 1200px) {

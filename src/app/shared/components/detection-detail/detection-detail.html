@@ -1,0 +1,88 @@
+<div class="detail-content">
+  <div class="detail-image">
+    @if (appearance().frameUrl; as image) {
+      <img appImageFallback [src]="image" [alt]="'Detección ' + appearance().faceId">
+    } @else {
+      <span class="image-missing">Sin imagen</span>
+    }
+  </div>
+
+  <dl class="detail-facts">
+    <div>
+      <dt>CÁMARA</dt>
+      <dd class="fact-camera">{{ cameraLabel() }}</dd>
+    </div>
+
+    <div>
+      <dt>FECHA Y HORA</dt>
+      <dd class="fact-date">
+        {{ appearance().capturedAt ? (appearance().capturedAt | date:'yyyy-MM-dd HH:mm:ss') : 'Sin fecha' }}
+      </dd>
+    </div>
+
+    <div>
+      <dt>VIDEO DE ORIGEN</dt>
+      <dd class="fact-video">
+        @switch (videoState()) {
+          @case ('loading') {
+            Cargando...
+          }
+          @case ('ready') {
+            {{ videoName() }}
+          }
+          @case ('error') {
+            No se pudo cargar el video.
+            <button type="button" class="link-button" (click)="retryVideo()">Reintentar</button>
+          }
+          @default {
+            Video no identificado
+          }
+        }
+      </dd>
+    </div>
+
+    <div>
+      <dt>POSICIÓN EN EL VIDEO</dt>
+      <dd class="fact-position">{{ appearance().timestamp }}</dd>
+    </div>
+  </dl>
+</div>
+
+<footer class="detail-actions">
+  @if (!currentMark()) {
+    <input
+      type="text"
+      class="mark-reason"
+      aria-label="Motivo del marcado"
+      placeholder="Motivo (opcional)"
+      maxlength="200"
+      [ngModel]="reason()"
+      (ngModelChange)="reason.set($event)"
+    >
+  }
+
+  <button
+    type="button"
+    class="mark-button"
+    [class.saved]="currentMark()"
+    [class.busy]="markBusy()"
+    [disabled]="markBusy()"
+    (click)="toggleMark()"
+  >
+    {{ markBusy() ? 'Guardando...' : currentMark() ? 'Quitar marca' : 'Marcar' }}
+  </button>
+
+  <button type="button" class="report-button" (click)="createReport()">
+    Crear reporte
+  </button>
+
+  @if (marksLoadError() && !message()) {
+    <p class="mark-message error" role="alert">{{ marksLoadError() }}</p>
+  }
+
+  @if (message()) {
+    <p class="mark-message" [class.error]="messageIsError()" role="status">
+      {{ message() }}
+    </p>
+  }
+</footer>

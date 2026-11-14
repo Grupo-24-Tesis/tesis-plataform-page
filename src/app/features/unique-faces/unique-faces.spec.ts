@@ -3,6 +3,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Subject, of, throwError } from 'rxjs';
 
 import { ApiService } from '../../core/services/api.service';
+import { UniqueFace } from '../../core/models/UniqueFace';
 import { UniqueFaces } from './unique-faces';
 
 const FACE = {
@@ -20,6 +21,8 @@ describe('UniqueFaces', () => {
   let api: {
     getUniqueFaces: ReturnType<typeof vi.fn>;
     getCameras: ReturnType<typeof vi.fn>;
+    getVideoJob: ReturnType<typeof vi.fn>;
+    getMarked: ReturnType<typeof vi.fn>;
   };
 
   async function create(): Promise<void> {
@@ -40,7 +43,9 @@ describe('UniqueFaces', () => {
   beforeEach(() => {
     api = {
       getUniqueFaces: vi.fn(() => of([FACE])),
-      getCameras: vi.fn(() => of([]))
+      getCameras: vi.fn(() => of([{ id: 'CAM-01', name: 'Entrada', active: true }])),
+      getVideoJob: vi.fn(() => of({ jobId: 'job-1', originalFileName: 'Camera_ch6.mp4' })),
+      getMarked: vi.fn(() => of([]))
     };
   });
 
@@ -140,6 +145,69 @@ describe('UniqueFaces', () => {
       .toContain('Fallo al listar las cámaras');
     expect(fixture.nativeElement.querySelectorAll('.card').length).toBe(1);
     expect(component.getCameraName('CAM-01')).toBe('Cámara no identificada');
+  });
+
+  it('shows the shared detection detail when a card is selected', async () => {
+    await create();
+
+    component.selectFace(FACE as UniqueFace);
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const detail: HTMLElement = fixture.nativeElement.querySelector('.detail app-detection-detail');
+    expect(detail.querySelector('.fact-camera')?.textContent).toContain('Entrada');
+    expect(detail.querySelector('.fact-video')?.textContent).toContain('Camera_ch6.mp4');
+    expect(api.getVideoJob).toHaveBeenCalledWith('job-1');
+  });
+
+  describe('url refresh', () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it('reloads faces older than ten minutes and keeps the cards meanwhile', async () => {
+      const pending = new Subject<unknown[]>();
+      await create();
+      api.getUniqueFaces.mockReturnValue(pending);
+
+      vi.advanceTimersByTime(9 * 60 * 1000);
+      expect(api.getUniqueFaces).toHaveBeenCalledTimes(1);
+
+      vi.advanceTimersByTime(2 * 60 * 1000);
+      expect(api.getUniqueFaces).toHaveBeenCalledTimes(2);
+      expect(component.faces().length).toBe(1);
+      expect(component.loading()).toBe(false);
+
+      pending.next([FACE, { ...FACE, faceId: 'job-1_2' }]);
+      pending.complete();
+      expect(component.faces().length).toBe(2);
+    });
+
+    it('ignores a refresh response that arrives after a newer filter load', async () => {
+      const slow = new Subject<unknown[]>();
+      await create();
+      api.getUniqueFaces.mockReturnValue(slow);
+      vi.advanceTimersByTime(11 * 60 * 1000);
+
+      api.getUniqueFaces.mockReturnValue(of([]));
+      component.applyFilters();
+      slow.next([FACE]);
+
+      expect(component.faces().length).toBe(0);
+    });
+
+    it('stops checking after destroy', async () => {
+      await create();
+      component.ngOnDestroy();
+
+      vi.advanceTimersByTime(30 * 60 * 1000);
+
+      expect(api.getUniqueFaces).toHaveBeenCalledTimes(1);
+    });
   });
 });
 

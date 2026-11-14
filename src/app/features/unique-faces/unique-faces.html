@@ -161,7 +161,7 @@
   <aside
     class="detail"
     [class.closing]="detailClosing()"
-    *ngIf="selected() as face"
+    *ngIf="selectedAppearance() as appearance"
   >
     <header class="detail-header">
       <div>
@@ -177,67 +177,10 @@
       </button>
     </header>
 
-    <div class="detail-content">
-      <div class="detail-main-image">
-        <img
-          appImageFallback
-          *ngIf="face.appearances[0]?.frameUrl as image; else detailPlaceholder"
-          [src]="image"
-          [alt]="face.faceId"
-        >
-
-        <ng-template #detailPlaceholder>
-          <span aria-hidden="true">♙</span>
-        </ng-template>
-      </div>
-
-      <div class="detail-summary">
-        <span
-          class="detail-status"
-          [class.is-suspect]="face.suspect"
-        >
-          {{ face.suspect ? 'MARCADO' : 'SIN MARCAR' }}
-        </span>
-
-        <div>
-          <span>REPORTES</span>
-          <strong>{{ face.reportCount }}</strong>
-        </div>
-      </div>
-
-      <section class="appearances-section">
-        <h2>APARICIÓN EN EL VIDEO</h2>
-
-        <div class="appearances">
-          <article
-            class="appearance"
-            *ngFor="let appearance of face.appearances"
-          >
-            <div class="appearance-image-container">
-              <img
-                appImageFallback
-                class="appearance-image"
-                *ngIf="appearance.frameUrl as image; else appearancePlaceholder"
-                [src]="image"
-                [alt]="face.faceId"
-              >
-
-              <ng-template #appearancePlaceholder>
-                <span class="image-placeholder" aria-hidden="true">♙</span>
-              </ng-template>
-            </div>
-
-            <div class="appearance-info">
-              <strong>{{ getCameraName(appearance.cameraId) }}</strong>
-              <span>{{ appearance.timestamp }}</span>
-
-              <small>
-                {{ appearance.capturedAt | date:'dd/MM/yyyy HH:mm' }}
-              </small>
-            </div>
-          </article>
-        </div>
-      </section>
-    </div>
+    <app-detection-detail
+      [appearance]="appearance"
+      [cameras]="cameras()"
+      (markChanged)="onMarkChanged($event)"
+    />
   </aside>
 </section>

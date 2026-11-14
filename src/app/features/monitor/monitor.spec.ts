@@ -57,6 +57,7 @@ describe('MonitorComponent', () => {
     uploadVideoToS3: ReturnType<typeof vi.fn>;
     notifyVideoUploaded: ReturnType<typeof vi.fn>;
     retryVideoJob: ReturnType<typeof vi.fn>;
+    getVideoJob: ReturnType<typeof vi.fn>;
     getMarked: ReturnType<typeof vi.fn>;
     createMarked: ReturnType<typeof vi.fn>;
     deleteMarked: ReturnType<typeof vi.fn>;
@@ -92,6 +93,7 @@ describe('MonitorComponent', () => {
       uploadVideoToS3: vi.fn(),
       notifyVideoUploaded: vi.fn(),
       retryVideoJob: vi.fn(),
+      getVideoJob: vi.fn(() => of({ ...job('COMPLETED'), originalFileName: 'Camera_ch6.mp4' })),
       getMarked: vi.fn(() => of([])),
       createMarked: vi.fn(),
       deleteMarked: vi.fn(),
@@ -444,19 +446,35 @@ describe('MonitorComponent', () => {
   }
 
   function markButton(): HTMLButtonElement {
-    return fixture.nativeElement.querySelector('.detail-actions button');
+    return fixture.nativeElement.querySelector('.mark-button');
   }
+
+  function typeReason(value: string): void {
+    const input: HTMLInputElement = fixture.nativeElement.querySelector('.mark-reason');
+    input.value = value;
+    input.dispatchEvent(new Event('input'));
+  }
+
+  it('shows the shared detection detail with its context', async () => {
+    await openDetail();
+
+    const panel: HTMLElement = fixture.nativeElement.querySelector('.detail-panel app-detection-detail');
+    expect(panel).not.toBeNull();
+    expect(panel.querySelector('.fact-camera')?.textContent).toContain('Entrada');
+    expect(panel.querySelector('.fact-video')?.textContent).toContain('Camera_ch6.mp4');
+    expect(api.getVideoJob).toHaveBeenCalledWith('job-1');
+  });
 
   it('marks the detection with the typed reason', async () => {
     api.createMarked.mockReturnValue(of({ id: 'm1', faceId: 'job-1_4', reason: 'Merodeo' }));
     await openDetail();
 
-    component.markReason.set('Merodeo');
+    typeReason('Merodeo');
     markButton().click();
     await fixture.whenStable();
 
     expect(api.createMarked).toHaveBeenCalledWith({ faceId: 'job-1_4', reason: 'Merodeo' });
-    expect(markButton().textContent).toContain('QUITAR');
+    expect(markButton().textContent).toContain('Quitar marca');
   });
 
   it('marks the detection with Sin motivo when the reason is empty', async () => {
@@ -474,14 +492,14 @@ describe('MonitorComponent', () => {
     api.deleteMarked.mockReturnValue(of(undefined));
     await openDetail();
 
-    expect(markButton().textContent).toContain('QUITAR');
+    expect(markButton().textContent).toContain('Quitar marca');
 
     markButton().click();
     await fixture.whenStable();
 
     expect(api.deleteMarked).toHaveBeenCalledWith('m1');
     expect(api.createMarked).not.toHaveBeenCalled();
-    expect(markButton().textContent).toContain('MARCAR');
+    expect(markButton().textContent).toContain('Marcar');
   });
 
   it('shows the backend message and reloads marks on a 409', async () => {
@@ -500,8 +518,7 @@ describe('MonitorComponent', () => {
     await fixture.whenStable();
 
     expect(api.getMarked).toHaveBeenCalledTimes(2);
-    expect(component.marks()[0].id).toBe('m9');
-    expect(markButton().textContent).toContain('QUITAR');
+    expect(markButton().textContent).toContain('Quitar marca');
     expect(fixture.nativeElement.querySelector('.mark-message').textContent)
       .toContain('La detección ya está marcada');
   });

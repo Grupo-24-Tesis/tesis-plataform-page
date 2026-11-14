@@ -8,7 +8,7 @@ import {
   signal
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { HttpErrorResponse, HttpEventType } from '@angular/common/http';
+import { HttpEventType } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 
 import { apiErrorMessage } from '../../core/services/api-error';
@@ -16,8 +16,7 @@ import { videoContentType } from '../../core/models/video-content-type';
 
 import {
   ApiService,
-  Camera,
-  MarkedPerson
+  Camera
 } from '../../core/services/api.service';
 import { PresignedUploadResponse, VideoJobMetrics, VideoJobResponse } from '../../core/models/uploadVideo';
 import { describeVideoTimings, formatDuration } from '../../core/models/duration-format';
@@ -25,6 +24,7 @@ import { MetricsStripComponent } from './metrics-strip';
 import { VideoRetryComponent } from './video-retry/video-retry';
 import { FaceAppearance } from '../../core/models/face.model';
 import { ImageFallbackDirective } from '../../shared/directives/image-fallback.directive';
+import { DetectionDetailComponent } from '../../shared/components/detection-detail/detection-detail';
 import {
   VideoStatusTone,
   isTerminalStatus,
@@ -51,6 +51,7 @@ interface MonitorVideo {
     clusterId: string;
     appearances: Array<{
       faceId: string;
+      jobId?: string;
       timestamp: string;
       cameraId: string;
       frameUrl?: string;
@@ -69,7 +70,7 @@ interface SelectedCluster {
 @Component({
   selector: 'app-monitor',
   standalone: true,
-  imports: [CommonModule, FormsModule, ImageFallbackDirective, MetricsStripComponent, VideoRetryComponent],
+  imports: [CommonModule, FormsModule, ImageFallbackDirective, MetricsStripComponent, VideoRetryComponent, DetectionDetailComponent],
   templateUrl: './monitor.html',
   styleUrl: './monitor.css',
 })
@@ -123,11 +124,6 @@ export class MonitorComponent implements OnInit, OnDestroy {
     ];
   });
   selectedCluster = signal<SelectedCluster | null>(null);
-  marks = signal<MarkedPerson[]>([]);
-  markReason = signal('');
-  markMsg = signal('');
-  markError = signal(false);
-  markBusy = signal(false);
   cameraVideoCounts = signal<Record<string, number>>({});
   retryingJobs = signal<ReadonlySet<string>>(new Set());
   retryErrors = signal<Record<string, string>>({});
@@ -147,7 +143,6 @@ export class MonitorComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    this.loadMarks();
 
     this.api.getCameras().subscribe({
       next: (data) => {
@@ -436,6 +431,7 @@ export class MonitorComponent implements OnInit, OnDestroy {
       appearances: [
         {
           faceId: appearance.faceId,
+          jobId: appearance.jobId,
           timestamp: appearance.timestamp,
           cameraId: appearance.cameraId,
           frameUrl: appearance.frameUrl,
@@ -542,8 +538,6 @@ export class MonitorComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.markReason.set('');
-    this.setMarkMessage('', false);
     this.selectedCluster.set({
       video,
       cluster
@@ -552,111 +546,6 @@ export class MonitorComponent implements OnInit, OnDestroy {
 
   closeClusterDetail(): void {
     this.selectedCluster.set(null);
-  }
-
-  private loadMarks(): void {
-    this.api.getMarked().subscribe({
-      next: marks => this.marks.set(marks),
-      error: error => {
-        this.setMarkMessage(
-          apiErrorMessage(error, 'No se pudieron cargar las marcas.'),
-          true
-        );
-      }
-    });
-  }
-
-  private isSelected(cluster: MonitorCluster): boolean {
-    return this.selectedCluster()?.cluster.clusterId === cluster.clusterId;
-  }
-
-  private reportMark(
-    cluster: MonitorCluster,
-    message: string,
-    isError: boolean,
-    onSelected?: () => void
-  ): void {
-    if (!this.isSelected(cluster)) {
-      return;
-    }
-
-    onSelected?.();
-    this.setMarkMessage(message, isError);
-  }
-
-  private setMarkMessage(message: string, isError: boolean): void {
-    this.markMsg.set(message);
-    this.markError.set(isError);
-  }
-
-  markFor(cluster: MonitorCluster): MarkedPerson | undefined {
-    return this.marks().find(mark => mark.faceId === cluster.clusterId);
-  }
-
-  toggleMark(cluster: MonitorCluster): void {
-    if (this.markBusy()) {
-      return;
-    }
-
-    const existing = this.markFor(cluster);
-
-    if (existing?.id) {
-      this.removeMark(existing.id, cluster);
-      return;
-    }
-
-    this.addMark(cluster);
-  }
-
-  private addMark(cluster: MonitorCluster): void {
-    this.markBusy.set(true);
-    this.setMarkMessage('', false);
-
-    this.api.createMarked({
-      faceId: cluster.clusterId,
-      reason: this.markReason().trim() || 'Sin motivo'
-    }).subscribe({
-      next: created => {
-        this.marks.update(marks => [...marks, created]);
-        this.markBusy.set(false);
-        this.reportMark(cluster, 'Detección marcada.', false, () =>
-          this.markReason.set('')
-        );
-      },
-      error: error => {
-        if (error instanceof HttpErrorResponse && error.status === 409) {
-          this.loadMarks();
-        }
-
-        this.markBusy.set(false);
-        this.reportMark(
-          cluster,
-          apiErrorMessage(error, 'No se pudo marcar la detección.'),
-          true
-        );
-      }
-    });
-  }
-
-  private removeMark(id: string, cluster: MonitorCluster): void {
-    this.markBusy.set(true);
-    this.setMarkMessage('', false);
-
-    this.api.deleteMarked(id).subscribe({
-      next: () => {
-        this.marks.update(marks => marks.filter(mark => mark.id !== id));
-        this.markBusy.set(false);
-        this.reportMark(cluster, 'Marca eliminada.', false);
-      },
-      error: error => {
-        this.markBusy.set(false);
-        this.reportMark(
-          cluster,
-          apiErrorMessage(error, 'No se pudo quitar la marca.'),
-          true
-        );
-      }
-    });
   }
 
   getCameraVideos(): MonitorVideo[] {
