@@ -1,0 +1,24 @@
+:host {
+  display: contents;
+}
+
+.retry-error {
+  flex: 1 1 100%;
+  color: var(--rojo);
+}
+
+.retry-button {
+  min-height: 30px;
+  padding: 4px 14px;
+  color: var(--texto);
+  background: var(--superficie-2);
+  border: 1px solid var(--borde);
+  border-radius: 5px;
+  font: 11px var(--fuente);
+  cursor: pointer;
+}
+
+.retry-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}

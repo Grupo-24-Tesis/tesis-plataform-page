@@ -110,18 +110,12 @@
 
           <div class="video-failure" *ngIf="video.failureReason || canRetry(video)">
             <span *ngIf="video.failureReason">{{ video.failureReason }}</span>
-            <span *ngIf="video.jobId && retryErrors()[video.jobId]">
-              {{ retryErrors()[video.jobId] }}
-            </span>
-            <button
-              type="button"
-              class="video-retry"
+            <app-video-retry
               *ngIf="canRetry(video)"
-              [disabled]="!!video.jobId && retryingJobs().has(video.jobId)"
-              (click)="retryVideo(video)"
-            >
-              Reintentar
-            </button>
+              [busy]="!!video.jobId && retryingJobs().has(video.jobId)"
+              [error]="(video.jobId && retryErrors()[video.jobId]) || ''"
+              (retry)="retryVideo(video)"
+            />
           </div>
 
           <p

@@ -734,7 +734,7 @@ describe('MonitorComponent', () => {
   });
 
   function retryButtons(): HTMLButtonElement[] {
-    return Array.from(fixture.nativeElement.querySelectorAll('.video-retry'));
+    return Array.from(fixture.nativeElement.querySelectorAll('app-video-retry button'));
   }
 
   it('shows the retry button only on failed and queue error videos', async () => {
@@ -767,6 +767,7 @@ describe('MonitorComponent', () => {
     expect(api.retryVideoJob).toHaveBeenCalledTimes(1);
     expect(api.retryVideoJob).toHaveBeenCalledWith('job-1');
     expect(retryButtons()[0].disabled).toBe(true);
+    expect(retryButtons()[0].textContent).toContain('Reintentando...');
 
     pending.next(job('QUEUED'));
     await fixture.whenStable();
