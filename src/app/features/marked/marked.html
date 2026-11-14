@@ -101,7 +101,30 @@
 
     <div
       class="empty-state"
-      *ngIf="marked().length === 0"
+      role="status"
+      *ngIf="loading()"
+    >
+      <strong>Cargando...</strong>
+    </div>
+
+    <div
+      class="empty-state"
+      role="alert"
+      *ngIf="!loading() && loadError()"
+    >
+      <strong>{{ loadError() }}</strong>
+      <button
+        type="button"
+        class="add-button"
+        (click)="loadMarked()"
+      >
+        Reintentar
+      </button>
+    </div>
+
+    <div
+      class="empty-state"
+      *ngIf="!loading() && !loadError() && marked().length === 0"
     >
       <span aria-hidden="true">☆</span>
       <strong>No hay personas guardadas</strong>

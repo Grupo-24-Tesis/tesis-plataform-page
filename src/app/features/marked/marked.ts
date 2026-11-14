@@ -41,6 +41,10 @@ export class Marked implements OnInit {
 
   busy = signal(false);
 
+  loading = signal(false);
+
+  loadError = signal('');
+
   pendingDeleteId = signal<string | null>(null);
 
   constructor(private api: ApiService) {}
@@ -74,14 +78,20 @@ export class Marked implements OnInit {
     });
   }
 
-  private loadMarked(): void {
+  loadMarked(): void {
+    this.loading.set(true);
+    this.loadError.set('');
+
     this.api.getMarked().subscribe({
-      next: data => this.marked.set(data),
+      next: data => {
+        this.marked.set(data);
+        this.loading.set(false);
+      },
       error: error => {
-        this.showMessage(
-          apiErrorMessage(error, 'No se pudieron cargar las marcas.'),
-          true
+        this.loadError.set(
+          apiErrorMessage(error, 'No se pudieron cargar las marcas.')
         );
+        this.loading.set(false);
       }
     });
   }

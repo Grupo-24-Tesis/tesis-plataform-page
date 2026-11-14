@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ImageFallbackDirective } from '../../shared/directives/image-fallback.directive';
 
 import { ApiService, Camera } from '../../core/services/api.service';
+import { apiErrorMessage } from '../../core/services/api-error';
 import { UniqueFace } from '../../core/models/UniqueFace';
 
 @Component({
@@ -24,6 +25,10 @@ export class UniqueFaces implements OnInit {
 
   selected = signal<UniqueFace | null>(null);
   detailClosing = signal(false);
+
+  loading = signal(false);
+
+  loadError = signal('');
 
 
   startDate: string = '';
@@ -67,6 +72,10 @@ export class UniqueFaces implements OnInit {
         : this.suspect === 'true';
 
 
+    this.faces.set([]);
+    this.loading.set(true);
+    this.loadError.set('');
+
     this.api.getUniqueFaces(
       this.startDate || undefined,
       this.endDate || undefined,
@@ -76,21 +85,18 @@ export class UniqueFaces implements OnInit {
 
       next: (data) => {
 
-        console.log(
-          'UNIQUE FACES API =>',
-          data
-        );
-
         this.faces.set(data);
+        this.loading.set(false);
 
       },
 
       error: (err) => {
 
-        console.error(
-          'Error loading unique faces',
-          err
+        this.faces.set([]);
+        this.loadError.set(
+          apiErrorMessage(err, 'No se pudieron cargar las personas.')
         );
+        this.loading.set(false);
 
       }
 

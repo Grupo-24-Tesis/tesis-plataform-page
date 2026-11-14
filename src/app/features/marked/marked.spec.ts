@@ -185,4 +185,50 @@ describe('Marked', () => {
 
     expect(text()).toContain('La marca no existe');
   });
+
+  it('shows the loading state until the marks arrive', async () => {
+    const pending = new Subject<unknown[]>();
+    api.getMarked.mockReturnValue(pending);
+    await create();
+
+    expect(text()).toContain('Cargando...');
+    expect(text()).not.toContain('No hay personas guardadas');
+
+    pending.next([{ id: 'm1', faceId: 'job-1_1', reason: 'Merodeo' }]);
+    pending.complete();
+    fixture.detectChanges();
+
+    expect(text()).not.toContain('Cargando...');
+    expect(text()).toContain('Merodeo');
+  });
+
+  it('shows the backend error with a retry that reloads', async () => {
+    api.getMarked.mockReturnValueOnce(
+      throwError(() => new HttpErrorResponse({
+        status: 500,
+        error: { status: 500, message: 'Fallo al leer las marcas' }
+      }))
+    );
+    await create();
+
+    expect(text()).toContain('Fallo al leer las marcas');
+    expect(text()).not.toContain('No hay personas guardadas');
+
+    const retry: HTMLButtonElement = Array.from<HTMLButtonElement>(
+      fixture.nativeElement.querySelectorAll('button')
+    ).find(button => button.textContent?.includes('Reintentar'))!;
+    retry.click();
+    fixture.detectChanges();
+
+    expect(api.getMarked).toHaveBeenCalledTimes(2);
+    expect(text()).not.toContain('Fallo al leer las marcas');
+    expect(text()).toContain('Merodeo');
+  });
+
+  it('shows the empty state only after loading finishes without marks', async () => {
+    api.getMarked.mockReturnValue(of([]));
+    await create();
+
+    expect(text()).toContain('No hay personas guardadas');
+  });
 });

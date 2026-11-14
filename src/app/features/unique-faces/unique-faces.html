@@ -122,7 +122,30 @@
       </button>
 
       <div
-        *ngIf="faces().length === 0"
+        *ngIf="loading()"
+        class="empty-state"
+        role="status"
+      >
+        <strong>Cargando...</strong>
+      </div>
+
+      <div
+        *ngIf="!loading() && loadError()"
+        class="empty-state"
+        role="alert"
+      >
+        <strong>{{ loadError() }}</strong>
+        <button
+          type="button"
+          class="btn btn-secondary"
+          (click)="loadFaces()"
+        >
+          Reintentar
+        </button>
+      </div>
+
+      <div
+        *ngIf="!loading() && !loadError() && faces().length === 0"
         class="empty-state"
       >
         <span aria-hidden="true">◎</span>
