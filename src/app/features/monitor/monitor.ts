@@ -445,13 +445,30 @@ export class MonitorComponent implements OnInit, OnDestroy {
     this.api.getMarked().subscribe({
       next: marks => this.marks.set(marks),
       error: error => {
-        console.warn('No se pudieron cargar las marcas', error);
         this.setMarkMessage(
           apiErrorMessage(error, 'No se pudieron cargar las marcas.'),
           true
         );
       }
     });
+  }
+
+  private isSelected(cluster: MonitorCluster): boolean {
+    return this.selectedCluster()?.cluster.clusterId === cluster.clusterId;
+  }
+
+  private reportMark(
+    cluster: MonitorCluster,
+    message: string,
+    isError: boolean,
+    onSelected?: () => void
+  ): void {
+    if (!this.isSelected(cluster)) {
+      return;
+    }
+
+    onSelected?.();
+    this.setMarkMessage(message, isError);
   }
 
   private setMarkMessage(message: string, isError: boolean): void {
@@ -471,7 +488,7 @@ export class MonitorComponent implements OnInit, OnDestroy {
     const existing = this.markFor(cluster);
 
     if (existing?.id) {
-      this.removeMark(existing.id);
+      this.removeMark(existing.id, cluster);
       return;
     }
 
@@ -488,40 +505,43 @@ export class MonitorComponent implements OnInit, OnDestroy {
     }).subscribe({
       next: created => {
         this.marks.update(marks => [...marks, created]);
-        this.markReason.set('');
-        this.setMarkMessage('Detección guardada.', false);
         this.markBusy.set(false);
+        this.reportMark(cluster, 'Detección guardada.', false, () =>
+          this.markReason.set('')
+        );
       },
       error: error => {
         if (error instanceof HttpErrorResponse && error.status === 409) {
           this.loadMarks();
         }
 
-        this.setMarkMessage(
+        this.markBusy.set(false);
+        this.reportMark(
+          cluster,
           apiErrorMessage(error, 'No se pudo guardar la detección.'),
           true
         );
-        this.markBusy.set(false);
       }
     });
   }
 
-  private removeMark(id: string): void {
+  private removeMark(id: string, cluster: MonitorCluster): void {
     this.markBusy.set(true);
     this.setMarkMessage('', false);
 
     this.api.deleteMarked(id).subscribe({
       next: () => {
         this.marks.update(marks => marks.filter(mark => mark.id !== id));
-        this.setMarkMessage('Marca eliminada.', false);
         this.markBusy.set(false);
+        this.reportMark(cluster, 'Marca eliminada.', false);
       },
       error: error => {
-        this.setMarkMessage(
+        this.markBusy.set(false);
+        this.reportMark(
+          cluster,
           apiErrorMessage(error, 'No se pudo quitar la marca.'),
           true
         );
-        this.markBusy.set(false);
       }
     });
   }

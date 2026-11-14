@@ -37,6 +37,10 @@ export class Marked implements OnInit {
 
   messageIsError = signal(false);
 
+  modalMessage = signal('');
+
+  busy = signal(false);
+
   pendingDeleteId = signal<string | null>(null);
 
   constructor(private api: ApiService) {}
@@ -94,6 +98,7 @@ export class Marked implements OnInit {
   openModal(): void {
     this.reason.set('');
     this.selectedPerson.set(null);
+    this.modalMessage.set('');
     this.showMessage('', false);
     this.showModal.set(true);
   }
@@ -102,6 +107,7 @@ export class Marked implements OnInit {
     this.showModal.set(false);
     this.selectedPerson.set(null);
     this.reason.set('');
+    this.modalMessage.set('');
   }
 
   selectPerson(person: Person): void {
@@ -113,22 +119,29 @@ export class Marked implements OnInit {
   }
 
   createMarked(): void {
+    if (this.busy()) {
+      return;
+    }
+
     const person = this.selectedPerson();
 
     if (!person) {
-      this.showMessage('Selecciona una persona.', true);
+      this.modalMessage.set('Selecciona una persona.');
       return;
     }
 
     if (this.isMarked(person.faceId)) {
-      this.showMessage('La detección ya está marcada.', true);
+      this.modalMessage.set('La detección ya está marcada.');
       return;
     }
 
     if (!this.reason().trim()) {
-      this.showMessage('Ingresa una razón.', true);
+      this.modalMessage.set('Ingresa una razón.');
       return;
     }
+
+    this.busy.set(true);
+    this.modalMessage.set('');
 
     this.api.createMarked({
       faceId: person.faceId,
@@ -136,14 +149,16 @@ export class Marked implements OnInit {
     }).subscribe({
       next: created => {
         this.marked.update(current => [...current, created]);
+        this.busy.set(false);
         this.closeModal();
         this.showMessage('Persona guardada.', false);
       },
       error: error => {
+        this.busy.set(false);
+        this.selectedPerson.set(null);
         this.loadMarked();
-        this.showMessage(
-          apiErrorMessage(error, 'No se pudo guardar la persona.'),
-          true
+        this.modalMessage.set(
+          apiErrorMessage(error, 'No se pudo guardar la persona.')
         );
       }
     });
@@ -164,19 +179,22 @@ export class Marked implements OnInit {
   }
 
   confirmDelete(item: MarkedPerson): void {
-    if (!item.id) {
+    if (!item.id || this.busy()) {
       return;
     }
 
     const id = item.id;
+    this.busy.set(true);
 
     this.api.deleteMarked(id).subscribe({
       next: () => {
         this.marked.update(list => list.filter(current => current.id !== id));
+        this.busy.set(false);
         this.pendingDeleteId.set(null);
         this.showMessage('Marca eliminada.', false);
       },
       error: error => {
+        this.busy.set(false);
         this.pendingDeleteId.set(null);
         this.showMessage(
           apiErrorMessage(error, 'No se pudo eliminar la marca.'),

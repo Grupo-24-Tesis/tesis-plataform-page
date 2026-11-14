@@ -81,6 +81,7 @@
             <button
               type="button"
               class="delete-button confirm-delete"
+              [disabled]="busy()"
               (click)="confirmDelete(markedPerson)"
             >
               CONFIRMAR
@@ -202,6 +203,14 @@
       ></textarea>
     </div>
 
+    <p
+      class="feedback error"
+      role="alert"
+      *ngIf="modalMessage()"
+    >
+      {{ modalMessage() }}
+    </p>
+
     <footer class="modal-actions">
       <button
         type="button"
@@ -214,6 +223,7 @@
       <button
         type="button"
         class="confirm-button"
+        [disabled]="busy()"
         (click)="createMarked()"
       >
         GUARDAR PERSONA

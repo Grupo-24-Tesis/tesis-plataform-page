@@ -361,6 +361,9 @@ describe('MonitorComponent', () => {
   });
 
   it('shows the backend message and reloads marks on a 409', async () => {
+    api.getMarked
+      .mockReturnValueOnce(of([]))
+      .mockReturnValue(of([{ id: 'm9', faceId: 'job-1_4', reason: 'otro' }]));
     api.createMarked.mockReturnValue(
       throwError(() => new HttpErrorResponse({
         status: 409,
@@ -373,8 +376,27 @@ describe('MonitorComponent', () => {
     await fixture.whenStable();
 
     expect(api.getMarked).toHaveBeenCalledTimes(2);
+    expect(component.marks()[0].id).toBe('m9');
+    expect(markButton().textContent).toContain('QUITAR');
     expect(fixture.nativeElement.querySelector('.mark-message').textContent)
       .toContain('La deteccion ya esta marcada');
+  });
+
+  it('shows the backend message when removing a mark fails', async () => {
+    api.getMarked.mockReturnValue(of([{ id: 'm1', faceId: 'job-1_4', reason: 'x' }]));
+    api.deleteMarked.mockReturnValue(
+      throwError(() => new HttpErrorResponse({
+        status: 404,
+        error: { status: 404, message: 'La marca no existe' }
+      }))
+    );
+    await openDetail();
+
+    markButton().click();
+    await fixture.whenStable();
+
+    expect(fixture.nativeElement.querySelector('.mark-message').textContent)
+      .toContain('La marca no existe');
   });
 
   it('does not use localStorage', async () => {

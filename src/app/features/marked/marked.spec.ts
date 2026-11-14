@@ -1,6 +1,6 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { of, throwError } from 'rxjs';
+import { Subject, of, throwError } from 'rxjs';
 
 import { ApiService } from '../../core/services/api.service';
 import { Marked } from './marked';
@@ -126,7 +126,9 @@ describe('Marked', () => {
     component.createMarked();
     await fixture.whenStable();
 
-    expect(text()).toContain('La deteccion ya esta marcada');
+    expect(fixture.nativeElement.querySelector('.modal .feedback').textContent)
+      .toContain('La deteccion ya esta marcada');
+    expect(component.selectedPerson()).toBeNull();
     expect(alertSpy).not.toHaveBeenCalled();
   });
 
@@ -137,7 +139,50 @@ describe('Marked', () => {
     component.createMarked();
     await fixture.whenStable();
 
-    expect(text()).toContain('Selecciona una persona.');
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('.modal .feedback').textContent)
+      .toContain('Selecciona una persona.');
     expect(alertSpy).not.toHaveBeenCalled();
+  });
+
+  it('sends a single create request on a double click', async () => {
+    const pending = new Subject<unknown>();
+    api.createMarked.mockReturnValue(pending);
+    await create();
+
+    component.openModal();
+    component.selectPerson(component.people()[1]);
+    component.reason.set('Motivo');
+    component.createMarked();
+    component.createMarked();
+
+    expect(api.createMarked).toHaveBeenCalledTimes(1);
+  });
+
+  it('sends a single delete request on a double click', async () => {
+    const pending = new Subject<void>();
+    api.deleteMarked.mockReturnValue(pending);
+    await create();
+
+    component.confirmDelete(component.marked()[0]);
+    component.confirmDelete(component.marked()[0]);
+
+    expect(api.deleteMarked).toHaveBeenCalledTimes(1);
+  });
+
+  it('shows the backend message when deleting fails', async () => {
+    api.deleteMarked.mockReturnValue(
+      throwError(() => new HttpErrorResponse({
+        status: 404,
+        error: { status: 404, message: 'La marca no existe' }
+      }))
+    );
+    await create();
+
+    component.confirmDelete(component.marked()[0]);
+    await fixture.whenStable();
+
+    expect(text()).toContain('La marca no existe');
   });
 });
