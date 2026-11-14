@@ -24,6 +24,7 @@ import { FaceAppearance } from '../../core/models/face.model';
 import { ImageFallbackDirective } from '../../shared/directives/image-fallback.directive';
 import {
   VideoStatusTone,
+  isTerminalStatus,
   videoStatusLabel,
   videoStatusTone
 } from '../../core/models/video-job-status';
@@ -31,7 +32,6 @@ import {
 const ACTIVE_REFRESH_MS = 5000;
 const IDLE_REFRESH_MS = 30000;
 const FACES_MAX_AGE_MS = 10 * 60 * 1000;
-const ACTIVE_STATUSES = ['UPLOADED', 'QUEUED', 'PROCESSING'];
 
 interface MonitorVideo {
   id: string;
@@ -94,9 +94,11 @@ export class MonitorComponent implements OnInit, OnDestroy {
   loading = signal(true);
   errorMsg = signal('');
   cameraErrorMsg = signal('');
+  savingCamera = signal(false);
   newCameraName = '';
 
   videos = signal<MonitorVideo[]>([]);
+  videosLoading = signal(false);
   selectedCluster = signal<SelectedCluster | null>(null);
   marks = signal<MarkedPerson[]>([]);
   markReason = signal('');
@@ -174,6 +176,7 @@ export class MonitorComponent implements OnInit, OnDestroy {
     this.selectedCamera.set(camera);
     this.selectedCluster.set(null);
     this.videos.set([]);
+    this.videosLoading.set(camera !== null);
     this.loadingFaceJobs.clear();
 
     if (camera) {
@@ -192,7 +195,7 @@ export class MonitorComponent implements OnInit, OnDestroy {
     this.stopRefresh();
 
     const hasActiveJobs = this.videos().some(video =>
-      ACTIVE_STATUSES.includes(video.status)
+      !isTerminalStatus(video.status)
     );
 
     this.refreshTimer = setTimeout(
@@ -230,6 +233,7 @@ export class MonitorComponent implements OnInit, OnDestroy {
           [camera.id]: jobs.length
         }));
         this.errorMsg.set('');
+        this.videosLoading.set(false);
 
         for (const job of jobs) {
           if (job.status === 'COMPLETED') {
@@ -251,6 +255,7 @@ export class MonitorComponent implements OnInit, OnDestroy {
             'No se pudieron cargar los videos de la cámara.'
           )
         );
+        this.videosLoading.set(false);
         this.scheduleRefresh();
       }
     });
@@ -368,6 +373,10 @@ export class MonitorComponent implements OnInit, OnDestroy {
   }
 
   addCamera(): void {
+    if (this.savingCamera()) {
+      return;
+    }
+
     const name = this.newCameraName
       .trim()
       .replace(/\s+/g, ' ');
@@ -397,8 +406,11 @@ export class MonitorComponent implements OnInit, OnDestroy {
       active: true
     };
 
+    this.savingCamera.set(true);
+
     this.api.createCamera(camera).subscribe({
       next: (createdCamera) => {
+        this.savingCamera.set(false);
         this.cameras.update(currentCameras => [
           ...currentCameras,
           createdCamera
@@ -408,6 +420,7 @@ export class MonitorComponent implements OnInit, OnDestroy {
       },
       error: (err) => {
         console.error('Error al registrar la cámara', err);
+        this.savingCamera.set(false);
         this.cameraErrorMsg.set(
           apiErrorMessage(err, 'No se pudo registrar la cámara.')
         );
@@ -550,30 +563,45 @@ export class MonitorComponent implements OnInit, OnDestroy {
     return this.videos();
   }
 
+  trackVideo(index: number, video: MonitorVideo): string {
+    return video.id;
+  }
+
+  trackCluster(index: number, cluster: MonitorCluster): string {
+    return cluster.clusterId;
+  }
+
   openVideoDialog(): void {
     if (!this.selectedCamera()) {
       return;
     }
 
-    this.selectedFile.set(null);
-    this.processingVideo.set(false);
-    this.uploadProgress.set(0);
-    this.videoErrorMsg.set('');
-    this.videoSuccessMsg.set('');
+    if (!this.processingVideo()) {
+      this.resetVideoForm();
+    }
 
     this.videoDialog?.nativeElement.showModal();
   }
 
-  closeVideoDialog(): void {
+  closeVideoDialog(event?: Event): void {
     if (this.processingVideo()) {
+      event?.preventDefault();
       return;
     }
 
     this.videoDialog?.nativeElement.close();
+    this.resetVideoForm();
+  }
+
+  private resetVideoForm(): void {
     this.selectedFile.set(null);
     this.uploadProgress.set(0);
     this.videoErrorMsg.set('');
     this.videoSuccessMsg.set('');
+
+    if (this.videoFileInput) {
+      this.videoFileInput.nativeElement.value = '';
+    }
   }
 
   onFileSelected(event: Event): void {

@@ -46,6 +46,7 @@ describe('MonitorComponent', () => {
     getMarked: ReturnType<typeof vi.fn>;
     createMarked: ReturnType<typeof vi.fn>;
     deleteMarked: ReturnType<typeof vi.fn>;
+    createCamera: ReturnType<typeof vi.fn>;
   };
 
   async function create(): Promise<void> {
@@ -62,6 +63,7 @@ describe('MonitorComponent', () => {
 
   beforeEach(() => {
     HTMLDialogElement.prototype.showModal = vi.fn();
+    HTMLDialogElement.prototype.close = vi.fn();
     api = {
       getCameras: vi.fn(() =>
         of([
@@ -76,7 +78,8 @@ describe('MonitorComponent', () => {
       notifyVideoUploaded: vi.fn(),
       getMarked: vi.fn(() => of([])),
       createMarked: vi.fn(),
-      deleteMarked: vi.fn()
+      deleteMarked: vi.fn(),
+      createCamera: vi.fn()
     };
   });
 
@@ -369,7 +372,7 @@ describe('MonitorComponent', () => {
     api.createMarked.mockReturnValue(
       throwError(() => new HttpErrorResponse({
         status: 409,
-        error: { status: 409, message: 'La deteccion ya esta marcada' }
+        error: { status: 409, message: 'La detección ya está marcada' }
       }))
     );
     await openDetail();
@@ -381,7 +384,7 @@ describe('MonitorComponent', () => {
     expect(component.marks()[0].id).toBe('m9');
     expect(markButton().textContent).toContain('QUITAR');
     expect(fixture.nativeElement.querySelector('.mark-message').textContent)
-      .toContain('La deteccion ya esta marcada');
+      .toContain('La detección ya está marcada');
   });
 
   it('shows the backend message when removing a mark fails', async () => {
@@ -493,5 +496,189 @@ describe('MonitorComponent', () => {
       fileName: 'Camera_ch6.mkv',
       contentType: 'video/x-matroska'
     });
+  });
+
+  function pendingUpload(): void {
+    api.requestVideoUploadUrl.mockReturnValue(of({
+      uploadUrl: 'https://cubo.s3.amazonaws.com/videos/abc.mp4',
+      bucket: 'cubo',
+      objectKey: 'videos/abc.mp4',
+      originalFileName: 'Camera_ch6.mp4'
+    }));
+    api.uploadVideoToS3.mockReturnValue(new Subject());
+  }
+
+  function cancelVideoDialog(): Event {
+    const cancel = new Event('cancel', { cancelable: true });
+    fixture.nativeElement.querySelector('.video-dialog').dispatchEvent(cancel);
+    return cancel;
+  }
+
+  it('keeps the video dialog open on Escape while an upload is running', async () => {
+    pendingUpload();
+    await create();
+    component.openVideoDialog();
+    selectFile(new File(['x'], 'Camera_ch6.mp4', { type: 'video/mp4' }));
+    component.processVideo();
+    await fixture.whenStable();
+
+    const cancel = cancelVideoDialog();
+
+    expect(cancel.defaultPrevented).toBe(true);
+    expect(HTMLDialogElement.prototype.close).not.toHaveBeenCalled();
+    expect(component.processingVideo()).toBe(true);
+  });
+
+  it('does not reset a running upload when the video dialog is opened again', async () => {
+    pendingUpload();
+    await create();
+    component.openVideoDialog();
+    selectFile(new File(['x'], 'Camera_ch6.mp4', { type: 'video/mp4' }));
+    component.processVideo();
+    await fixture.whenStable();
+
+    component.openVideoDialog();
+    await fixture.whenStable();
+    component.processVideo();
+
+    expect(component.processingVideo()).toBe(true);
+    expect(component.selectedFile()?.name).toBe('Camera_ch6.mp4');
+    expect(fixture.nativeElement.querySelector('.video-dialog').textContent)
+      .toContain('SUBIENDO...');
+    expect(api.requestVideoUploadUrl).toHaveBeenCalledTimes(1);
+  });
+
+  it('closes the video dialog on Escape when no upload is running', async () => {
+    await create();
+    component.openVideoDialog();
+
+    const cancel = cancelVideoDialog();
+
+    expect(cancel.defaultPrevented).toBe(false);
+    expect(HTMLDialogElement.prototype.close).toHaveBeenCalled();
+  });
+
+  it('clears the native file input when the video dialog is opened or closed', async () => {
+    await create();
+    const input: HTMLInputElement =
+      fixture.nativeElement.querySelector('#video-file');
+    const setValue = vi.fn();
+    Object.defineProperty(input, 'value', { set: setValue, get: () => '', configurable: true });
+
+    component.openVideoDialog();
+    expect(setValue).toHaveBeenCalledWith('');
+
+    setValue.mockClear();
+    component.closeVideoDialog();
+    expect(setValue).toHaveBeenCalledWith('');
+  });
+
+  it('sends one camera request on a double submit and disables the button meanwhile', async () => {
+    const pending = new Subject<{ id: string; name: string; active: boolean }>();
+    api.createCamera.mockReturnValue(pending);
+    await create();
+    component.openCameraDialog();
+    component.newCameraName = 'Portería';
+
+    component.addCamera();
+    component.addCamera();
+    await fixture.whenStable();
+
+    expect(api.createCamera).toHaveBeenCalledTimes(1);
+    const submit: HTMLButtonElement =
+      fixture.nativeElement.querySelector('.camera-dialog button[type="submit"]');
+    expect(submit.disabled).toBe(true);
+
+    pending.next({ id: 'CAM-03', name: 'Portería', active: true });
+    await fixture.whenStable();
+
+    expect(component.savingCamera()).toBe(false);
+    expect(submit.disabled).toBe(false);
+  });
+
+  it('re-enables the camera submit when the request fails', async () => {
+    api.createCamera.mockReturnValue(
+      throwError(() => new HttpErrorResponse({
+        status: 409,
+        error: { status: 409, message: 'La cámara ya existe' }
+      }))
+    );
+    await create();
+    component.newCameraName = 'Portería';
+
+    component.addCamera();
+    await fixture.whenStable();
+
+    expect(component.savingCamera()).toBe(false);
+    expect(fixture.nativeElement.querySelector('.camera-dialog').textContent)
+      .toContain('La cámara ya existe');
+  });
+
+  const EMPTY_CAMERA_TEXT = 'Esta cámara todavía no tiene videos procesados.';
+
+  it('shows Cargando while the videos of the camera load', async () => {
+    api.getVideoJobs.mockReturnValue(new Subject());
+
+    await create();
+
+    const text = fixture.nativeElement.querySelector('.camera-preview').textContent;
+    expect(text).toContain('Cargando...');
+    expect(text).not.toContain(EMPTY_CAMERA_TEXT);
+  });
+
+  it('does not show the empty text when the videos fail to load', async () => {
+    api.getVideoJobs.mockReturnValue(
+      throwError(() => new HttpErrorResponse({
+        status: 500,
+        error: { status: 500, message: 'Fallo interno' }
+      }))
+    );
+
+    await create();
+
+    const text = fixture.nativeElement.textContent;
+    expect(text).toContain('Fallo interno');
+    expect(text).not.toContain(EMPTY_CAMERA_TEXT);
+    expect(text).not.toContain('Cargando...');
+  });
+
+  it('shows the empty text only after an empty list loads', async () => {
+    api.getVideoJobs.mockReturnValue(of([]));
+
+    await create();
+
+    const text = fixture.nativeElement.textContent;
+    expect(text).toContain(EMPTY_CAMERA_TEXT);
+    expect(text).not.toContain('Cargando...');
+  });
+
+  it('does not show the empty camera list text when the cameras fail to load', async () => {
+    api.getCameras.mockReturnValue(throwError(() => new Error('sin backend')));
+
+    await create();
+
+    const text = fixture.nativeElement.textContent;
+    expect(text).toContain('No se pudieron cargar las cámaras.');
+    expect(text).not.toContain('No hay cámaras registradas.');
+  });
+
+  it('keeps the same video and cluster elements across refreshes', async () => {
+    vi.useFakeTimers();
+    api.getVideoJobs.mockReturnValue(of([job('COMPLETED')]));
+    api.getVideoJobFaces.mockReturnValue(of([FACE]));
+
+    await create();
+    const block = fixture.nativeElement.querySelector('.video-block');
+    const card = fixture.nativeElement.querySelector('.cluster-card');
+
+    vi.advanceTimersByTime(30000);
+    await fixture.whenStable();
+    expect(fixture.nativeElement.querySelector('.video-block')).toBe(block);
+    expect(fixture.nativeElement.querySelector('.cluster-card')).toBe(card);
+
+    vi.advanceTimersByTime(10 * 60 * 1000);
+    await fixture.whenStable();
+    expect(api.getVideoJobFaces).toHaveBeenCalledTimes(2);
+    expect(fixture.nativeElement.querySelector('.cluster-card')).toBe(card);
   });
 });

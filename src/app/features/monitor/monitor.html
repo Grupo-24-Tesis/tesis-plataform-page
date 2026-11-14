@@ -40,7 +40,7 @@
         </span>
       </button>
 
-      <p class="empty" *ngIf="!loading() && cameras().length === 0">
+      <p class="empty" *ngIf="!loading() && !errorMsg() && cameras().length === 0">
         No hay cámaras registradas.
       </p>
     </div>
@@ -78,7 +78,7 @@
       <div class="video-list" *ngIf="getCameraVideos().length > 0">
         <article
           class="video-block"
-          *ngFor="let video of getCameraVideos()"
+          *ngFor="let video of getCameraVideos(); trackBy: trackVideo"
         >
           <header class="video-header">
             <div>
@@ -112,7 +112,7 @@
             <button
               type="button"
               class="cluster-card"
-              *ngFor="let cluster of video.clusters"
+              *ngFor="let cluster of video.clusters; trackBy: trackCluster"
               [class.selected]="
                 selectedCluster()?.video?.id === video.id &&
                 selectedCluster()?.cluster?.clusterId === cluster.clusterId
@@ -151,9 +151,13 @@
         </article>
       </div>
 
+      <p class="loading" *ngIf="videosLoading()">
+        Cargando...
+      </p>
+
       <div
         class="preview-placeholder"
-        *ngIf="getCameraVideos().length === 0"
+        *ngIf="!videosLoading() && !errorMsg() && getCameraVideos().length === 0"
       >
         <span class="preview-icon" aria-hidden="true">▣</span>
 
@@ -313,7 +317,11 @@
         CANCELAR
       </button>
 
-      <button type="submit" class="primary-button">
+      <button
+        type="submit"
+        class="primary-button"
+        [disabled]="savingCamera()"
+      >
         AGREGAR CÁMARA
       </button>
     </div>
@@ -324,7 +332,7 @@
   #videoDialog
   class="video-dialog"
   aria-labelledby="video-dialog-title"
-  (cancel)="closeVideoDialog()"
+  (cancel)="closeVideoDialog($event)"
 >
   <header class="dialog-header">
     <div>

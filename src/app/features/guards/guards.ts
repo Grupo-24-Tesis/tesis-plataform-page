@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ApiService, Guard } from '../../core/services/api.service';
+import { apiErrorMessage } from '../../core/services/api-error';
 import { SessionService } from '../../core/services/session.service';
 
 @Component({
@@ -18,7 +19,9 @@ export class Guards implements OnInit {
   guards = signal<Guard[]>([]);
   selectedGuard = signal<Guard | null>(null);
   loading = signal(true);
-  errorMsg = signal('');
+  loadErrorMsg = signal('');
+  dialogErrorMsg = signal('');
+  saving = signal(false);
   newGuardName = '';
 
   constructor(
@@ -36,7 +39,7 @@ export class Guards implements OnInit {
       error: (err) => {
         console.error('Error al cargar los vigilantes', err);
         this.guards.set([]);
-        this.errorMsg.set('No se pudieron cargar los vigilantes.');
+        this.loadErrorMsg.set('No se pudieron cargar los vigilantes.');
         this.loading.set(false);
       }
     });
@@ -70,21 +73,25 @@ export class Guards implements OnInit {
 
   openGuardDialog(): void {
     this.newGuardName = '';
-    this.errorMsg.set('');
+    this.dialogErrorMsg.set('');
     this.guardDialog?.nativeElement.showModal();
   }
 
   closeGuardDialog(): void {
     this.guardDialog?.nativeElement.close();
     this.newGuardName = '';
-    this.errorMsg.set('');
+    this.dialogErrorMsg.set('');
   }
 
   addGuard(): void {
+    if (this.saving()) {
+      return;
+    }
+
     const name = this.newGuardName.trim().replace(/\s+/g, ' ');
 
     if (name.length < 3) {
-      this.errorMsg.set('Escribe un nombre de al menos tres caracteres.');
+      this.dialogErrorMsg.set('Escribe un nombre de al menos tres caracteres.');
       return;
     }
 
@@ -95,7 +102,7 @@ export class Guards implements OnInit {
     );
 
     if (exists) {
-      this.errorMsg.set('Este vigilante ya está registrado.');
+      this.dialogErrorMsg.set('Este vigilante ya está registrado.');
       return;
     }
 
@@ -105,8 +112,11 @@ export class Guards implements OnInit {
       schedule: 'Horario no definido'
     };
 
+    this.saving.set(true);
+
     this.api.createGuard(guard).subscribe({
       next: (createdGuard) => {
+        this.saving.set(false);
         this.guards.update(currentGuards => [
           ...currentGuards,
           createdGuard
@@ -116,7 +126,10 @@ export class Guards implements OnInit {
       },
       error: (err) => {
         console.error('Error al registrar el vigilante', err);
-        this.errorMsg.set('No se pudo registrar el vigilante.');
+        this.saving.set(false);
+        this.dialogErrorMsg.set(
+          apiErrorMessage(err, 'No se pudo registrar el vigilante.')
+        );
       }
     });
   }
