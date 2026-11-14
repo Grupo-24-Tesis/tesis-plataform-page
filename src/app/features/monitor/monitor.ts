@@ -10,7 +10,6 @@ import {
 import { CommonModule } from '@angular/common';
 import { HttpEventType } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
-import { Subscription, interval } from 'rxjs';
 
 import { apiErrorMessage } from '../../core/services/api-error';
 import { videoContentType } from '../../core/models/video-content-type';
@@ -21,14 +20,16 @@ import {
 } from '../../core/services/api.service';
 import { PresignedUploadResponse, VideoJobResponse } from '../../core/models/uploadVideo';
 import { FaceAppearance } from '../../core/models/face.model';
+import { ImageFallbackDirective } from '../../shared/directives/image-fallback.directive';
 import {
   VideoStatusTone,
-  isTerminalStatus,
   videoStatusLabel,
   videoStatusTone
 } from '../../core/models/video-job-status';
 
-const JOB_STATUS_POLL_MS = 5000;
+const ACTIVE_REFRESH_MS = 5000;
+const IDLE_REFRESH_MS = 30000;
+const ACTIVE_STATUSES = ['UPLOADED', 'QUEUED', 'PROCESSING'];
 
 interface MonitorVideo {
   id: string;
@@ -38,6 +39,7 @@ interface MonitorVideo {
   status: string;
   jobId?: string;
   failureReason?: string;
+  facesLoaded: boolean;
   clusters: Array<{
     clusterId: string;
     appearances: Array<{
@@ -60,7 +62,7 @@ interface SelectedCluster {
 @Component({
   selector: 'app-monitor',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ImageFallbackDirective],
   templateUrl: './monitor.html',
   styleUrl: './monitor.css',
 })
@@ -94,6 +96,7 @@ export class MonitorComponent implements OnInit, OnDestroy {
   videos = signal<MonitorVideo[]>([]);
   selectedCluster = signal<SelectedCluster | null>(null);
   savedClusterIds = signal<string[]>([]);
+  cameraVideoCounts = signal<Record<string, number>>({});
 
   selectedFile = signal<File | null>(null);
   processingVideo = signal(false);
@@ -101,34 +104,19 @@ export class MonitorComponent implements OnInit, OnDestroy {
   videoErrorMsg = signal('');
   videoSuccessMsg = signal('');
 
-  private readonly videosStorageKey =
-    'facecluster-monitor-videos-v1';
-
-  private readonly savedClustersStorageKey =
-    'facecluster-saved-clusters-v1';
-
-  private jobStatusPolling?: Subscription;
+  private refreshTimer?: ReturnType<typeof setTimeout>;
+  private readonly loadingFaceJobs = new Set<string>();
 
   constructor(
     private api: ApiService
   ) {}
 
   ngOnInit(): void {
-    this.loadLocalVideos();
-    this.loadSavedClusters();
-
-    this.refreshPendingVideos();
-    this.jobStatusPolling = interval(JOB_STATUS_POLL_MS).subscribe(
-      () => this.refreshPendingVideos()
-    );
-
     this.api.getCameras().subscribe({
       next: (data) => {
-        console.log('CAMERAS API =>', data);
-
         this.cameras.set(data);
-        this.selectedCamera.set(data[0] ?? null);
         this.loading.set(false);
+        this.showCamera(data[0] ?? null);
       },
       error: (err) => {
         console.error('Error loading cameras', err);
@@ -142,7 +130,7 @@ export class MonitorComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    this.jobStatusPolling?.unsubscribe();
+    this.stopRefresh();
   }
 
   statusLabel(status: string): string {
@@ -153,51 +141,155 @@ export class MonitorComponent implements OnInit, OnDestroy {
     return videoStatusTone(status);
   }
 
-  refreshPendingVideos(): void {
-    for (const video of this.videos()) {
-      if (!video.jobId || isTerminalStatus(video.status)) {
-        continue;
-      }
+  cameraName(cameraId: string): string {
+    return (
+      this.cameras().find(camera => camera.id === cameraId)?.name ??
+      cameraId
+    );
+  }
 
-      this.api.getVideoJob(video.jobId).subscribe({
-        next: job => this.applyJobStatus(job),
-        error: error => {
-          console.warn(
-            'No se pudo consultar el estado del video',
-            error
-          );
+  cameraVideoCountLabel(cameraId: string): string {
+    const count = this.cameraVideoCounts()[cameraId];
+
+    if (count === undefined) {
+      return '';
+    }
+
+    return `${count} ${count === 1 ? 'video' : 'videos'}`;
+  }
+
+  private showCamera(camera: Camera | null): void {
+    this.stopRefresh();
+    this.selectedCamera.set(camera);
+    this.selectedCluster.set(null);
+    this.videos.set([]);
+    this.loadingFaceJobs.clear();
+
+    if (camera) {
+      this.loadVideos();
+    }
+  }
+
+  private stopRefresh(): void {
+    if (this.refreshTimer !== undefined) {
+      clearTimeout(this.refreshTimer);
+      this.refreshTimer = undefined;
+    }
+  }
+
+  private scheduleRefresh(): void {
+    this.stopRefresh();
+
+    const hasActiveJobs = this.videos().some(video =>
+      ACTIVE_STATUSES.includes(video.status)
+    );
+
+    this.refreshTimer = setTimeout(
+      () => this.loadVideos(),
+      hasActiveJobs ? ACTIVE_REFRESH_MS : IDLE_REFRESH_MS
+    );
+  }
+
+  private loadVideos(): void {
+    const camera = this.selectedCamera();
+
+    if (!camera) {
+      return;
+    }
+
+    this.stopRefresh();
+
+    this.api.getVideoJobs(camera.id).subscribe({
+      next: jobs => {
+        if (this.selectedCamera()?.id !== camera.id) {
+          return;
         }
-      });
-    }
-  }
 
-  private applyJobStatus(job: VideoJobResponse): void {
-    this.updateVideo(job.jobId, video => ({
-      ...video,
-      status: job.status,
-      failureReason: job.failureReason ?? undefined
-    }));
+        const previous = new Map(
+          this.videos().map(video => [video.jobId, video])
+        );
 
-    if (job.status === 'COMPLETED') {
-      this.loadJobFaces(job.jobId);
-    }
-  }
+        this.videos.set(
+          jobs.map(job => this.toVideo(job, previous.get(job.jobId)))
+        );
+        this.cameraVideoCounts.update(counts => ({
+          ...counts,
+          [camera.id]: jobs.length
+        }));
+        this.errorMsg.set('');
 
-  private loadJobFaces(jobId: string): void {
-    this.api.getFaceAppearances().subscribe({
-      next: appearances => {
-        const clusters = appearances
-          .filter(appearance =>
-            appearance.faceId.startsWith(`${jobId}_`)
+        for (const job of jobs) {
+          if (job.status === 'COMPLETED') {
+            this.loadJobFaces(job.jobId, camera.id);
+          }
+        }
+
+        this.scheduleRefresh();
+      },
+      error: error => {
+        if (this.selectedCamera()?.id !== camera.id) {
+          return;
+        }
+
+        console.warn('No se pudieron cargar los videos', error);
+        this.errorMsg.set(
+          apiErrorMessage(
+            error,
+            'No se pudieron cargar los videos de la cámara.'
           )
-          .map(appearance => this.toCluster(appearance));
+        );
+        this.scheduleRefresh();
+      }
+    });
+  }
 
-        this.updateVideo(jobId, video => ({
-          ...video,
-          clusters
+  private toVideo(
+    job: VideoJobResponse,
+    previous?: MonitorVideo
+  ): MonitorVideo {
+    const keepFaces =
+      previous?.facesLoaded === true && job.status === 'COMPLETED';
+
+    return {
+      id: job.jobId,
+      jobId: job.jobId,
+      cameraId: job.cameraId,
+      fileName: job.originalFileName,
+      processedAt: job.createdAt,
+      status: job.status,
+      failureReason: job.failureReason ?? undefined,
+      facesLoaded: keepFaces,
+      clusters: keepFaces ? previous.clusters : []
+    };
+  }
+
+  private loadJobFaces(jobId: string, cameraId: string): void {
+    const video = this.videos().find(item => item.jobId === jobId);
+
+    if (!video || video.facesLoaded || this.loadingFaceJobs.has(jobId)) {
+      return;
+    }
+
+    this.loadingFaceJobs.add(jobId);
+
+    this.api.getVideoJobFaces(jobId).subscribe({
+      next: appearances => {
+        this.loadingFaceJobs.delete(jobId);
+
+        if (this.selectedCamera()?.id !== cameraId) {
+          return;
+        }
+
+        this.updateVideo(jobId, current => ({
+          ...current,
+          facesLoaded: true,
+          clusters: appearances.map(appearance =>
+            this.toCluster(appearance)
+          )
         }));
       },
       error: error => {
+        this.loadingFaceJobs.delete(jobId);
         console.warn(
           'No se pudieron cargar los rostros del video',
           error
@@ -214,6 +306,7 @@ export class MonitorComponent implements OnInit, OnDestroy {
           faceId: appearance.faceId,
           timestamp: appearance.timestamp,
           cameraId: appearance.cameraId,
+          frameUrl: appearance.frameUrl,
           capturedAt: appearance.capturedAt
         }
       ]
@@ -229,13 +322,10 @@ export class MonitorComponent implements OnInit, OnDestroy {
         video.jobId === jobId ? change(video) : video
       )
     );
-
-    this.saveLocalVideos();
   }
 
   selectCamera(camera: Camera): void {
-    this.selectedCamera.set(camera);
-    this.selectedCluster.set(null);
+    this.showCamera(camera);
   }
 
   openCameraDialog(): void {
@@ -286,7 +376,7 @@ export class MonitorComponent implements OnInit, OnDestroy {
           ...currentCameras,
           createdCamera
         ]);
-        this.selectedCamera.set(createdCamera);
+        this.showCamera(createdCamera);
         this.closeCameraDialog();
       },
       error: (err) => {
@@ -347,35 +437,10 @@ export class MonitorComponent implements OnInit, OnDestroy {
         key
       ]);
     }
-
-    this.saveSavedClusters();
   }
 
   getCameraVideos(): MonitorVideo[] {
-    const camera = this.selectedCamera();
-
-    if (!camera) {
-      return [];
-    }
-
-    return this.videos().filter(
-      video => video.cameraId === camera.id
-    );
-  }
-
-  getCameraAppearanceCount(cameraId: string): number {
-    return this.videos()
-      .filter(video => video.cameraId === cameraId)
-      .reduce(
-        (total, video) =>
-          total +
-          video.clusters.reduce(
-            (count, cluster) =>
-              count + cluster.appearances.length,
-            0
-          ),
-        0
-      );
+    return this.videos();
   }
 
   openVideoDialog(): void {
@@ -542,8 +607,8 @@ export class MonitorComponent implements OnInit, OnDestroy {
       objectKey: uploadData.objectKey,
       cameraId: camera.id
     }).subscribe({
-      next: job => {
-        this.addUploadedVideo(job, camera);
+      next: () => {
+        this.loadVideos();
 
         this.videoSuccessMsg.set(
           'Video subido a S3 y registrado correctamente.'
@@ -575,103 +640,10 @@ export class MonitorComponent implements OnInit, OnDestroy {
     });
   }
 
-  private addUploadedVideo(
-    job: VideoJobResponse,
-    camera: Camera
-  ): void {
-    const video: MonitorVideo = {
-      id: job.jobId,
-      jobId: job.jobId,
-      cameraId: camera.id,
-      fileName: job.originalFileName,
-      processedAt: job.createdAt,
-      status: job.status,
-      clusters: []
-    };
-
-    this.videos.update(currentVideos => [
-      video,
-      ...currentVideos
-    ]);
-
-    this.saveLocalVideos();
-  }
-
   private getClusterKey(
     video: MonitorVideo,
     cluster: MonitorCluster
   ): string {
     return `${video.id}:${cluster.clusterId}`;
   }
-
-  private loadSavedClusters(): void {
-    try {
-      const content = localStorage.getItem(
-        this.savedClustersStorageKey
-      );
-
-      if (!content) {
-        return;
-      }
-
-      const savedIds = JSON.parse(content);
-
-      if (Array.isArray(savedIds)) {
-        this.savedClusterIds.set(savedIds);
-      }
-    } catch {
-      console.warn(
-        'No fue posible recuperar las detecciones guardadas.'
-      );
-    }
-  }
-
-  private saveSavedClusters(): void {
-    try {
-      localStorage.setItem(
-        this.savedClustersStorageKey,
-        JSON.stringify(this.savedClusterIds())
-      );
-    } catch {
-      console.warn(
-        'No fue posible guardar las detecciones.'
-      );
-    }
-  }
-
-  private loadLocalVideos(): void {
-    try {
-      const content = localStorage.getItem(
-        this.videosStorageKey
-      );
-
-      if (!content) {
-        return;
-      }
-
-      const savedVideos = JSON.parse(content);
-
-      if (Array.isArray(savedVideos)) {
-        this.videos.set(savedVideos);
-      }
-    } catch {
-      console.warn(
-        'No fue posible recuperar los videos guardados.'
-      );
-    }
-  }
-
-  private saveLocalVideos(): void {
-    try {
-      localStorage.setItem(
-        this.videosStorageKey,
-        JSON.stringify(this.videos())
-      );
-    } catch {
-      console.warn(
-        'No fue posible guardar los videos.'
-      );
-    }
-  }
-
 }

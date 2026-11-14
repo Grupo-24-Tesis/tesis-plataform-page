@@ -34,9 +34,8 @@
         </span>
 
         <span class="camera-summary">
-          <small>
-            {{ getCameraAppearanceCount(camera.id) }}
-            {{ getCameraAppearanceCount(camera.id) === 1 ? 'aparición total' : 'apariciones totales' }}
+          <small *ngIf="cameraVideoCountLabel(camera.id) as videoCount">
+            {{ videoCount }}
           </small>
         </span>
       </button>
@@ -102,6 +101,13 @@
             {{ video.failureReason }}
           </p>
 
+          <p
+            class="video-empty"
+            *ngIf="video.status === 'COMPLETED' && video.facesLoaded && video.clusters.length === 0"
+          >
+            Sin rostros detectados en este video
+          </p>
+
           <div class="cluster-grid">
             <button
               type="button"
@@ -114,7 +120,16 @@
               (click)="selectCluster(video, cluster)"
             >
               <div class="face-preview">
-                <span aria-hidden="true">♙</span>
+                <img
+                  appImageFallback
+                  *ngIf="cluster.appearances[0]?.frameUrl as image; else facePlaceholder"
+                  [src]="image"
+                  [alt]="cluster.clusterId"
+                >
+
+                <ng-template #facePlaceholder>
+                  <span aria-hidden="true">♙</span>
+                </ng-template>
               </div>
 
               <div class="cluster-information">
@@ -130,7 +145,7 @@
                   <span
                     *ngFor="let appearance of cluster.appearances"
                   >
-                    {{ appearance.cameraId }} ·
+                    {{ cameraName(appearance.cameraId) }} ·
                     {{ appearance.timestamp }}
                   </span>
                 </div>
@@ -181,7 +196,16 @@
 
     <div class="detail-content">
       <div class="detail-preview">
-        <span aria-hidden="true">♙</span>
+        <img
+          appImageFallback
+          *ngIf="selected.cluster.appearances[0]?.frameUrl as image; else detailPlaceholder"
+          [src]="image"
+          [alt]="selected.cluster.clusterId"
+        >
+
+        <ng-template #detailPlaceholder>
+          <span aria-hidden="true">♙</span>
+        </ng-template>
       </div>
 
       <section class="detail-section">
@@ -198,7 +222,7 @@
         <ol class="detail-appearances">
           <li *ngFor="let appearance of selected.cluster.appearances">
             <strong>{{ appearance.timestamp }}</strong>
-            <span>{{ appearance.cameraId }}</span>
+            <span>{{ cameraName(appearance.cameraId) }}</span>
             <small>{{ appearance.faceId }}</small>
           </li>
         </ol>
@@ -313,10 +337,6 @@
     <strong>
       {{ selectedCamera()?.name }}
     </strong>
-
-    <small>
-      ID: {{ selectedCamera()?.id }}
-    </small>
   </div>
 
   <form (ngSubmit)="processVideo()">

@@ -6,23 +6,13 @@ import { ApiService } from '../../core/services/api.service';
 import { VideoJobResponse } from '../../core/models/uploadVideo';
 import { MonitorComponent } from './monitor';
 
-const VIDEOS_KEY = 'facecluster-monitor-videos-v1';
-
-function storedVideo(status: string) {
+function job(
+  status: string,
+  failureReason: string | null = null,
+  jobId = 'job-1'
+): VideoJobResponse {
   return {
-    id: 'job-1',
-    jobId: 'job-1',
-    cameraId: 'CAM-01',
-    fileName: 'Camera_ch6.mp4',
-    processedAt: '2026-11-14T12:00:00Z',
-    status,
-    clusters: []
-  };
-}
-
-function job(status: string, failureReason: string | null = null): VideoJobResponse {
-  return {
-    jobId: 'job-1',
+    jobId,
     originalFileName: 'Camera_ch6.mp4',
     bucket: 'cubo',
     objectKey: 'videos/abc.mp4',
@@ -34,21 +24,28 @@ function job(status: string, failureReason: string | null = null): VideoJobRespo
   };
 }
 
+const FACE = {
+  id: 'a',
+  faceId: 'job-1_4',
+  timestamp: '00:01:23',
+  cameraId: 'CAM-01',
+  frameUrl: 'https://cubo.s3.us-east-2.amazonaws.com/faces/job-1/4.jpg?firma',
+  capturedAt: '2026-10-16T10:05:21'
+};
+
 describe('MonitorComponent', () => {
   let fixture: ComponentFixture<MonitorComponent>;
   let component: MonitorComponent;
   let api: {
     getCameras: ReturnType<typeof vi.fn>;
-    getVideoJob: ReturnType<typeof vi.fn>;
-    getFaceAppearances: ReturnType<typeof vi.fn>;
+    getVideoJobs: ReturnType<typeof vi.fn>;
+    getVideoJobFaces: ReturnType<typeof vi.fn>;
     requestVideoUploadUrl: ReturnType<typeof vi.fn>;
     uploadVideoToS3: ReturnType<typeof vi.fn>;
     notifyVideoUploaded: ReturnType<typeof vi.fn>;
   };
 
-  async function createWith(status: string): Promise<void> {
-    localStorage.setItem(VIDEOS_KEY, JSON.stringify([storedVideo(status)]));
-
+  async function create(): Promise<void> {
     await TestBed.configureTestingModule({
       imports: [MonitorComponent],
       providers: [{ provide: ApiService, useValue: api }]
@@ -58,18 +55,19 @@ describe('MonitorComponent', () => {
     component = fixture.componentInstance;
     fixture.detectChanges();
     await fixture.whenStable();
-    fixture.detectChanges();
   }
 
   beforeEach(() => {
     HTMLDialogElement.prototype.showModal = vi.fn();
-    localStorage.clear();
     api = {
       getCameras: vi.fn(() =>
-        of([{ id: 'CAM-01', name: 'Entrada', active: true }])
+        of([
+          { id: 'CAM-01', name: 'Entrada', active: true },
+          { id: 'CAM-02', name: 'Garaje', active: true }
+        ])
       ),
-      getVideoJob: vi.fn(() => of(job('QUEUED'))),
-      getFaceAppearances: vi.fn(() => of([])),
+      getVideoJobs: vi.fn(() => of([job('QUEUED')])),
+      getVideoJobFaces: vi.fn(() => of([])),
       requestVideoUploadUrl: vi.fn(),
       uploadVideoToS3: vi.fn(),
       notifyVideoUploaded: vi.fn()
@@ -78,78 +76,146 @@ describe('MonitorComponent', () => {
 
   afterEach(() => {
     fixture?.destroy();
-    localStorage.clear();
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
+
+  it('loads the jobs of the selected camera and shows the video count', async () => {
+    await create();
+
+    expect(api.getVideoJobs).toHaveBeenCalledWith('CAM-01');
+    expect(component.videos().length).toBe(1);
+
+    const text = fixture.nativeElement.textContent;
+    expect(text).toContain('Camera_ch6.mp4');
+    expect(text).toContain('En cola');
+    expect(text).toContain('1 video');
+    expect(text).not.toContain('apariciones totales');
   });
 
   it('shows the failure reason of a failed job', async () => {
-    api.getVideoJob.mockReturnValue(of(job('FAILED', 'video no encontrado')));
+    api.getVideoJobs.mockReturnValue(of([job('FAILED', 'video no encontrado')]));
 
-    await createWith('QUEUED');
-
-    const video = component.videos()[0];
-    expect(video.status).toBe('FAILED');
-    expect(video.failureReason).toBe('video no encontrado');
+    await create();
 
     const text = fixture.nativeElement.textContent;
     expect(text).toContain('Fallido');
     expect(text).toContain('video no encontrado');
-
-    const saved = JSON.parse(localStorage.getItem(VIDEOS_KEY) ?? '[]');
-    expect(saved[0].status).toBe('FAILED');
+    expect(api.getVideoJobFaces).not.toHaveBeenCalled();
   });
 
-  it('loads the faces of a completed job', async () => {
-    api.getVideoJob.mockReturnValue(of(job('COMPLETED')));
-    api.getFaceAppearances.mockReturnValue(of([
-      {
-        id: 'a',
-        faceId: 'job-1_4',
-        timestamp: '00:01:23',
-        cameraId: 'CAM-01',
-        frameUrl: 'https://cubo.s3.us-east-2.amazonaws.com/faces/job-1/4.jpg?firma',
-        capturedAt: '2026-10-16T10:05:21'
-      },
-      {
-        id: 'b',
-        faceId: 'otro-job_1',
-        timestamp: '00:00:02',
-        cameraId: 'CAM-01'
-      }
-    ]));
+  it('renders the faces of a completed job as images', async () => {
+    api.getVideoJobs.mockReturnValue(of([job('COMPLETED')]));
+    api.getVideoJobFaces.mockReturnValue(of([FACE]));
 
-    await createWith('PROCESSING');
+    await create();
 
-    const video = component.videos()[0];
-    expect(video.status).toBe('COMPLETED');
-    expect(video.clusters).toEqual([
-      {
-        clusterId: 'job-1_4',
-        appearances: [
-          {
-            faceId: 'job-1_4',
-            timestamp: '00:01:23',
-            cameraId: 'CAM-01',
-            capturedAt: '2026-10-16T10:05:21'
-          }
-        ]
-      }
-    ]);
-    expect(fixture.nativeElement.textContent).toContain('Completado');
+    expect(api.getVideoJobFaces).toHaveBeenCalledWith('job-1');
+    const img: HTMLImageElement | null =
+      fixture.nativeElement.querySelector('.face-preview img');
+    expect(img?.getAttribute('src')).toBe(FACE.frameUrl);
+    expect(fixture.nativeElement.textContent).toContain('Entrada');
+    expect(fixture.nativeElement.textContent).not.toContain('CAM-01');
   });
 
-  it('does not ask the backend about finished jobs', async () => {
-    await createWith('COMPLETED');
+  it('shows the empty text for a completed job without faces', async () => {
+    api.getVideoJobs.mockReturnValue(of([job('COMPLETED')]));
 
-    expect(api.getVideoJob).not.toHaveBeenCalled();
+    await create();
+
+    expect(fixture.nativeElement.textContent)
+      .toContain('Sin rostros detectados en este video');
   });
 
-  it('keeps the last known status when the backend does not answer', async () => {
-    api.getVideoJob.mockReturnValue(throwError(() => new Error('sin backend')));
+  it('shows the backend error when the list cannot be loaded', async () => {
+    api.getVideoJobs.mockReturnValue(
+      throwError(() => new HttpErrorResponse({
+        status: 500,
+        error: { status: 500, message: 'Fallo interno' }
+      }))
+    );
 
-    await createWith('QUEUED');
+    await create();
 
-    expect(component.videos()[0].status).toBe('QUEUED');
-    expect(fixture.nativeElement.textContent).toContain('En cola');
+    expect(fixture.nativeElement.textContent).toContain('Fallo interno');
+  });
+
+  it('loads the faces when a failed job completes on a later refresh', async () => {
+    vi.useFakeTimers();
+    api.getVideoJobs
+      .mockReturnValueOnce(of([job('FAILED', 'tiempo agotado')]))
+      .mockReturnValue(of([job('COMPLETED')]));
+    api.getVideoJobFaces.mockReturnValue(of([FACE]));
+
+    await create();
+    expect(api.getVideoJobFaces).not.toHaveBeenCalled();
+
+    vi.advanceTimersByTime(30000);
+    await fixture.whenStable();
+
+    expect(api.getVideoJobs).toHaveBeenCalledTimes(2);
+    expect(api.getVideoJobFaces).toHaveBeenCalledWith('job-1');
+    expect(fixture.nativeElement.querySelector('.face-preview img')).not.toBeNull();
+  });
+
+  it('refreshes every 5 seconds while a job is active', async () => {
+    vi.useFakeTimers();
+
+    await create();
+    vi.advanceTimersByTime(5000);
+    vi.advanceTimersByTime(5000);
+
+    expect(api.getVideoJobs).toHaveBeenCalledTimes(3);
+  });
+
+  it('retries the faces of a job on the next refresh when they fail to load', async () => {
+    vi.useFakeTimers();
+    api.getVideoJobs.mockReturnValue(of([job('COMPLETED')]));
+    api.getVideoJobFaces
+      .mockReturnValueOnce(throwError(() => new Error('sin backend')))
+      .mockReturnValue(of([FACE]));
+
+    await create();
+    expect(fixture.nativeElement.querySelector('.face-preview img')).toBeNull();
+
+    vi.advanceTimersByTime(30000);
+    await fixture.whenStable();
+
+    expect(api.getVideoJobFaces).toHaveBeenCalledTimes(2);
+    expect(fixture.nativeElement.querySelector('.face-preview img')).not.toBeNull();
+  });
+
+  it('reloads the list when the camera changes', async () => {
+    await create();
+
+    component.selectCamera({ id: 'CAM-02', name: 'Garaje', active: true });
+    await fixture.whenStable();
+
+    expect(api.getVideoJobs).toHaveBeenLastCalledWith('CAM-02');
+    expect(component.cameraVideoCountLabel('CAM-02')).toBe('1 video');
+    expect(component.cameraVideoCountLabel('CAM-01')).toBe('1 video');
+  });
+
+  it('stops refreshing when destroyed', async () => {
+    vi.useFakeTimers();
+
+    await create();
+    component.ngOnDestroy();
+    vi.advanceTimersByTime(60000);
+
+    expect(api.getVideoJobs).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not write to localStorage', async () => {
+    const setItem = vi.spyOn(Storage.prototype, 'setItem');
+    api.getVideoJobs.mockReturnValue(of([job('COMPLETED')]));
+    api.getVideoJobFaces.mockReturnValue(of([FACE]));
+
+    await create();
+    component.selectCluster(component.videos()[0], component.videos()[0].clusters[0]);
+    component.toggleSavedCluster(component.videos()[0], component.videos()[0].clusters[0]);
+
+    expect(setItem).not.toHaveBeenCalled();
   });
 
   function selectFile(file: File): void {
@@ -167,7 +233,7 @@ describe('MonitorComponent', () => {
       }))
     );
 
-    await createWith('COMPLETED');
+    await create();
     component.openVideoDialog();
     selectFile(new File(['x'], 'Camera_ch6.mp4', { type: 'video/mp4' }));
     await fixture.whenStable();
@@ -192,7 +258,7 @@ describe('MonitorComponent', () => {
     api.uploadVideoToS3.mockReturnValue(of({ type: HttpEventType.Response }));
     api.notifyVideoUploaded.mockReturnValue(of(job('QUEUED')));
 
-    await createWith('COMPLETED');
+    await create();
     component.openVideoDialog();
     selectFile(new File(['x'], 'Camera_ch6.mp4', { type: 'video/mp4' }));
     await fixture.whenStable();
@@ -205,6 +271,7 @@ describe('MonitorComponent', () => {
     expect(dialog.textContent).toContain('Video subido a S3 y registrado correctamente.');
     expect(submit?.disabled).toBe(true);
     expect(component.selectedFile()).toBeNull();
+    expect(api.getVideoJobs).toHaveBeenCalledTimes(2);
 
     component.processVideo();
     expect(api.requestVideoUploadUrl).toHaveBeenCalledTimes(1);
@@ -219,7 +286,7 @@ describe('MonitorComponent', () => {
   it('sends the inferred content type when the browser reports none', async () => {
     api.requestVideoUploadUrl.mockReturnValue(throwError(() => new Error('sin backend')));
 
-    await createWith('COMPLETED');
+    await create();
     component.openVideoDialog();
     selectFile(new File(['x'], 'Camera_ch6.mkv'));
     await fixture.whenStable();

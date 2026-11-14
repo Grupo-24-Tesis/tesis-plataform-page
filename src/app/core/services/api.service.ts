@@ -180,5 +180,18 @@ getVideoJob(jobId: string) {
     `${this.base}/video-jobs/${jobId}`
   );
 }
- 
+
+getVideoJobs(cameraId?: string) {
+  return this.http.get<VideoJobResponse[]>(
+    `${this.base}/video-jobs`,
+    { params: cameraId ? { cameraId } : {} }
+  );
+}
+
+getVideoJobFaces(jobId: string) {
+  return this.http.get<FaceAppearance[]>(
+    `${this.base}/video-jobs/${jobId}/faces`
+  );
+}
+
 }
