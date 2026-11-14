@@ -88,7 +88,7 @@ describe('ReportDetail', () => {
 
     expect(text()).toContain('Robo en el parqueadero');
     expect(query('.fact-status').textContent).toContain('Solucionado');
-    expect(query('.fact-priority').textContent).toContain('alta');
+    expect(query('.fact-priority').textContent?.trim()).toBe('Alta');
     expect(query('.fact-incident').textContent).toContain('01/01/2026 10:00');
     expect(query('.fact-created').textContent).toContain('02/01/2026 08:30');
     expect(query('.fact-resolved').textContent).toContain('03/01/2026 09:15');
@@ -109,6 +109,23 @@ describe('ReportDetail', () => {
     await create();
 
     expect(query('.fact-author').textContent).toContain('Sin registro');
+  });
+
+  it('capitalizes every priority', async () => {
+    api.getReport.mockReturnValue(of({ ...REPORT, priority: 'media' }));
+    await create();
+
+    expect(query('.fact-priority').textContent?.trim()).toBe('Media');
+    expect(component.priorityLabel('alta')).toBe('Alta');
+    expect(component.priorityLabel('baja')).toBe('Baja');
+  });
+
+  it('says the guard could not be loaded when the guards request fails', async () => {
+    api.getGuards.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 500 })));
+    await create();
+
+    expect(query('.fact-author').textContent).toContain('No se pudo cargar el vigilante');
+    expect(query('.fact-author').textContent).not.toContain('Sin registro');
   });
 
   it('omits the resolution for a report under investigation', async () => {

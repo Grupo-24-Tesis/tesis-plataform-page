@@ -320,6 +320,18 @@ describe('Marked', () => {
     expect(text()).toContain('Marcado por un vigilante sin registro');
   });
 
+  it('says the guard could not be loaded when the guards request fails', async () => {
+    api.getMarked.mockReturnValue(of([
+      { id: 'm1', faceId: 'job-1_1', reason: 'Merodeo', createdByGuardId: 'g1' }
+    ]));
+    api.getGuards.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 500 })));
+    await create();
+
+    expect(fixture.nativeElement.querySelector('.marked-by').textContent)
+      .toContain('No se pudo cargar el vigilante');
+    expect(text()).not.toContain('sin registro');
+  });
+
   it('shows no author line for old marks without a guard', async () => {
     await create();
 

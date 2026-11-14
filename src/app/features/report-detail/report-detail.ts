@@ -12,6 +12,12 @@ import { FreshnessTimer, IMAGES_MAX_AGE_MS } from '../../shared/utils/freshness-
 
 const BY_IDS_LIMIT = 50;
 
+const PRIORITY_LABELS: Record<string, string> = {
+  alta: 'Alta',
+  media: 'Media',
+  baja: 'Baja'
+};
+
 interface InvolvedDetection {
   faceId: string;
   appearance: FaceAppearance | undefined;
@@ -33,6 +39,7 @@ export class ReportDetail implements OnInit, OnDestroy {
   readonly loading = signal(true);
   readonly loadError = signal('');
   readonly guards = signal<Guard[]>([]);
+  readonly guardsError = signal(false);
   readonly cameras = signal<Camera[]>([]);
   readonly appearances = signal<FaceAppearance[]>([]);
   readonly appearancesLoading = signal(false);
@@ -43,6 +50,10 @@ export class ReportDetail implements OnInit, OnDestroy {
 
     if (!guardId) {
       return 'Sin registro';
+    }
+
+    if (this.guardsError()) {
+      return 'No se pudo cargar el vigilante';
     }
 
     return this.guards().find(guard => guard.id === guardId)?.name ?? 'Sin registro';
@@ -71,7 +82,10 @@ export class ReportDetail implements OnInit, OnDestroy {
 
     this.api.getGuards().subscribe({
       next: guards => this.guards.set(guards),
-      error: () => this.guards.set([])
+      error: () => {
+        this.guards.set([]);
+        this.guardsError.set(true);
+      }
     });
 
     this.api.getCameras().subscribe({
@@ -166,6 +180,10 @@ export class ReportDetail implements OnInit, OnDestroy {
         );
       }
     });
+  }
+
+  priorityLabel(priority: string): string {
+    return PRIORITY_LABELS[priority] ?? priority;
   }
 
   cameraLabel(cameraId: string): string {

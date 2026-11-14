@@ -52,6 +52,7 @@ export class Marked implements OnInit, OnDestroy {
   pendingDeleteId = signal<string | null>(null);
 
   guards = signal<Guard[]>([]);
+  guardsError = signal(false);
 
   private peopleToken = 0;
 
@@ -70,7 +71,10 @@ export class Marked implements OnInit, OnDestroy {
 
     this.api.getGuards().subscribe({
       next: guards => this.guards.set(guards),
-      error: () => this.guards.set([])
+      error: () => {
+        this.guards.set([]);
+        this.guardsError.set(true);
+      }
     });
   }
 
@@ -139,7 +143,13 @@ export class Marked implements OnInit, OnDestroy {
   markedByLabel(guardId: string): string {
     const name = this.guards().find(guard => guard.id === guardId)?.name;
 
-    return name ? `Marcado por ${name}` : 'Marcado por un vigilante sin registro';
+    if (name) {
+      return `Marcado por ${name}`;
+    }
+
+    return this.guardsError()
+      ? 'No se pudo cargar el vigilante'
+      : 'Marcado por un vigilante sin registro';
   }
 
   loadMarked(): void {
