@@ -7,7 +7,7 @@ import {
 } from '@angular/router';
 
 import { routes } from './app.routes';
-import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClient, withXhr } from '@angular/common/http';
 
 const navigationOrder: Record<string, number> = {
   monitor: 1,
@@ -63,7 +63,7 @@ function setTransitionDirection(info: ViewTransitionInfo): void {
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
-    provideHttpClient(),
+    provideHttpClient(withXhr()),
     provideRouter(
       routes,
       withViewTransitions({

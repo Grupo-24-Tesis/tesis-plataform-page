@@ -12,6 +12,9 @@ import { HttpEventType } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { Subscription, interval } from 'rxjs';
 
+import { apiErrorMessage } from '../../core/services/api-error';
+import { videoContentType } from '../../core/models/video-content-type';
+
 import {
   ApiService,
   Camera
@@ -68,6 +71,9 @@ export class MonitorComponent implements OnInit, OnDestroy {
   @ViewChild('videoDialog')
   videoDialog?: ElementRef<HTMLDialogElement>;
 
+  @ViewChild('videoFileInput')
+  videoFileInput?: ElementRef<HTMLInputElement>;
+
   cameras = signal<Camera[]>([]);
 
   sortedCameras = computed(() =>
@@ -80,20 +86,20 @@ export class MonitorComponent implements OnInit, OnDestroy {
 
   selectedCamera = signal<Camera | null>(null);
 
-  loading = true;
-  errorMsg = '';
-  cameraErrorMsg = '';
+  loading = signal(true);
+  errorMsg = signal('');
+  cameraErrorMsg = signal('');
   newCameraName = '';
 
   videos = signal<MonitorVideo[]>([]);
   selectedCluster = signal<SelectedCluster | null>(null);
   savedClusterIds = signal<string[]>([]);
 
-  selectedFile: File | null = null;
-  processingVideo = false;
-  uploadProgress = 0;
-  videoErrorMsg = '';
-  videoSuccessMsg = '';
+  selectedFile = signal<File | null>(null);
+  processingVideo = signal(false);
+  uploadProgress = signal(0);
+  videoErrorMsg = signal('');
+  videoSuccessMsg = signal('');
 
   private readonly videosStorageKey =
     'facecluster-monitor-videos-v1';
@@ -122,15 +128,15 @@ export class MonitorComponent implements OnInit, OnDestroy {
 
         this.cameras.set(data);
         this.selectedCamera.set(data[0] ?? null);
-        this.loading = false;
+        this.loading.set(false);
       },
       error: (err) => {
         console.error('Error loading cameras', err);
 
         this.cameras.set([]);
         this.selectedCamera.set(null);
-        this.errorMsg = 'No se pudieron cargar las cámaras.';
-        this.loading = false;
+        this.errorMsg.set('No se pudieron cargar las cámaras.');
+        this.loading.set(false);
       }
     });
   }
@@ -234,14 +240,14 @@ export class MonitorComponent implements OnInit, OnDestroy {
 
   openCameraDialog(): void {
     this.newCameraName = '';
-    this.cameraErrorMsg = '';
+    this.cameraErrorMsg.set('');
     this.cameraDialog?.nativeElement.showModal();
   }
 
   closeCameraDialog(): void {
     this.cameraDialog?.nativeElement.close();
     this.newCameraName = '';
-    this.cameraErrorMsg = '';
+    this.cameraErrorMsg.set('');
   }
 
   addCamera(): void {
@@ -250,8 +256,9 @@ export class MonitorComponent implements OnInit, OnDestroy {
       .replace(/\s+/g, ' ');
 
     if (name.length < 3) {
-      this.cameraErrorMsg =
-        'Escribe un nombre de al menos tres caracteres.';
+      this.cameraErrorMsg.set(
+        'Escribe un nombre de al menos tres caracteres.'
+      );
       return;
     }
 
@@ -262,8 +269,9 @@ export class MonitorComponent implements OnInit, OnDestroy {
     );
 
     if (exists) {
-      this.cameraErrorMsg =
-        'Ya existe una cámara con ese nombre.';
+      this.cameraErrorMsg.set(
+        'Ya existe una cámara con ese nombre.'
+      );
       return;
     }
 
@@ -283,7 +291,9 @@ export class MonitorComponent implements OnInit, OnDestroy {
       },
       error: (err) => {
         console.error('Error creating camera', err);
-        this.cameraErrorMsg = 'No se pudo registrar la cámara.';
+        this.cameraErrorMsg.set(
+          apiErrorMessage(err, 'No se pudo registrar la cámara.')
+        );
       }
     });
   }
@@ -373,82 +383,91 @@ export class MonitorComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.selectedFile = null;
-    this.processingVideo = false;
-    this.uploadProgress = 0;
-    this.videoErrorMsg = '';
-    this.videoSuccessMsg = '';
+    this.selectedFile.set(null);
+    this.processingVideo.set(false);
+    this.uploadProgress.set(0);
+    this.videoErrorMsg.set('');
+    this.videoSuccessMsg.set('');
 
     this.videoDialog?.nativeElement.showModal();
   }
 
   closeVideoDialog(): void {
-    if (this.processingVideo) {
+    if (this.processingVideo()) {
       return;
     }
 
     this.videoDialog?.nativeElement.close();
-    this.selectedFile = null;
-    this.uploadProgress = 0;
-    this.videoErrorMsg = '';
-    this.videoSuccessMsg = '';
+    this.selectedFile.set(null);
+    this.uploadProgress.set(0);
+    this.videoErrorMsg.set('');
+    this.videoSuccessMsg.set('');
   }
 
   onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
 
-    this.videoErrorMsg = '';
-    this.videoSuccessMsg = '';
-    this.uploadProgress = 0;
+    this.videoErrorMsg.set('');
+    this.videoSuccessMsg.set('');
+    this.uploadProgress.set(0);
 
     if (!input.files || input.files.length === 0) {
-      this.selectedFile = null;
+      this.selectedFile.set(null);
       return;
     }
 
     const file = input.files[0];
 
-    if (!file.type.startsWith('video/')) {
-      this.selectedFile = null;
+    if (!videoContentType(file).startsWith('video/')) {
+      this.selectedFile.set(null);
       input.value = '';
-      this.videoErrorMsg =
-        'Selecciona un archivo de video válido.';
+      this.videoErrorMsg.set(
+        'Selecciona un archivo de video válido.'
+      );
       return;
     }
 
-    this.selectedFile = file;
+    this.selectedFile.set(file);
   }
 
   processVideo(): void {
     const camera = this.selectedCamera();
 
     if (!camera) {
-      this.videoErrorMsg = 'Selecciona una cámara.';
+      this.videoErrorMsg.set('Selecciona una cámara.');
       return;
     }
 
-    if (!this.selectedFile) {
-      this.videoErrorMsg =
-        'Selecciona un video primero.';
+    const file = this.selectedFile();
+
+    if (this.processingVideo()) {
       return;
     }
 
-    const file = this.selectedFile;
+    if (!file) {
+      this.videoErrorMsg.set(
+        'Selecciona un video primero.'
+      );
+      return;
+    }
 
-    this.processingVideo = true;
-    this.uploadProgress = 0;
-    this.videoErrorMsg = '';
-    this.videoSuccessMsg = '';
+    const contentType = videoContentType(file);
+
+    this.processingVideo.set(true);
+    this.uploadProgress.set(0);
+    this.videoErrorMsg.set('');
+    this.videoSuccessMsg.set('');
 
     this.api.requestVideoUploadUrl({
       fileName: file.name,
-      contentType: file.type
+      contentType
     }).subscribe({
       next: uploadData => {
         this.uploadFileToS3(
           uploadData,
           camera,
-          file
+          file,
+          contentType
         );
       },
       error: error => {
@@ -457,9 +476,13 @@ export class MonitorComponent implements OnInit, OnDestroy {
           error
         );
 
-        this.videoErrorMsg =
-          'No se pudo preparar la carga del video.';
-        this.processingVideo = false;
+        this.videoErrorMsg.set(
+          apiErrorMessage(
+            error,
+            'No se pudo preparar la carga del video.'
+          )
+        );
+        this.processingVideo.set(false);
       }
     });
   }
@@ -467,24 +490,26 @@ export class MonitorComponent implements OnInit, OnDestroy {
   private uploadFileToS3(
     uploadData: PresignedUploadResponse,
     camera: Camera,
-    file: File
+    file: File,
+    contentType: string
   ): void {
     this.api.uploadVideoToS3(
       uploadData.uploadUrl,
-      file
+      file,
+      contentType
     ).subscribe({
       next: event => {
         if (
           event.type === HttpEventType.UploadProgress &&
           event.total
         ) {
-          this.uploadProgress = Math.round(
-            (event.loaded / event.total) * 100
+          this.uploadProgress.set(
+            Math.round((event.loaded / event.total) * 100)
           );
         }
 
         if (event.type === HttpEventType.Response) {
-          this.uploadProgress = 100;
+          this.uploadProgress.set(100);
 
           this.notifyBackend(
             uploadData,
@@ -498,10 +523,11 @@ export class MonitorComponent implements OnInit, OnDestroy {
           error
         );
 
-        this.videoErrorMsg =
+        this.videoErrorMsg.set(
           'No se pudo subir el video a AWS S3. ' +
-          'Verifica el CORS del bucket.';
-        this.processingVideo = false;
+          'Verifica el CORS del bucket.'
+        );
+        this.processingVideo.set(false);
       }
     });
   }
@@ -519,10 +545,17 @@ export class MonitorComponent implements OnInit, OnDestroy {
       next: job => {
         this.addUploadedVideo(job, camera);
 
-        this.videoSuccessMsg =
-          'Video subido a S3 y registrado correctamente.';
+        this.videoSuccessMsg.set(
+          'Video subido a S3 y registrado correctamente.'
+        );
 
-        this.processingVideo = false;
+        this.selectedFile.set(null);
+
+        if (this.videoFileInput) {
+          this.videoFileInput.nativeElement.value = '';
+        }
+
+        this.processingVideo.set(false);
       },
       error: error => {
         console.error(
@@ -530,10 +563,14 @@ export class MonitorComponent implements OnInit, OnDestroy {
           error
         );
 
-        this.videoErrorMsg =
-          'El video se subió a S3, pero no se pudo ' +
-          'registrar en el backend.';
-        this.processingVideo = false;
+        this.videoErrorMsg.set(
+          apiErrorMessage(
+            error,
+            'El video se subió a S3, pero no se pudo ' +
+              'registrar en el backend.'
+          )
+        );
+        this.processingVideo.set(false);
       }
     });
   }

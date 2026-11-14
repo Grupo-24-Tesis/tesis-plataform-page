@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { HttpErrorResponse, HttpEventType } from '@angular/common/http';
 import { of, throwError } from 'rxjs';
 
 import { ApiService } from '../../core/services/api.service';
@@ -40,6 +41,9 @@ describe('MonitorComponent', () => {
     getCameras: ReturnType<typeof vi.fn>;
     getVideoJob: ReturnType<typeof vi.fn>;
     getFaceAppearances: ReturnType<typeof vi.fn>;
+    requestVideoUploadUrl: ReturnType<typeof vi.fn>;
+    uploadVideoToS3: ReturnType<typeof vi.fn>;
+    notifyVideoUploaded: ReturnType<typeof vi.fn>;
   };
 
   async function createWith(status: string): Promise<void> {
@@ -58,13 +62,17 @@ describe('MonitorComponent', () => {
   }
 
   beforeEach(() => {
+    HTMLDialogElement.prototype.showModal = vi.fn();
     localStorage.clear();
     api = {
       getCameras: vi.fn(() =>
         of([{ id: 'CAM-01', name: 'Entrada', active: true }])
       ),
       getVideoJob: vi.fn(() => of(job('QUEUED'))),
-      getFaceAppearances: vi.fn(() => of([]))
+      getFaceAppearances: vi.fn(() => of([])),
+      requestVideoUploadUrl: vi.fn(),
+      uploadVideoToS3: vi.fn(),
+      notifyVideoUploaded: vi.fn()
     };
   });
 
@@ -142,5 +150,85 @@ describe('MonitorComponent', () => {
 
     expect(component.videos()[0].status).toBe('QUEUED');
     expect(fixture.nativeElement.textContent).toContain('En cola');
+  });
+
+  function selectFile(file: File): void {
+    const input: HTMLInputElement =
+      fixture.nativeElement.querySelector('#video-file');
+    Object.defineProperty(input, 'files', { value: [file], configurable: true });
+    input.dispatchEvent(new Event('change'));
+  }
+
+  it('shows the backend error and re-enables the controls when the upload url fails', async () => {
+    api.requestVideoUploadUrl.mockReturnValue(
+      throwError(() => new HttpErrorResponse({
+        status: 400,
+        error: { status: 400, message: 'Tipo de archivo no permitido' }
+      }))
+    );
+
+    await createWith('COMPLETED');
+    component.openVideoDialog();
+    selectFile(new File(['x'], 'Camera_ch6.mp4', { type: 'video/mp4' }));
+    await fixture.whenStable();
+
+    component.processVideo();
+    await fixture.whenStable();
+
+    const dialog: HTMLElement = fixture.nativeElement.querySelector('.video-dialog');
+    expect(dialog.textContent).toContain('Tipo de archivo no permitido');
+    expect(dialog.textContent).not.toContain('SUBIENDO...');
+    expect(dialog.querySelector<HTMLInputElement>('#video-file')?.disabled).toBe(false);
+    expect(dialog.querySelector<HTMLButtonElement>('button[type="submit"]')?.disabled).toBe(false);
+  });
+
+  it('disables submit after a successful upload until a new file is selected', async () => {
+    api.requestVideoUploadUrl.mockReturnValue(of({
+      uploadUrl: 'https://cubo.s3.amazonaws.com/videos/abc.mp4',
+      bucket: 'cubo',
+      objectKey: 'videos/abc.mp4',
+      originalFileName: 'Camera_ch6.mp4'
+    }));
+    api.uploadVideoToS3.mockReturnValue(of({ type: HttpEventType.Response }));
+    api.notifyVideoUploaded.mockReturnValue(of(job('QUEUED')));
+
+    await createWith('COMPLETED');
+    component.openVideoDialog();
+    selectFile(new File(['x'], 'Camera_ch6.mp4', { type: 'video/mp4' }));
+    await fixture.whenStable();
+
+    component.processVideo();
+    await fixture.whenStable();
+
+    const dialog: HTMLElement = fixture.nativeElement.querySelector('.video-dialog');
+    const submit = dialog.querySelector<HTMLButtonElement>('button[type="submit"]');
+    expect(dialog.textContent).toContain('Video subido a S3 y registrado correctamente.');
+    expect(submit?.disabled).toBe(true);
+    expect(component.selectedFile()).toBeNull();
+
+    component.processVideo();
+    expect(api.requestVideoUploadUrl).toHaveBeenCalledTimes(1);
+
+    selectFile(new File(['y'], 'Otro.mkv'));
+    await fixture.whenStable();
+
+    expect(submit?.disabled).toBe(false);
+    expect(api.requestVideoUploadUrl.mock.calls[0][0].contentType).toBe('video/mp4');
+  });
+
+  it('sends the inferred content type when the browser reports none', async () => {
+    api.requestVideoUploadUrl.mockReturnValue(throwError(() => new Error('sin backend')));
+
+    await createWith('COMPLETED');
+    component.openVideoDialog();
+    selectFile(new File(['x'], 'Camera_ch6.mkv'));
+    await fixture.whenStable();
+
+    component.processVideo();
+
+    expect(api.requestVideoUploadUrl).toHaveBeenCalledWith({
+      fileName: 'Camera_ch6.mkv',
+      contentType: 'video/x-matroska'
+    });
   });
 });

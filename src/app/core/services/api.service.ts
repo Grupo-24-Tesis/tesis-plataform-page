@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 
 import { ReportItem } from '../models/report.model';
+import { videoContentType } from '../models/video-content-type';
 import {FaceAppearance} from '../models/face.model';
 import { UniqueFace } from '../models/UniqueFace';
 import { PresignedUploadRequest, PresignedUploadResponse, VideoJobResponse, VideoUploadedRequest } from '../models/uploadVideo';
@@ -148,14 +149,15 @@ requestVideoUploadUrl(
 
 uploadVideoToS3(
   uploadUrl: string,
-  file: File
+  file: File,
+  contentType: string = videoContentType(file)
 ) {
   return this.http.put(
     uploadUrl,
     file,
     {
       headers: {
-        'Content-Type': file.type
+        'Content-Type': contentType
       },
       observe: 'events',
       reportProgress: true,

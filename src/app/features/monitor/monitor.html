@@ -17,7 +17,7 @@
       </button>
     </div>
 
-    <p class="loading" *ngIf="loading">
+    <p class="loading" *ngIf="loading()">
       Cargando cámaras...
     </p>
 
@@ -41,13 +41,13 @@
         </span>
       </button>
 
-      <p class="empty" *ngIf="!loading && cameras().length === 0">
+      <p class="empty" *ngIf="!loading() && cameras().length === 0">
         No hay cámaras registradas.
       </p>
     </div>
 
-    <p class="demo-message" *ngIf="errorMsg">
-      {{ errorMsg }}
+    <p class="demo-message" *ngIf="errorMsg()">
+      {{ errorMsg() }}
     </p>
   </aside>
 
@@ -260,8 +260,8 @@
       [(ngModel)]="newCameraName"
     />
 
-    <p class="form-error" *ngIf="cameraErrorMsg">
-      {{ cameraErrorMsg }}
+    <p class="form-error" *ngIf="cameraErrorMsg()">
+      {{ cameraErrorMsg() }}
     </p>
 
        <div class="dialog-actions">
@@ -295,7 +295,7 @@
     <button
       type="button"
       aria-label="Cerrar"
-      [disabled]="processingVideo"
+      [disabled]="processingVideo()"
       (click)="closeVideoDialog()"
     >
       ×
@@ -325,63 +325,64 @@
     </label>
 
     <input
+      #videoFileInput
       id="video-file"
       name="videoFile"
       type="file"
       accept="video/*"
-      [disabled]="processingVideo"
+      [disabled]="processingVideo()"
       (change)="onFileSelected($event)"
     />
 
     <p
       class="selected-file"
-      *ngIf="selectedFile"
+      *ngIf="selectedFile() as file"
     >
       Archivo seleccionado:
-      {{ selectedFile.name }}
+      {{ file.name }}
     </p>
 
     <p
       class="selected-file"
-      *ngIf="selectedFile"
+      *ngIf="selectedFile() as file"
     >
       Tamaño:
-      {{ selectedFile.size / 1024 / 1024 | number:'1.2-2' }} MB
+      {{ file.size / 1024 / 1024 | number:'1.2-2' }} MB
     </p>
 
     <div
-      *ngIf="processingVideo"
+      *ngIf="processingVideo()"
       class="upload-progress"
     >
       <p>
-        {{ uploadProgress }}% cargado
+        {{ uploadProgress() }}% cargado
       </p>
 
       <progress
-        [value]="uploadProgress"
+        [value]="uploadProgress()"
         max="100"
       ></progress>
     </div>
 
     <p
       class="form-error"
-      *ngIf="videoErrorMsg"
+      *ngIf="videoErrorMsg()"
     >
-      {{ videoErrorMsg }}
+      {{ videoErrorMsg() }}
     </p>
 
     <p
       class="form-success"
-      *ngIf="videoSuccessMsg"
+      *ngIf="videoSuccessMsg()"
     >
-      {{ videoSuccessMsg }}
+      {{ videoSuccessMsg() }}
     </p>
 
     <div class="dialog-actions">
       <button
         type="button"
         class="secondary-button"
-        [disabled]="processingVideo"
+        [disabled]="processingVideo()"
         (click)="closeVideoDialog()"
       >
         CANCELAR
@@ -390,10 +391,10 @@
       <button
         type="submit"
         class="primary-button"
-        [disabled]="processingVideo || !selectedFile"
+        [disabled]="processingVideo() || !selectedFile()"
       >
         {{
-          processingVideo
+          processingVideo()
             ? 'SUBIENDO...'
             : 'SUBIR VIDEO'
         }}
