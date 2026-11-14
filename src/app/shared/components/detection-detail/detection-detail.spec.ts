@@ -1,10 +1,11 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
-import { of, throwError } from 'rxjs';
+import { Subject, of, throwError } from 'rxjs';
 
 import { ApiService } from '../../../core/services/api.service';
 import { FaceAppearance } from '../../../core/models/face.model';
+import { MarksService } from '../../services/marks.service';
 import { DetectionDetailComponent } from './detection-detail';
 
 const APPEARANCE: FaceAppearance = {
@@ -37,6 +38,7 @@ describe('DetectionDetailComponent', () => {
       ]
     }).compileComponents();
 
+    TestBed.inject(MarksService).load();
     fixture = TestBed.createComponent(DetectionDetailComponent);
     fixture.componentRef.setInput('appearance', appearance);
     fixture.componentRef.setInput('cameras', CAMERAS);
@@ -160,7 +162,7 @@ describe('DetectionDetailComponent', () => {
   });
 
   it('ignores a second click while a mark request is pending', async () => {
-    const pending = { subscribe: vi.fn() };
+    const pending = new Subject<unknown>();
     api.createMarked.mockReturnValue(pending);
     await create();
 
@@ -179,5 +181,39 @@ describe('DetectionDetailComponent', () => {
     (query('.report-button') as HTMLButtonElement).click();
 
     expect(navigate).toHaveBeenCalledWith(['/reports'], { queryParams: { faceId: 'job-1_4' } });
+  });
+
+  it('ignores a stale video response after switching to another detection', async () => {
+    const slow = new Subject<unknown>();
+    api.getVideoJob.mockImplementation((jobId: string) =>
+      jobId === 'job-1' ? slow : of({ jobId, originalFileName: 'Otro.mp4' })
+    );
+    await create();
+
+    fixture.componentRef.setInput('appearance', { ...APPEARANCE, faceId: 'job-2_1', jobId: 'job-2' });
+    fixture.detectChanges();
+    await fixture.whenStable();
+    slow.next({ jobId: 'job-1', originalFileName: 'Camera_ch6.mp4' });
+    fixture.detectChanges();
+
+    expect(query('.fact-video').textContent).toContain('Otro.mp4');
+  });
+
+  it('does not refetch a video name it already has', async () => {
+    await create();
+
+    fixture.componentRef.setInput('appearance', { ...APPEARANCE, faceId: 'job-2_1', jobId: 'job-2' });
+    fixture.detectChanges();
+    fixture.componentRef.setInput('appearance', APPEARANCE);
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(api.getVideoJob).toHaveBeenCalledTimes(2);
+  });
+
+  it('does not load the marks by itself', async () => {
+    await create();
+
+    expect(api.getMarked).toHaveBeenCalledTimes(1);
   });
 });

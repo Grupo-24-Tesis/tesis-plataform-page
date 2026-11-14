@@ -4,7 +4,6 @@ import {
   effect,
   inject,
   input,
-  output,
   signal,
   untracked
 } from '@angular/core';
@@ -12,10 +11,12 @@ import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 
-import { ApiService, Camera } from '../../../core/services/api.service';
+import { Camera } from '../../../core/services/api.service';
 import { FaceAppearance } from '../../../core/models/face.model';
 import { ImageFallbackDirective } from '../../directives/image-fallback.directive';
 import { MarkOutcome, MarksService } from '../../services/marks.service';
+import { VideoNamesService } from '../../services/video-names.service';
+import { Subscription } from 'rxjs';
 
 export function jobIdOf(appearance: FaceAppearance): string {
   if (appearance.jobId) {
@@ -34,13 +35,12 @@ export function jobIdOf(appearance: FaceAppearance): string {
   styleUrl: './detection-detail.css'
 })
 export class DetectionDetailComponent {
-  private readonly api = inject(ApiService);
+  private readonly videoNames = inject(VideoNamesService);
   private readonly router = inject(Router);
   private readonly marksService = inject(MarksService);
 
   readonly appearance = input.required<FaceAppearance>();
   readonly cameras = input<Camera[]>([]);
-  readonly markChanged = output<{ faceId: string; marked: boolean }>();
 
   readonly marks = this.marksService.marks;
   readonly markBusy = this.marksService.busy;
@@ -64,10 +64,9 @@ export class DetectionDetailComponent {
   private readonly faceId = computed(() => this.appearance().faceId);
 
   private videoToken = 0;
+  private videoRequest: Subscription | undefined;
 
   constructor() {
-    this.marksService.load();
-
     effect(() => {
       this.faceId();
       untracked(() => {
@@ -103,8 +102,6 @@ export class DetectionDetailComponent {
   }
 
   private finishMark(faceId: string, outcome: MarkOutcome): void {
-    this.markChanged.emit({ faceId, marked: outcome.marked });
-
     if (faceId !== this.appearance().faceId) {
       return;
     }
@@ -119,6 +116,7 @@ export class DetectionDetailComponent {
 
   private loadVideo(jobId: string): void {
     const token = ++this.videoToken;
+    this.videoRequest?.unsubscribe();
     this.videoName.set('');
 
     if (!jobId) {
@@ -128,13 +126,13 @@ export class DetectionDetailComponent {
 
     this.videoState.set('loading');
 
-    this.api.getVideoJob(jobId).subscribe({
-      next: job => {
+    this.videoRequest = this.videoNames.nameOf(jobId).subscribe({
+      next: name => {
         if (token !== this.videoToken) {
           return;
         }
 
-        this.videoName.set(job.originalFileName);
+        this.videoName.set(name);
         this.videoState.set('ready');
       },
       error: () => {

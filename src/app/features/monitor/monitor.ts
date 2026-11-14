@@ -24,6 +24,7 @@ import { MetricsStripComponent } from './metrics-strip';
 import { VideoRetryComponent } from './video-retry/video-retry';
 import { FaceAppearance } from '../../core/models/face.model';
 import { ImageFallbackDirective } from '../../shared/directives/image-fallback.directive';
+import { MarksService } from '../../shared/services/marks.service';
 import { DetectionDetailComponent } from '../../shared/components/detection-detail/detection-detail';
 import {
   VideoStatusTone,
@@ -139,10 +140,13 @@ export class MonitorComponent implements OnInit, OnDestroy {
   private readonly loadingFaceJobs = new Set<string>();
 
   constructor(
-    private api: ApiService
+    private api: ApiService,
+    private marks: MarksService
   ) {}
 
   ngOnInit(): void {
+
+    this.marks.load();
 
     this.api.getCameras().subscribe({
       next: (data) => {

@@ -393,10 +393,15 @@ describe('Reports', () => {
 
   it('opens the create modal with the detection from the query param and clears the param', async () => {
     queryParams = { faceId: 'job-1_4' };
+    api.getFaceAppearances.mockReturnValue(of([
+      { faceId: 'job-1_4', timestamp: '00:00:01', cameraId: 'CAM-01', frameUrl: 'https://x/4.jpg' }
+    ]));
     await create();
 
     expect(component.showModal()).toBe(true);
     expect(component.newReport.faceIds).toEqual(['job-1_4']);
+    const selected = fixture.nativeElement.querySelector('.person-option.selected');
+    expect(selected?.getAttribute('aria-label')).toBe('Detección job-1_4');
     expect(navigate).toHaveBeenCalledWith(
       [],
       expect.objectContaining({

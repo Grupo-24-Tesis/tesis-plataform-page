@@ -4,6 +4,7 @@ import { Subject, of, throwError } from 'rxjs';
 
 import { ApiService } from '../../core/services/api.service';
 import { UniqueFace } from '../../core/models/UniqueFace';
+import { MarksService } from '../../shared/services/marks.service';
 import { UniqueFaces } from './unique-faces';
 
 const FACE = {
@@ -23,6 +24,8 @@ describe('UniqueFaces', () => {
     getCameras: ReturnType<typeof vi.fn>;
     getVideoJob: ReturnType<typeof vi.fn>;
     getMarked: ReturnType<typeof vi.fn>;
+    createMarked: ReturnType<typeof vi.fn>;
+    deleteMarked: ReturnType<typeof vi.fn>;
   };
 
   async function create(): Promise<void> {
@@ -45,7 +48,9 @@ describe('UniqueFaces', () => {
       getUniqueFaces: vi.fn(() => of([FACE])),
       getCameras: vi.fn(() => of([{ id: 'CAM-01', name: 'Entrada', active: true }])),
       getVideoJob: vi.fn(() => of({ jobId: 'job-1', originalFileName: 'Camera_ch6.mp4' })),
-      getMarked: vi.fn(() => of([]))
+      getMarked: vi.fn(() => of([])),
+      createMarked: vi.fn(),
+      deleteMarked: vi.fn()
     };
   });
 
@@ -160,6 +165,70 @@ describe('UniqueFaces', () => {
     expect(api.getVideoJob).toHaveBeenCalledWith('job-1');
   });
 
+  async function openDetail(): Promise<void> {
+    await create();
+    component.selectFace(FACE as UniqueFace);
+    fixture.detectChanges();
+    await fixture.whenStable();
+  }
+
+  function badge(): string {
+    return fixture.nativeElement.querySelector('.status-badge').textContent.trim();
+  }
+
+  function markButton(): HTMLButtonElement {
+    return fixture.nativeElement.querySelector('.mark-button');
+  }
+
+  it('shows MARCADO after a 409 because the mark exists', async () => {
+    api.getMarked
+      .mockReturnValueOnce(of([]))
+      .mockReturnValue(of([{ id: 'm9', faceId: 'job-1_1', reason: 'otro' }]));
+    api.createMarked.mockReturnValue(
+      throwError(() => new HttpErrorResponse({
+        status: 409,
+        error: { status: 409, message: 'La detección ya está marcada' }
+      }))
+    );
+    await openDetail();
+
+    markButton().click();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(badge()).toBe('MARCADO');
+  });
+
+  it('updates the badge when the panel closes while the mark is pending', async () => {
+    const pending = new Subject<unknown>();
+    api.createMarked.mockReturnValue(pending);
+    await openDetail();
+
+    markButton().click();
+    component.selected.set(null);
+    fixture.detectChanges();
+    pending.next({ id: 'm1', faceId: 'job-1_1', reason: 'Sin motivo' });
+    pending.complete();
+    fixture.detectChanges();
+
+    expect(badge()).toBe('MARCADO');
+  });
+
+  it('reflects a mark removed elsewhere when the detail is opened', async () => {
+    api.getMarked.mockReturnValue(of([{ id: 'm1', faceId: 'job-1_1', reason: 'x' }]));
+    api.deleteMarked.mockReturnValue(of(undefined));
+    await create();
+    expect(badge()).toBe('MARCADO');
+
+    TestBed.inject(MarksService).remove('m1').subscribe();
+    component.selectFace(FACE as UniqueFace);
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(badge()).toBe('SIN MARCAR');
+    expect(markButton().textContent).toContain('Marcar');
+  });
+
   describe('url refresh', () => {
     beforeEach(() => {
       vi.useFakeTimers();
@@ -198,6 +267,19 @@ describe('UniqueFaces', () => {
       slow.next([FACE]);
 
       expect(component.faces().length).toBe(0);
+    });
+
+    it('keeps the cards when a silent refresh fails', async () => {
+      await create();
+      api.getUniqueFaces.mockReturnValue(
+        throwError(() => new HttpErrorResponse({ status: 500 }))
+      );
+
+      vi.advanceTimersByTime(10 * 60 * 1000 + 1000);
+
+      expect(api.getUniqueFaces).toHaveBeenCalledTimes(2);
+      expect(component.faces().length).toBe(1);
+      expect(component.loadError()).toBe('');
     });
 
     it('stops checking after destroy', async () => {

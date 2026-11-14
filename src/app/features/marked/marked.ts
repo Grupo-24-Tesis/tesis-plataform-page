@@ -1,8 +1,9 @@
-import { Component, HostListener, OnInit, computed, signal } from '@angular/core';
+import { Component, HostListener, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ImageFallbackDirective } from '../../shared/directives/image-fallback.directive';
 import { ApiService, MarkedPerson } from '../../core/services/api.service';
+import { MarksService } from '../../shared/services/marks.service';
 import { apiErrorMessage } from '../../core/services/api-error';
 import { FaceAppearance } from '../../core/models/face.model';
 
@@ -19,15 +20,15 @@ interface Person {
   styleUrl: './marked.css',
 })
 export class Marked implements OnInit {
-  marked = signal<MarkedPerson[]>([]);
+  private readonly api = inject(ApiService);
+
+  private readonly marks = inject(MarksService);
+
+  marked = this.marks.marks;
 
   people = signal<Person[]>([]);
 
   peopleError = signal('');
-
-  markedFaceIds = computed(
-    () => new Set(this.marked().map(item => item.faceId))
-  );
 
   showModal = signal(false);
 
@@ -43,13 +44,13 @@ export class Marked implements OnInit {
 
   busy = signal(false);
 
-  loading = signal(false);
+  loading = this.marks.loading;
 
-  loadError = signal('');
+  loadError = this.marks.loadError;
 
   pendingDeleteId = signal<string | null>(null);
 
-  constructor(private api: ApiService) {}
+
 
   ngOnInit(): void {
     this.loadMarked();
@@ -80,21 +81,7 @@ export class Marked implements OnInit {
   }
 
   loadMarked(): void {
-    this.loading.set(true);
-    this.loadError.set('');
-
-    this.api.getMarked().subscribe({
-      next: data => {
-        this.marked.set(data);
-        this.loading.set(false);
-      },
-      error: error => {
-        this.loadError.set(
-          apiErrorMessage(error, 'No se pudieron cargar las marcas.')
-        );
-        this.loading.set(false);
-      }
-    });
+    this.marks.load();
   }
 
   private showMessage(text: string, isError: boolean): void {
@@ -103,7 +90,7 @@ export class Marked implements OnInit {
   }
 
   isMarked(faceId: string): boolean {
-    return this.markedFaceIds().has(faceId);
+    return this.marks.isMarked(faceId);
   }
 
   openModal(): void {
@@ -165,12 +152,8 @@ export class Marked implements OnInit {
     this.busy.set(true);
     this.modalMessage.set('');
 
-    this.api.createMarked({
-      faceId: person.faceId,
-      reason: this.reason().trim()
-    }).subscribe({
-      next: created => {
-        this.marked.update(current => [...current, created]);
+    this.marks.create(person.faceId, this.reason().trim()).subscribe({
+      next: () => {
         this.busy.set(false);
         this.closeModal();
         this.showMessage('Detección marcada.', false);
@@ -208,9 +191,8 @@ export class Marked implements OnInit {
     const id = item.id;
     this.busy.set(true);
 
-    this.api.deleteMarked(id).subscribe({
+    this.marks.remove(id).subscribe({
       next: () => {
-        this.marked.update(list => list.filter(current => current.id !== id));
         this.busy.set(false);
         this.pendingDeleteId.set(null);
         this.showMessage('Marca eliminada.', false);

@@ -6,6 +6,7 @@ import { ImageFallbackDirective } from '../../shared/directives/image-fallback.d
 import { ApiService, Camera } from '../../core/services/api.service';
 import { apiErrorMessage } from '../../core/services/api-error';
 import { UniqueFace } from '../../core/models/UniqueFace';
+import { MarksService } from '../../shared/services/marks.service';
 import { FaceAppearance } from '../../core/models/face.model';
 import { DetectionDetailComponent } from '../../shared/components/detection-detail/detection-detail';
 
@@ -65,11 +66,12 @@ export class UniqueFaces implements OnInit, OnDestroy {
   private freshnessTimer: ReturnType<typeof setTimeout> | undefined;
   private activeQuery: FaceQuery = {};
 
-  constructor(private api: ApiService) {}
+  constructor(private api: ApiService, private marks: MarksService) {}
 
 
   ngOnInit(): void {
 
+    this.marks.load();
     this.loadFaces();
     this.scheduleFreshnessCheck();
     this.api.getCameras().subscribe({
@@ -97,14 +99,10 @@ export class UniqueFaces implements OnInit, OnDestroy {
 
 
 
-  onMarkChanged(change: { faceId: string; marked: boolean }): void {
-    this.faces.update(faces =>
-      faces.map(face =>
-        face.faceId === change.faceId
-          ? { ...face, suspect: change.marked }
-          : face
-      )
-    );
+  isMarked(face: UniqueFace): boolean {
+    return this.marks.loaded()
+      ? this.marks.isMarked(face.faceId)
+      : face.suspect;
   }
 
 

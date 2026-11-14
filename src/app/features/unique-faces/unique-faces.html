@@ -108,9 +108,9 @@
 
           <span
             class="status-badge"
-            [class.is-suspect]="face.suspect"
+            [class.is-suspect]="isMarked(face)"
           >
-            {{ face.suspect ? 'MARCADO' : 'SIN MARCAR' }}
+            {{ isMarked(face) ? 'MARCADO' : 'SIN MARCAR' }}
           </span>
         </div>
 
@@ -180,7 +180,6 @@
     <app-detection-detail
       [appearance]="appearance"
       [cameras]="cameras()"
-      (markChanged)="onMarkChanged($event)"
     />
   </aside>
 </section>
