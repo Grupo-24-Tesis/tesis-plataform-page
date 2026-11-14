@@ -1,0 +1,29 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+
+.chart {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.axis {
+  stroke: var(--borde);
+  stroke-width: 1;
+}
+
+.bar {
+  fill: var(--azul);
+}
+
+.bar:hover {
+  fill: var(--verde);
+}
+
+.tick {
+  fill: var(--texto-terciario);
+  font-family: var(--fuente);
+  font-size: 11px;
+}

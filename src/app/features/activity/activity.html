@@ -1,0 +1,100 @@
+<section class="activity-page">
+  <header class="page-header">
+    <div>
+      <span>DETECCIONES</span>
+      <h1>Actividad por hora</h1>
+    </div>
+
+    <p>
+      {{ activity()?.total ?? 0 }}
+      {{ activity()?.total === 1 ? 'detección' : 'detecciones' }}
+    </p>
+  </header>
+
+  <section class="filters">
+    <div class="filter-field">
+      <label for="activityCamera">Cámara</label>
+      <select id="activityCamera" [(ngModel)]="cameraId">
+        <option value="">Todas</option>
+        @for (camera of cameras(); track camera.id) {
+          <option [value]="camera.id">{{ camera.name }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="filter-field">
+      <label for="activityStart">Desde</label>
+      <input id="activityStart" type="date" [(ngModel)]="startDate">
+    </div>
+
+    <div class="filter-field">
+      <label for="activityEnd">Hasta</label>
+      <input id="activityEnd" type="date" [(ngModel)]="endDate">
+    </div>
+
+    <div class="filter-actions">
+      <button type="button" class="btn btn-primary" (click)="applyFilters()">
+        Aplicar
+      </button>
+
+      <button type="button" class="btn btn-secondary" (click)="clearFilters()">
+        Limpiar
+      </button>
+    </div>
+  </section>
+
+  @if (camerasError()) {
+    <p class="cameras-error" role="alert">{{ camerasError() }}</p>
+  }
+
+  @if (loading()) {
+    <div class="state" role="status">
+      <strong>Cargando...</strong>
+    </div>
+  } @else if (loadError()) {
+    <div class="state" role="alert">
+      <strong>{{ loadError() }}</strong>
+      <button type="button" class="btn btn-primary" (click)="loadActivity()">
+        Reintentar
+      </button>
+    </div>
+  } @else if (activity(); as data) {
+    @if (hasActivity()) {
+      <section class="chart-card">
+        <h2>DETECCIONES POR HORA DEL DÍA</h2>
+        <app-activity-chart [hours]="data.hours" />
+      </section>
+
+      <section class="table-card">
+        <h2>DETECCIONES POR CÁMARA</h2>
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Cámara</th>
+              <th scope="col" class="number">Detecciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (camera of data.cameras; track camera.cameraId) {
+              <tr>
+                <td>{{ camera.cameraName }}</td>
+                <td class="number">{{ camera.count }}</td>
+              </tr>
+            }
+          </tbody>
+          <tfoot>
+            <tr>
+              <th scope="row">Total</th>
+              <td class="number">{{ data.total }}</td>
+            </tr>
+          </tfoot>
+        </table>
+      </section>
+    } @else {
+      <div class="state">
+        <strong>No hay detecciones en el rango seleccionado</strong>
+        <p>La actividad por hora aparecerá cuando existan detecciones.</p>
+      </div>
+    }
+  }
+</section>

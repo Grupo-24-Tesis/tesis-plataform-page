@@ -33,13 +33,14 @@ describe('Shell', () => {
     expect(element.querySelector('.guard')?.textContent).toContain('Laura Martinez');
   });
 
-  it('muestra los cuatro enlaces de navegacion', async () => {
+  it('muestra los cinco enlaces de navegacion', async () => {
     const element = await render();
     const hrefs = Array.from(element.querySelectorAll('nav a')).map(link =>
       link.getAttribute('href')
     );
 
-    expect(hrefs).toEqual(['/monitor', '/unique-faces', '/reports', '/marked']);
+    expect(hrefs).toEqual(['/monitor', '/activity', '/unique-faces', '/reports', '/marked']);
+    expect(element.querySelector('nav')?.textContent).toContain('Actividad');
     expect(element.querySelector('nav')?.textContent).toContain('Rostros detectados');
     expect(element.querySelector('nav')?.textContent).toContain('Marcados');
   });

@@ -72,4 +72,27 @@ describe('ApiService', () => {
     expect(request.request.method).toBe('GET');
     request.flush([]);
   });
+
+  it('requests the activity with every filter', () => {
+    api.getActivity('CAM-01', '2026-05-01', '2026-05-31').subscribe();
+
+    const request = http.expectOne(
+      r => r.url === 'http://localhost:8080/api/metrics/activity'
+    );
+    expect(request.request.method).toBe('GET');
+    expect(request.request.params.get('cameraId')).toBe('CAM-01');
+    expect(request.request.params.get('startDate')).toBe('2026-05-01');
+    expect(request.request.params.get('endDate')).toBe('2026-05-31');
+    request.flush({ hours: [], cameras: [], total: 0 });
+  });
+
+  it('requests the activity without filters', () => {
+    api.getActivity().subscribe();
+
+    const request = http.expectOne(
+      r => r.url === 'http://localhost:8080/api/metrics/activity'
+    );
+    expect(request.request.params.keys()).toEqual([]);
+    request.flush({ hours: [], cameras: [], total: 0 });
+  });
 });

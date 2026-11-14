@@ -4,6 +4,7 @@ import { HttpClient } from '@angular/common/http';
 import { ReportItem } from '../models/report.model';
 import { videoContentType } from '../models/video-content-type';
 import {FaceAppearance} from '../models/face.model';
+import { ActivityResponse } from '../models/activity.model';
 import { UniqueFace } from '../models/UniqueFace';
 import { PresignedUploadRequest, PresignedUploadResponse, VideoJobMetrics, VideoJobResponse, VideoUploadedRequest } from '../models/uploadVideo';
 export interface Guard { id?: string; name: string; shift: string; schedule: string; }
@@ -179,6 +180,27 @@ getVideoJobMetrics(cameraId?: string) {
   return this.http.get<VideoJobMetrics>(
     `${this.base}/metrics/video-jobs`,
     { params: cameraId ? { cameraId } : {} }
+  );
+}
+
+getActivity(cameraId?: string, startDate?: string, endDate?: string) {
+  const params: Record<string, string> = {};
+
+  if (cameraId) {
+    params['cameraId'] = cameraId;
+  }
+
+  if (startDate) {
+    params['startDate'] = startDate;
+  }
+
+  if (endDate) {
+    params['endDate'] = endDate;
+  }
+
+  return this.http.get<ActivityResponse>(
+    `${this.base}/metrics/activity`,
+    { params }
   );
 }
 

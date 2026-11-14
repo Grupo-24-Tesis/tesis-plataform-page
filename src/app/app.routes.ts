@@ -25,6 +25,11 @@ export const routes: Routes = [
           import('./features/monitor/monitor').then(m => m.MonitorComponent)
       },
       {
+        path: 'activity',
+        loadComponent: () =>
+          import('./features/activity/activity').then(m => m.Activity)
+      },
+      {
         path: 'unique-faces',
         loadComponent: () =>
           import('./features/unique-faces/unique-faces').then(m => m.UniqueFaces)
