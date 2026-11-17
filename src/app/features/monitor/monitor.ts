@@ -36,6 +36,7 @@ import {
 const ACTIVE_REFRESH_MS = 5000;
 const IDLE_REFRESH_MS = 30000;
 const FACES_MAX_AGE_MS = 10 * 60 * 1000;
+const UPLOAD_NOTICE_MS = 8000;
 
 interface MonitorVideo {
   id: string;
@@ -133,7 +134,8 @@ export class MonitorComponent implements OnInit, OnDestroy {
   processingVideo = signal(false);
   uploadProgress = signal(0);
   videoErrorMsg = signal('');
-  videoSuccessMsg = signal('');
+  uploadNotice = signal('');
+  private uploadNoticeTimer?: ReturnType<typeof setTimeout>;
 
   private refreshTimer?: ReturnType<typeof setTimeout>;
   private requestToken = 0;
@@ -167,6 +169,22 @@ export class MonitorComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.stopRefresh();
+    this.dismissUploadNotice();
+  }
+
+  dismissUploadNotice(): void {
+    clearTimeout(this.uploadNoticeTimer);
+    this.uploadNoticeTimer = undefined;
+    this.uploadNotice.set('');
+  }
+
+  private showUploadNotice(fileName: string): void {
+    this.dismissUploadNotice();
+    this.uploadNotice.set(`Video «${fileName}» subido. Se procesará en breve.`);
+    this.uploadNoticeTimer = setTimeout(
+      () => this.dismissUploadNotice(),
+      UPLOAD_NOTICE_MS
+    );
   }
 
   statusLabel(status: string): string {
@@ -583,7 +601,6 @@ export class MonitorComponent implements OnInit, OnDestroy {
     this.selectedFile.set(null);
     this.uploadProgress.set(0);
     this.videoErrorMsg.set('');
-    this.videoSuccessMsg.set('');
 
     if (this.videoFileInput) {
       this.videoFileInput.nativeElement.value = '';
@@ -594,7 +611,6 @@ export class MonitorComponent implements OnInit, OnDestroy {
     const input = event.target as HTMLInputElement;
 
     this.videoErrorMsg.set('');
-    this.videoSuccessMsg.set('');
     this.uploadProgress.set(0);
 
     if (!input.files || input.files.length === 0) {
@@ -642,7 +658,7 @@ export class MonitorComponent implements OnInit, OnDestroy {
     this.processingVideo.set(true);
     this.uploadProgress.set(0);
     this.videoErrorMsg.set('');
-    this.videoSuccessMsg.set('');
+    this.dismissUploadNotice();
 
     this.api.requestVideoUploadUrl({
       fileName: file.name,
@@ -730,18 +746,9 @@ export class MonitorComponent implements OnInit, OnDestroy {
     }).subscribe({
       next: () => {
         this.loadVideos();
-
-        this.videoSuccessMsg.set(
-          'Video subido a S3 y registrado correctamente.'
-        );
-
-        this.selectedFile.set(null);
-
-        if (this.videoFileInput) {
-          this.videoFileInput.nativeElement.value = '';
-        }
-
         this.processingVideo.set(false);
+        this.closeVideoDialog();
+        this.showUploadNotice(uploadData.originalFileName);
       },
       error: error => {
         console.error(

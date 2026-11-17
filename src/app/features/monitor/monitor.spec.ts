@@ -583,7 +583,7 @@ describe('MonitorComponent', () => {
     expect(dialog.querySelector<HTMLButtonElement>('button[type="submit"]')?.disabled).toBe(false);
   });
 
-  it('disables submit after a successful upload until a new file is selected', async () => {
+  function successfulUpload(): void {
     api.requestVideoUploadUrl.mockReturnValue(of({
       uploadUrl: 'https://cubo.s3.amazonaws.com/videos/abc.mp4',
       bucket: 'cubo',
@@ -592,30 +592,97 @@ describe('MonitorComponent', () => {
     }));
     api.uploadVideoToS3.mockReturnValue(of({ type: HttpEventType.Response }));
     api.notifyVideoUploaded.mockReturnValue(of(job('QUEUED')));
+  }
 
-    await create();
+  async function uploadCamera6(): Promise<void> {
     component.openVideoDialog();
     selectFile(new File(['x'], 'Camera_ch6.mp4', { type: 'video/mp4' }));
     await fixture.whenStable();
-
     component.processVideo();
     await fixture.whenStable();
+  }
 
-    const dialog: HTMLElement = fixture.nativeElement.querySelector('.video-dialog');
-    const submit = dialog.querySelector<HTMLButtonElement>('button[type="submit"]');
-    expect(dialog.textContent).toContain('Video subido a S3 y registrado correctamente.');
-    expect(submit?.disabled).toBe(true);
+  function uploadNotice(): HTMLElement | null {
+    return fixture.nativeElement.querySelector('.monitor-content .upload-notice');
+  }
+
+  it('closes the video dialog and shows a notice in the view after a successful upload', async () => {
+    successfulUpload();
+    await create();
+
+    await uploadCamera6();
+
+    expect(HTMLDialogElement.prototype.close).toHaveBeenCalledTimes(1);
+    expect(component.processingVideo()).toBe(false);
     expect(component.selectedFile()).toBeNull();
     expect(api.getVideoJobs).toHaveBeenCalledTimes(2);
+    expect(api.requestVideoUploadUrl.mock.calls[0][0].contentType).toBe('video/mp4');
+    expect(uploadNotice()?.getAttribute('role')).toBe('status');
+    expect(uploadNotice()?.textContent).toContain('Video «Camera_ch6.mp4» subido. Se procesará en breve.');
+    expect(fixture.nativeElement.querySelector('.video-dialog').textContent)
+      .not.toContain('subido');
 
     component.processVideo();
     expect(api.requestVideoUploadUrl).toHaveBeenCalledTimes(1);
+  });
 
-    selectFile(new File(['y'], 'Otro.mkv'));
+  it('hides the upload notice after 8 seconds', async () => {
+    vi.useFakeTimers();
+    api.getVideoJobs.mockReturnValue(of([job('COMPLETED')]));
+    successfulUpload();
+    await create();
+
+    component.openVideoDialog();
+    selectFile(new File(['x'], 'Camera_ch6.mp4', { type: 'video/mp4' }));
+    component.processVideo();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(uploadNotice()).not.toBeNull();
+
+    await vi.advanceTimersByTimeAsync(7999);
+    expect(uploadNotice()).not.toBeNull();
+
+    await vi.advanceTimersByTimeAsync(1);
+    expect(component.uploadNotice()).toBe('');
+
+    await vi.advanceTimersByTimeAsync(50);
+    expect(uploadNotice()).toBeNull();
+  });
+
+  it('hides the upload notice with its close button and clears it on a new upload', async () => {
+    successfulUpload();
+    await create();
+    await uploadCamera6();
+
+    uploadNotice()!.querySelector<HTMLButtonElement>('button')!.click();
     await fixture.whenStable();
+    expect(uploadNotice()).toBeNull();
 
-    expect(submit?.disabled).toBe(false);
-    expect(api.requestVideoUploadUrl.mock.calls[0][0].contentType).toBe('video/mp4');
+    await uploadCamera6();
+    expect(uploadNotice()).not.toBeNull();
+    pendingUpload();
+    component.openVideoDialog();
+    selectFile(new File(['x'], 'Otro.mp4', { type: 'video/mp4' }));
+    component.processVideo();
+    await fixture.whenStable();
+    expect(uploadNotice()).toBeNull();
+  });
+
+  it('keeps the video dialog open with the error inside when registering fails', async () => {
+    successfulUpload();
+    api.notifyVideoUploaded.mockReturnValue(
+      throwError(() => new HttpErrorResponse({
+        status: 400,
+        error: { status: 400, message: 'La cámara no existe' }
+      }))
+    );
+    await create();
+
+    await uploadCamera6();
+
+    expect(HTMLDialogElement.prototype.close).not.toHaveBeenCalled();
+    expect(fixture.nativeElement.querySelector('.video-dialog').textContent)
+      .toContain('La cámara no existe');
+    expect(uploadNotice()).toBeNull();
   });
 
   it('sends the inferred content type when the browser reports none', async () => {

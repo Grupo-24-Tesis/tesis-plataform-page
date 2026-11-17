@@ -482,6 +482,37 @@
   padding: 14px;
 }
 
+.upload-notice {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 0 16px;
+  padding: 10px 14px;
+  color: var(--texto);
+  background: var(--superficie-2);
+  border: 1px solid var(--verde);
+  border-radius: 6px;
+  font: 12px var(--fuente);
+}
+
+.upload-notice button {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  place-items: center;
+  color: var(--texto-secundario);
+  background: transparent;
+  border: 0;
+  font-size: 19px;
+  cursor: pointer;
+}
+
+.upload-notice button:hover {
+  color: var(--texto);
+}
+
 .video-dialog {
   width: min(520px, calc(100vw - 32px));
   margin: auto;

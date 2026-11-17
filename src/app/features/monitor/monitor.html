@@ -74,6 +74,17 @@
       </button>
     </header>
 
+    <p class="upload-notice" role="status" *ngIf="uploadNotice() as notice">
+      <span>{{ notice }}</span>
+      <button
+        type="button"
+        aria-label="Cerrar aviso"
+        (click)="dismissUploadNotice()"
+      >
+        ×
+      </button>
+    </p>
+
     <section class="camera-preview" *ngIf="selectedCamera()">
       <app-metrics-strip [items]="metricItems()" />
 
@@ -336,13 +347,6 @@
       *ngIf="videoErrorMsg()"
     >
       {{ videoErrorMsg() }}
-    </p>
-
-    <p
-      class="form-success"
-      *ngIf="videoSuccessMsg()"
-    >
-      {{ videoSuccessMsg() }}
     </p>
 
     <div class="dialog-actions">
