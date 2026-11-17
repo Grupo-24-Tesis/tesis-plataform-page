@@ -1,0 +1,78 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+
+.face-tile {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px;
+  color: var(--texto);
+  text-align: left;
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: 7px;
+  font: 12px var(--fuente);
+  cursor: pointer;
+}
+
+.face-tile:hover {
+  border-color: rgba(85, 182, 242, 0.5);
+}
+
+.face-tile:focus-visible {
+  outline: 2px solid var(--azul);
+  outline-offset: 2px;
+}
+
+.face-tile.selected {
+  background: var(--superficie-3);
+  border-color: var(--azul);
+}
+
+.face-frame {
+  display: grid;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  place-items: center;
+  color: var(--azul);
+  background: #05070c;
+  border: 1px solid rgba(99, 132, 195, 0.1);
+  border-radius: 5px;
+  font-size: 34px;
+}
+
+.face-frame img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.face-caption {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.face-label,
+.face-time {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  line-height: 15px;
+}
+
+.face-label {
+  color: var(--azul);
+  font: 600 12px var(--fuente);
+}
+
+.face-time {
+  color: var(--texto-secundario);
+  font: 11px var(--fuente);
+}

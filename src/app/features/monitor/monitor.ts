@@ -23,7 +23,7 @@ import { describeVideoTimings, formatDuration } from '../../core/models/duration
 import { MetricsStripComponent } from './metrics-strip';
 import { VideoRetryComponent } from './video-retry/video-retry';
 import { FaceAppearance } from '../../core/models/face.model';
-import { ImageFallbackDirective } from '../../shared/directives/image-fallback.directive';
+import { FaceTileComponent } from './face-tile/face-tile';
 import { MarksService } from '../../shared/services/marks.service';
 import { DetectionDetailComponent } from '../../shared/components/detection-detail/detection-detail';
 import {
@@ -71,7 +71,7 @@ interface SelectedCluster {
 @Component({
   selector: 'app-monitor',
   standalone: true,
-  imports: [CommonModule, FormsModule, ImageFallbackDirective, MetricsStripComponent, VideoRetryComponent, DetectionDetailComponent],
+  imports: [CommonModule, FormsModule, FaceTileComponent, MetricsStripComponent, VideoRetryComponent, DetectionDetailComponent],
   templateUrl: './monitor.html',
   styleUrl: './monitor.css',
 })
@@ -175,13 +175,6 @@ export class MonitorComponent implements OnInit, OnDestroy {
 
   statusTone(status: string): VideoStatusTone {
     return videoStatusTone(status);
-  }
-
-  cameraName(cameraId: string): string {
-    return (
-      this.cameras().find(camera => camera.id === cameraId)?.name ??
-      cameraId
-    );
   }
 
   cameraVideoCountLabel(cameraId: string): string {

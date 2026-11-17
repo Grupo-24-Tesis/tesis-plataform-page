@@ -242,11 +242,11 @@ describe('MonitorComponent', () => {
 
     expect(api.getVideoJobFaces).toHaveBeenCalledWith('job-1');
     const img: HTMLImageElement | null =
-      fixture.nativeElement.querySelector('.face-preview img');
+      fixture.nativeElement.querySelector('.face-frame img');
     expect(img?.getAttribute('src')).toBe(FACE.frameUrl);
     expect(fixture.nativeElement.textContent).toContain('Entrada');
     expect(fixture.nativeElement.textContent).not.toContain('CAM-01');
-    expect(fixture.nativeElement.querySelector('.cluster-title').textContent)
+    expect(fixture.nativeElement.querySelector('.face-label').textContent)
       .not.toContain('apariciones');
   });
 
@@ -287,7 +287,7 @@ describe('MonitorComponent', () => {
 
     expect(api.getVideoJobs).toHaveBeenCalledTimes(2);
     expect(api.getVideoJobFaces).toHaveBeenCalledWith('job-1');
-    expect(fixture.nativeElement.querySelector('.face-preview img')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('.face-frame img')).not.toBeNull();
   });
 
   it('refreshes every 5 seconds while a job is active', async () => {
@@ -308,13 +308,13 @@ describe('MonitorComponent', () => {
       .mockReturnValue(of([FACE]));
 
     await create();
-    expect(fixture.nativeElement.querySelector('.face-preview img')).toBeNull();
+    expect(fixture.nativeElement.querySelector('.face-frame img')).toBeNull();
 
     vi.advanceTimersByTime(30000);
     await fixture.whenStable();
 
     expect(api.getVideoJobFaces).toHaveBeenCalledTimes(2);
-    expect(fixture.nativeElement.querySelector('.face-preview img')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('.face-frame img')).not.toBeNull();
   });
 
   it('refetches the faces once their urls are older than ten minutes', async () => {
@@ -335,7 +335,7 @@ describe('MonitorComponent', () => {
 
     expect(api.getVideoJobFaces).toHaveBeenCalledTimes(2);
     const img: HTMLImageElement | null =
-      fixture.nativeElement.querySelector('.face-preview img');
+      fixture.nativeElement.querySelector('.face-frame img');
     expect(img?.getAttribute('src')).toBe(freshFace.frameUrl);
   });
 
@@ -352,7 +352,7 @@ describe('MonitorComponent', () => {
     await fixture.whenStable();
 
     expect(api.getVideoJobFaces).toHaveBeenCalledTimes(2);
-    expect(fixture.nativeElement.querySelector('.face-preview img')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('.face-frame img')).not.toBeNull();
   });
 
   it('uses the idle interval when every job is terminal', async () => {
@@ -868,16 +868,16 @@ describe('MonitorComponent', () => {
 
     await create();
     const block = fixture.nativeElement.querySelector('.video-block');
-    const card = fixture.nativeElement.querySelector('.cluster-card');
+    const card = fixture.nativeElement.querySelector('.face-tile');
 
     vi.advanceTimersByTime(30000);
     await fixture.whenStable();
     expect(fixture.nativeElement.querySelector('.video-block')).toBe(block);
-    expect(fixture.nativeElement.querySelector('.cluster-card')).toBe(card);
+    expect(fixture.nativeElement.querySelector('.face-tile')).toBe(card);
 
     vi.advanceTimersByTime(10 * 60 * 1000);
     await fixture.whenStable();
     expect(api.getVideoJobFaces).toHaveBeenCalledTimes(2);
-    expect(fixture.nativeElement.querySelector('.cluster-card')).toBe(card);
+    expect(fixture.nativeElement.querySelector('.face-tile')).toBe(card);
   });
 });

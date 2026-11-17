@@ -125,45 +125,16 @@
             Sin rostros detectados en este video
           </p>
 
-          <div class="cluster-grid">
-            <button
-              type="button"
-              class="cluster-card"
+          <div class="cluster-grid" *ngIf="video.clusters.length > 0">
+            <app-face-tile
               *ngFor="let cluster of video.clusters; trackBy: trackCluster"
-              [class.selected]="
+              [face]="cluster.appearances[0]"
+              [selected]="
                 selectedCluster()?.video?.id === video.id &&
                 selectedCluster()?.cluster?.clusterId === cluster.clusterId
               "
-              (click)="selectCluster(video, cluster)"
-            >
-              <div class="face-preview">
-                <img
-                  appImageFallback
-                  *ngIf="cluster.appearances[0]?.frameUrl as image; else facePlaceholder"
-                  [src]="image"
-                  [alt]="cluster.clusterId"
-                >
-
-                <ng-template #facePlaceholder>
-                  <span aria-hidden="true">♙</span>
-                </ng-template>
-              </div>
-
-              <div class="cluster-information">
-                <div class="cluster-title">
-                  <strong>{{ cluster.clusterId }}</strong>
-                </div>
-
-                <div class="appearance-list">
-                  <span
-                    *ngFor="let appearance of cluster.appearances"
-                  >
-                    {{ cameraName(appearance.cameraId) }} ·
-                    {{ appearance.timestamp }}
-                  </span>
-                </div>
-              </div>
-            </button>
+              (pick)="selectCluster(video, cluster)"
+            />
           </div>
         </article>
       </div>
