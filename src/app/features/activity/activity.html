@@ -2,7 +2,7 @@
   <header class="page-header">
     <div>
       <span>DETECCIONES</span>
-      <h1>Actividad por hora</h1>
+      <h1>Actividad</h1>
     </div>
 
     @if (!loading() && !loadError() && activity(); as data) {
@@ -62,35 +62,30 @@
     </div>
   } @else if (activity(); as data) {
     @if (hasActivity()) {
+      @if (appliedCameraId()) {
+        <section class="chart-card">
+          <h2>DETECCIONES POR VIDEO</h2>
+          <app-video-detections-chart [videos]="data.videos" [total]="data.total" />
+        </section>
+      } @else {
+        <section class="chart-card">
+          <h2>DETECCIONES POR CÁMARA</h2>
+          <app-camera-share-chart
+            [cameras]="data.cameras"
+            [total]="data.total"
+            [cameraOrder]="cameraOrder()"
+          />
+        </section>
+      }
+
+      <section class="chart-card">
+        <h2>SEGUIMIENTO</h2>
+        <app-follow-up-chart [followUp]="data.followUp" [total]="data.total" />
+      </section>
+
       <section class="chart-card">
         <h2>DETECCIONES POR HORA DEL DÍA</h2>
         <app-activity-chart [hours]="data.hours" />
-      </section>
-
-      <section class="table-card">
-        <h2>DETECCIONES POR CÁMARA</h2>
-        <table>
-          <thead>
-            <tr>
-              <th scope="col">Cámara</th>
-              <th scope="col" class="number">Detecciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (camera of data.cameras; track camera.cameraId) {
-              <tr>
-                <td>{{ camera.cameraName }}</td>
-                <td class="number">{{ camera.count }}</td>
-              </tr>
-            }
-          </tbody>
-          <tfoot>
-            <tr>
-              <th scope="row">Total</th>
-              <td class="number">{{ data.total }}</td>
-            </tr>
-          </tfoot>
-        </table>
       </section>
     } @else {
       <div class="state">

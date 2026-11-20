@@ -1,0 +1,31 @@
+<div class="chart-box" [style.height.px]="chartHeight">
+  <canvas #chartCanvas role="img" [attr.aria-label]="summary()"></canvas>
+</div>
+
+<table class="legend">
+  <thead>
+    <tr>
+      <th scope="col"><span class="visually-hidden">Color</span></th>
+      <th scope="col">Seguimiento</th>
+      <th scope="col" class="number">Detecciones</th>
+      <th scope="col" class="number">Porcentaje</th>
+    </tr>
+  </thead>
+  <tbody>
+    @for (segment of segments(); track segment.key) {
+      <tr>
+        <td><span class="swatch" [style.background]="segment.color"></span></td>
+        <td>{{ segment.label }}</td>
+        <td class="number">{{ segment.count }}</td>
+        <td class="number">{{ percent(segment.percent) }}</td>
+      </tr>
+    }
+  </tbody>
+  <tfoot>
+    <tr>
+      <th scope="row" colspan="2">Total</th>
+      <td class="number">{{ total() }}</td>
+      <td class="number">{{ totalPercent }}</td>
+    </tr>
+  </tfoot>
+</table>

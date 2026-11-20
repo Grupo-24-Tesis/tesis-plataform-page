@@ -1,0 +1,52 @@
+<div class="view-switch" role="group" aria-label="Tipo de gráfico">
+  <button
+    type="button"
+    [class.active]="view() === 'circular'"
+    [attr.aria-pressed]="view() === 'circular'"
+    (click)="show('circular')"
+  >
+    Circular
+  </button>
+  <button
+    type="button"
+    [class.active]="view() === 'barras'"
+    [attr.aria-pressed]="view() === 'barras'"
+    (click)="show('barras')"
+  >
+    Barras
+  </button>
+</div>
+
+<div class="share-body" [class.with-bars]="view() === 'barras'">
+  <div class="chart-box" [style.height.px]="chartHeight()">
+    <canvas #chartCanvas role="img" [attr.aria-label]="summary()"></canvas>
+  </div>
+
+  <table class="legend">
+    <thead>
+      <tr>
+        <th scope="col"><span class="visually-hidden">Color</span></th>
+        <th scope="col">Cámara</th>
+        <th scope="col" class="number">Detecciones</th>
+        <th scope="col" class="number">Porcentaje</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (share of shares(); track share.key) {
+        <tr>
+          <td><span class="swatch" [style.background]="share.color"></span></td>
+          <td>{{ share.name }}</td>
+          <td class="number">{{ share.count }}</td>
+          <td class="number">{{ percent(share.percent) }}</td>
+        </tr>
+      }
+    </tbody>
+    <tfoot>
+      <tr>
+        <th scope="row" colspan="2">Total</th>
+        <td class="number">{{ total() }}</td>
+        <td class="number">{{ totalPercent }}</td>
+      </tr>
+    </tfoot>
+  </table>
+</div>

@@ -1,0 +1,26 @@
+<div class="chart-box" [style.height.px]="chartHeight()">
+  <canvas #chartCanvas role="img" [attr.aria-label]="summary()"></canvas>
+</div>
+
+<table class="legend">
+  <thead>
+    <tr>
+      <th scope="col">Video</th>
+      <th scope="col" class="number">Detecciones</th>
+    </tr>
+  </thead>
+  <tbody>
+    @for (bar of bars(); track bar.key) {
+      <tr>
+        <td>{{ bar.label }}</td>
+        <td class="number">{{ bar.count }}</td>
+      </tr>
+    }
+  </tbody>
+  <tfoot>
+    <tr>
+      <th scope="row">Total</th>
+      <td class="number">{{ total() }}</td>
+    </tr>
+  </tfoot>
+</table>

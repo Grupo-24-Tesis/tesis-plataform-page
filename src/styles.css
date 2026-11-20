@@ -21,6 +21,16 @@
   --morado: #b58cff;
   --enlace: var(--azul);
 
+  --serie-1: #3987e5;
+  --serie-2: #d95926;
+  --serie-3: #199e70;
+  --serie-4: #c98500;
+  --serie-5: #d55181;
+  --serie-6: #0ca30c;
+  --serie-7: #9085e9;
+  --serie-8: #e66767;
+  --serie-otras: var(--texto-terciario);
+
   --fuente: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 

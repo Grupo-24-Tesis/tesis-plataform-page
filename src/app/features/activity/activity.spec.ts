@@ -2,8 +2,11 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Subject, of, throwError } from 'rxjs';
 
+import { ChartConfiguration } from 'chart.js';
+
 import { ActivityResponse } from '../../core/models/activity.model';
 import { ApiService } from '../../core/services/api.service';
+import { ChartFactory } from '../../shared/charts/chart-factory';
 import { Activity } from './activity';
 
 function response(counts: Record<number, number>): ActivityResponse {
@@ -16,6 +19,11 @@ function response(counts: Record<number, number>): ActivityResponse {
       { cameraId: 'CAM-01', cameraName: 'Entrada', count: total - 2 },
       { cameraId: 'CAM-02', cameraName: 'Garaje', count: 2 }
     ],
+    videos: total === 0 ? [] : [
+      { jobId: 'job-1', fileName: 'Camera_ch6.mp4', uploadedAt: '2026-11-17T16:21:13Z', count: total - 2 },
+      { jobId: 'job-2', fileName: 'Garaje.mp4', uploadedAt: null, count: 2 }
+    ],
+    followUp: { investigation: total === 0 ? 0 : 1, resolved: 0, markedOnly: 0, none: Math.max(total - 1, 0) },
     total
   };
 }
@@ -27,11 +35,29 @@ describe('Activity', () => {
     getActivity: ReturnType<typeof vi.fn>;
     getCameras: ReturnType<typeof vi.fn>;
   };
+  let charts: { canvas: HTMLCanvasElement; config: ChartConfiguration }[];
+
+  function hourChart(): ChartConfiguration {
+    const canvas = root().querySelector('app-activity-chart canvas');
+    return charts.filter(chart => chart.canvas === canvas).pop()!.config;
+  }
 
   async function create(): Promise<void> {
     await TestBed.configureTestingModule({
       imports: [Activity],
-      providers: [{ provide: ApiService, useValue: api }]
+      providers: [
+        { provide: ApiService, useValue: api },
+        {
+          provide: ChartFactory,
+          useValue: {
+            resolve: (value: string) => value,
+            create: (canvas: HTMLCanvasElement, config: ChartConfiguration) => {
+              charts.push({ canvas, config });
+              return { destroy: () => undefined };
+            }
+          }
+        }
+      ]
     }).compileComponents();
 
     fixture = TestBed.createComponent(Activity);
@@ -45,6 +71,7 @@ describe('Activity', () => {
   }
 
   beforeEach(() => {
+    charts = [];
     api = {
       getActivity: vi.fn(() => of(response({ 8: 3, 18: 14 }))),
       getCameras: vi.fn(() => of([{ id: 'CAM-01', name: 'Entrada', active: true }]))
@@ -79,46 +106,104 @@ describe('Activity', () => {
     expect(component.cameraId).toBe('');
   });
 
-  it('dibuja 24 barras con alturas proporcionales a los conteos', async () => {
+  it('dibuja las 24 horas con Chart.js con los conteos de cada hora', async () => {
     await create();
 
-    const bars = Array.from(root().querySelectorAll('rect.bar'));
-    const heights = bars.map(bar => Number(bar.getAttribute('height')));
-
-    expect(bars.length).toBe(24);
-    expect(heights[18]).toBeCloseTo(150);
-    expect(heights[8]).toBeCloseTo(150 * 3 / 14);
-    expect(heights[0]).toBe(0);
-    expect(bars[18].querySelector('title')?.textContent).toContain('14');
+    const config = hourChart();
+    expect(config.type).toBe('bar');
+    expect(config.data.datasets[0].data.length).toBe(24);
+    expect(config.data.datasets[0].data[18]).toBe(14);
+    expect(config.data.datasets[0].data[8]).toBe(3);
   });
 
-  it('muestra una etiqueta cada tres horas', async () => {
+  it('resume el maximo en el aria-label del grafico por hora', async () => {
     await create();
 
-    const labels = Array.from(root().querySelectorAll('text.tick')).map(
-      label => label.textContent?.trim()
-    );
-
-    expect(labels).toEqual(['0', '3', '6', '9', '12', '15', '18', '21']);
-  });
-
-  it('resume el maximo en el aria-label del grafico', async () => {
-    await create();
-
-    expect(root().querySelector('svg[role="img"]')?.getAttribute('aria-label')).toBe(
+    expect(root().querySelector('app-activity-chart canvas')?.getAttribute('aria-label')).toBe(
       'Detecciones por hora: el máximo es 14 a las 18 h'
     );
   });
 
-  it('muestra la tabla de camaras con el total', async () => {
+  it('muestra la leyenda por camara con el total', async () => {
     await create();
 
-    const rows = Array.from(root().querySelectorAll('tbody tr')).map(row => row.textContent);
+    const rows = Array.from(root().querySelectorAll('app-camera-share-chart table.legend tbody tr'))
+      .map(row => row.textContent);
 
     expect(rows.length).toBe(2);
     expect(rows[0]).toContain('Entrada');
     expect(rows[0]).toContain('15');
-    expect(root().querySelector('tfoot')?.textContent).toContain('17');
+    expect(rows[0]).toContain('88,2 %');
+    expect(root().querySelector('app-camera-share-chart table.legend tfoot')?.textContent).toContain('17');
+  });
+
+  it('pone el grafico por camara antes del grafico por hora', async () => {
+    await create();
+
+    const titles = Array.from(root().querySelectorAll('.chart-card h2')).map(title => title.textContent?.trim());
+    const cards = Array.from(root().querySelectorAll('.chart-card'));
+
+    expect(root().querySelector('h1')?.textContent?.trim()).toBe('Actividad');
+    expect(titles).toEqual(['DETECCIONES POR CÁMARA', 'SEGUIMIENTO', 'DETECCIONES POR HORA DEL DÍA']);
+    expect(cards[0].querySelector('app-camera-share-chart canvas')).not.toBeNull();
+    expect(cards[2].querySelector('app-activity-chart')).not.toBeNull();
+  });
+
+  it('con todas las camaras muestra el grafico por camara, el seguimiento y el grafico por hora', async () => {
+    await create();
+
+    const titles = Array.from(root().querySelectorAll('.chart-card h2')).map(title => title.textContent?.trim());
+    expect(titles).toEqual(['DETECCIONES POR CÁMARA', 'SEGUIMIENTO', 'DETECCIONES POR HORA DEL DÍA']);
+    expect(root().querySelector('app-follow-up-chart canvas')).not.toBeNull();
+    expect(root().querySelector('app-video-detections-chart')).toBeNull();
+  });
+
+  it('al aplicar una camara cambia el grafico por camara por el grafico por video', async () => {
+    await create();
+    component.cameraId = 'CAM-01';
+    component.applyFilters();
+    await fixture.whenStable();
+
+    const titles = Array.from(root().querySelectorAll('.chart-card h2')).map(title => title.textContent?.trim());
+    expect(titles).toEqual(['DETECCIONES POR VIDEO', 'SEGUIMIENTO', 'DETECCIONES POR HORA DEL DÍA']);
+    expect(root().querySelector('app-camera-share-chart')).toBeNull();
+    expect(Array.from(root().querySelectorAll('app-video-detections-chart tbody tr')).length).toBe(2);
+    expect(component.appliedCameraId()).toBe('CAM-01');
+  });
+
+  it('mantiene las tarjetas hasta aplicar el filtro y vuelve al grafico por camara al limpiar', async () => {
+    await create();
+    component.cameraId = 'CAM-01';
+    await fixture.whenStable();
+
+    expect(root().querySelector('app-camera-share-chart')).not.toBeNull();
+
+    component.applyFilters();
+    await fixture.whenStable();
+    expect(root().querySelector('app-video-detections-chart')).not.toBeNull();
+
+    component.clearFilters();
+    await fixture.whenStable();
+    expect(root().querySelector('app-camera-share-chart')).not.toBeNull();
+    expect(root().querySelector('app-video-detections-chart')).toBeNull();
+  });
+
+  it('pasa el seguimiento y el total al grafico de seguimiento', async () => {
+    await create();
+
+    const followUp = charts.filter(chart => chart.canvas === root().querySelector('app-follow-up-chart canvas')).pop()!;
+    expect(followUp.config.data.datasets.map(dataset => dataset.data[0])).toEqual([0, 0, 1, 16]);
+  });
+
+  it('ordena los colores por el nombre de las camaras registradas', async () => {
+    api.getCameras.mockReturnValue(of([
+      { id: 'CAM-02', name: 'Garaje', active: true },
+      { id: 'CAM-01', name: 'Entrada', active: true }
+    ]));
+
+    await create();
+
+    expect(component.cameraOrder()).toEqual(['CAM-01', 'CAM-02']);
   });
 
   it('muestra el estado vacio cuando todo es cero', async () => {
@@ -126,7 +211,7 @@ describe('Activity', () => {
 
     await create();
 
-    expect(root().querySelector('svg')).toBeNull();
+    expect(root().querySelector('canvas')).toBeNull();
     expect(root().textContent).toContain('No hay detecciones en el rango seleccionado');
   });
 
@@ -136,7 +221,7 @@ describe('Activity', () => {
     await create();
 
     expect(root().textContent).toContain('Cargando...');
-    expect(root().querySelector('svg')).toBeNull();
+    expect(root().querySelector('canvas')).toBeNull();
   });
 
   it('muestra el total del encabezado solo con datos cargados sin error', async () => {
@@ -184,6 +269,6 @@ describe('Activity', () => {
     await fixture.whenStable();
 
     expect(api.getActivity).toHaveBeenCalledTimes(2);
-    expect(root().querySelector('svg')).not.toBeNull();
+    expect(root().querySelector('canvas')).not.toBeNull();
   });
 });
