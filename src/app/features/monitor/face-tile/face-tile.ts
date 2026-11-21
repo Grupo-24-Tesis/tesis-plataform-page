@@ -1,11 +1,13 @@
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 
+import { MatchCountBadgeComponent, matchCountLabel } from '../../../shared/components/match-count-badge/match-count-badge';
 import { ImageFallbackDirective } from '../../../shared/directives/image-fallback.directive';
 
 export interface FaceTileFace {
   faceId: string;
   timestamp: string;
   frameUrl?: string;
+  matchCount?: number;
 }
 
 export function detectionNumber(faceId: string): string {
@@ -16,14 +18,14 @@ export function detectionNumber(faceId: string): string {
 
 @Component({
   selector: 'app-face-tile',
-  imports: [ImageFallbackDirective],
+  imports: [ImageFallbackDirective, MatchCountBadgeComponent],
   template: `
     <button
       type="button"
       class="face-tile"
       [class.selected]="selected()"
       [attr.aria-pressed]="selected()"
-      [attr.aria-label]="label() + ', ' + face().timestamp"
+      [attr.aria-label]="ariaLabel()"
       (click)="pick.emit()"
     >
       <span class="face-frame">
@@ -36,6 +38,7 @@ export function detectionNumber(faceId: string): string {
       <span class="face-caption">
         <strong class="face-label">{{ label() }}</strong>
         <span class="face-time">{{ face().timestamp }}</span>
+        <app-match-count-badge [count]="face().matchCount" />
       </span>
     </button>
   `,
@@ -48,4 +51,9 @@ export class FaceTileComponent {
   pick = output<void>();
 
   label = computed(() => `Detección ${detectionNumber(this.face().faceId)}`);
+
+  ariaLabel = computed(() => {
+    const matches = matchCountLabel(this.face().matchCount);
+    return [this.label(), this.face().timestamp, matches].filter(Boolean).join(', ');
+  });
 }

@@ -7,6 +7,7 @@ import { ApiService, Camera, Guard } from '../../core/services/api.service';
 import { apiErrorMessage } from '../../core/services/api-error';
 import { ReportItem } from '../../core/models/report.model';
 import { FaceAppearance } from '../../core/models/face.model';
+import { ReportMatchesComponent } from './report-matches/report-matches';
 import { ImageFallbackDirective } from '../../shared/directives/image-fallback.directive';
 import { FreshnessTimer, IMAGES_MAX_AGE_MS } from '../../shared/utils/freshness-timer';
 
@@ -26,7 +27,7 @@ interface InvolvedDetection {
 @Component({
   selector: 'app-report-detail',
   standalone: true,
-  imports: [DatePipe, ImageFallbackDirective],
+  imports: [DatePipe, ImageFallbackDirective, ReportMatchesComponent],
   templateUrl: './report-detail.html',
   styleUrl: './report-detail.css'
 })

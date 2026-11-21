@@ -38,6 +38,7 @@ describe('ReportDetail', () => {
     getGuards: ReturnType<typeof vi.fn>;
     getCameras: ReturnType<typeof vi.fn>;
     getFaceAppearancesByIds: ReturnType<typeof vi.fn>;
+    getDetectionMatches: ReturnType<typeof vi.fn>;
   };
 
   async function create(): Promise<void> {
@@ -73,7 +74,8 @@ describe('ReportDetail', () => {
       getReport: vi.fn(() => of(REPORT)),
       getGuards: vi.fn(() => of([{ id: 'g1', name: 'Marta', shift: '', schedule: '' }])),
       getCameras: vi.fn(() => of([{ id: 'CAM-01', name: 'Entrada', active: true }])),
-      getFaceAppearancesByIds: vi.fn(() => of([FACE]))
+      getFaceAppearancesByIds: vi.fn(() => of([FACE])),
+      getDetectionMatches: vi.fn(() => of({ faceId: 'job-1_1', links: [], detections: [] }))
     };
   });
 
@@ -95,6 +97,14 @@ describe('ReportDetail', () => {
     expect(query('.fact-author').textContent).toContain('Marta');
     expect(query('.description').textContent).toContain('forzar un candado');
     expect(query('.resolution').textContent).toContain('Se recupero el objeto');
+  });
+
+  it('shows matches under each detection', async () => {
+    await create();
+
+    expect(fixture.nativeElement.querySelectorAll('.detection app-report-matches').length).toBe(2);
+    expect(api.getDetectionMatches).toHaveBeenCalledWith('job-1_1');
+    expect(api.getDetectionMatches).toHaveBeenCalledWith('job-1_2');
   });
 
   it('shows Sin registro when the report has no author or the guard is unknown', async () => {

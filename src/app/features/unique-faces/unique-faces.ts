@@ -9,6 +9,7 @@ import { UniqueFace } from '../../core/models/UniqueFace';
 import { MarksService } from '../../shared/services/marks.service';
 import { FaceAppearance } from '../../core/models/face.model';
 import { DetectionDetailComponent } from '../../shared/components/detection-detail/detection-detail';
+import { MatchCountBadgeComponent } from '../../shared/components/match-count-badge/match-count-badge';
 import { FreshnessTimer, IMAGES_MAX_AGE_MS } from '../../shared/utils/freshness-timer';
 
 interface FaceQuery {
@@ -25,7 +26,8 @@ interface FaceQuery {
     ImageFallbackDirective,
     CommonModule,
     FormsModule,
-    DetectionDetailComponent
+    DetectionDetailComponent,
+    MatchCountBadgeComponent
   ],
   templateUrl: './unique-faces.html',
   styleUrl: './unique-faces.css',
@@ -215,6 +217,12 @@ export class UniqueFaces implements OnInit, OnDestroy {
 
   }
 
+
+  onMatchesChanged(): void {
+    if (!this.loading()) {
+      this.refreshFaces();
+    }
+  }
 
   private refreshIfStale(): void {
 

@@ -156,6 +156,28 @@ describe('UniqueFaces', () => {
     expect(component.getCameraName('CAM-01')).toBe('Cámara no identificada');
   });
 
+  it('show the badge from matchCount', async () => {
+    api.getUniqueFaces.mockReturnValue(of([
+      { ...FACE, appearances: [{ ...FACE.appearances[0], matchCount: 1 }] }
+    ]));
+    await create();
+
+    expect(fixture.nativeElement.querySelector('.card .match-count').textContent.trim()).toBe('1 coincidencia');
+  });
+
+  it('reloads the list after the detail reports a match change', async () => {
+    await create();
+    component.selectFace(FACE as UniqueFace);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    const calls = api.getUniqueFaces.mock.calls.length;
+
+    component.onMatchesChanged();
+    await fixture.whenStable();
+
+    expect(api.getUniqueFaces.mock.calls.length).toBe(calls + 1);
+  });
+
   it('opening a match shows that detection in the detail', async () => {
     api.getDetectionMatches.mockReturnValue(
       of({

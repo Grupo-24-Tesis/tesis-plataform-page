@@ -9,7 +9,7 @@ describe('FaceTileComponent', () => {
     return fixture.nativeElement.querySelector('button.face-tile');
   }
 
-  async function render(face: { faceId: string; timestamp: string; frameUrl?: string }, selected = false) {
+  async function render(face: { faceId: string; timestamp: string; frameUrl?: string; matchCount?: number }, selected = false) {
     fixture.componentRef.setInput('face', face);
     fixture.componentRef.setInput('selected', selected);
     await fixture.whenStable();
@@ -60,6 +60,15 @@ describe('FaceTileComponent', () => {
     await render({ faceId: 'job1_7', timestamp: '00:00:06' }, true);
     expect(tile().getAttribute('aria-pressed')).toBe('true');
     expect(tile().classList).toContain('selected');
+  });
+
+  it('shows the badge from matchCount', async () => {
+    await render({ faceId: 'job1_7', timestamp: '00:00:06', matchCount: 2 });
+    expect(fixture.nativeElement.querySelector('app-match-count-badge .match-count').textContent.trim()).toBe('2 coincidencias');
+    expect(tile().getAttribute('aria-label')).toBe('Detección 7, 00:00:06, 2 coincidencias');
+
+    await render({ faceId: 'job1_7', timestamp: '00:00:06' });
+    expect(fixture.nativeElement.querySelector('.match-count')).toBeNull();
   });
 
   it('takes the number after the last underscore of the face id', () => {

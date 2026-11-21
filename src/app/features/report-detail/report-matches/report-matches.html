@@ -1,0 +1,40 @@
+<div class="report-matches">
+  <h3>Coincidencias confirmadas</h3>
+
+  @switch (state()) {
+    @case ('loading') {
+      <p class="note" role="status">Cargando...</p>
+    }
+    @case ('error') {
+      <div role="alert">
+        <p class="note error">{{ error() }}</p>
+        <button type="button" class="retry-button no-print" (click)="retry()">Reintentar</button>
+      </div>
+    }
+    @default {
+      @if (others().length === 0) {
+        <p class="note">Sin coincidencias confirmadas</p>
+      } @else {
+        <ul>
+          @for (item of others(); track item.faceId) {
+            <li>
+              <span class="match-image">
+                @if (item.frameUrl; as image) {
+                  <img appImageFallback [src]="image" [alt]="'Detección ' + item.faceId">
+                }
+              </span>
+              <div class="match-info">
+                <strong>{{ item.cameraName }}</strong>
+                <span>{{ item.videoName }}</span>
+                <span>Posición en el video: {{ item.timestamp }}</span>
+                @if (item.capturedAt) {
+                  <span>{{ item.capturedAt | date:'dd/MM/yyyy HH:mm:ss' }}</span>
+                }
+              </div>
+            </li>
+          }
+        </ul>
+      }
+    }
+  }
+</div>

@@ -197,6 +197,7 @@
       [appearance]="openedMatch() ?? selected.cluster.appearances[0]"
       [cameras]="cameras()"
       (openDetection)="openMatch($event)"
+      (matchesChanged)="onMatchesChanged()"
     />
   </aside>
 </section>

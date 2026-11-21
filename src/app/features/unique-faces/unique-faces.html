@@ -112,6 +112,11 @@
           >
             {{ isMarked(face) ? 'MARCADO' : 'SIN MARCAR' }}
           </span>
+
+          <app-match-count-badge
+            class="match-badge"
+            [count]="face.appearances[0]?.matchCount"
+          />
         </div>
 
         <div class="face-info">
@@ -181,6 +186,7 @@
       [appearance]="appearance"
       [cameras]="cameras()"
       (openDetection)="openMatch($event)"
+      (matchesChanged)="onMatchesChanged()"
     />
   </aside>
 </section>

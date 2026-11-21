@@ -58,6 +58,7 @@ interface MonitorVideo {
       cameraId: string;
       frameUrl?: string;
       capturedAt?: string;
+      matchCount?: number;
     }>;
   }>;
 }
@@ -453,7 +454,8 @@ export class MonitorComponent implements OnInit, OnDestroy {
           timestamp: appearance.timestamp,
           cameraId: appearance.cameraId,
           frameUrl: appearance.frameUrl,
-          capturedAt: appearance.capturedAt
+          capturedAt: appearance.capturedAt,
+          matchCount: appearance.matchCount
         }
       ]
     };
@@ -580,6 +582,23 @@ export class MonitorComponent implements OnInit, OnDestroy {
       },
       error: error => console.error('No se pudo abrir la detección', error)
     });
+  }
+
+  onMatchesChanged(): void {
+    const selected = this.selectedCluster();
+
+    if (!selected) {
+      return;
+    }
+
+    const jobId = selected.video.jobId;
+
+    if (!jobId) {
+      return;
+    }
+
+    this.updateVideo(jobId, current => ({ ...current, facesLoaded: false, facesLoadedAt: 0 }));
+    this.loadJobFaces(jobId, this.requestToken);
   }
 
   private clearOpenedMatch(): void {

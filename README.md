@@ -108,6 +108,8 @@ El detalle de una detección (Monitor y "Rostros detectados") incluye el bloque 
 - "Coincidencias confirmadas (N)" se carga junto con el detalle y lista, en orden cronológico, las detecciones de otros videos que un vigilante confirmó como el mismo rostro. "Quitar" elimina el vínculo de esa detección.
 - "Posibles coincidencias en otras cámaras" solo se consulta al pulsar "Buscar". Cada candidato muestra su similitud (por ejemplo "similitud 0,82") y se puede confirmar o descartar; una vez decidido sale de la lista. Si la detección no tiene embedding, se muestra el mensaje del backend en lugar de la lista.
 - Al pulsar la imagen de una coincidencia se abre esa detección en el mismo detalle.
+- Las tarjetas de Monitor y de "Rostros detectados" muestran "N coincidencias" cuando la detección tiene vínculos confirmados; tras confirmar o quitar una coincidencia la lista se recarga para actualizar el contador.
+- El detalle del reporte muestra, bajo cada detección involucrada, la lista de solo lectura "Coincidencias confirmadas" (cámara, video, posición en el video y fecha de captura, en orden cronológico). No tiene botones, por lo que se imprime junto con el reporte.
 - Cada decisión se guarda con el vigilante activo de la sesión.
 
 ## Imágenes de rostros
