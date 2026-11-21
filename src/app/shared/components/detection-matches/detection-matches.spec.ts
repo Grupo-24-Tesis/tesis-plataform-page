@@ -155,7 +155,7 @@ describe('DetectionMatchesComponent', () => {
     await create();
     await search();
 
-    expect(text()).toContain('No hay detecciones de otros videos con embedding');
+    expect(text()).toContain('No hay detecciones de otros videos parecidas a esta');
   });
 
   it('confirm sends confirmada with the score and reloads confirmed', async () => {

@@ -128,7 +128,7 @@
     }
     @case ('ready') {
       @if (candidates().length === 0) {
-        <p class="matches-note">No hay detecciones de otros videos con embedding</p>
+        <p class="matches-note">No hay detecciones de otros videos parecidas a esta</p>
       } @else {
         <ul class="candidate-list">
           @for (candidate of candidates(); track candidate.faceId) {
