@@ -5,6 +5,7 @@ import { ReportItem } from '../models/report.model';
 import { videoContentType } from '../models/video-content-type';
 import {FaceAppearance} from '../models/face.model';
 import { ActivityResponse } from '../models/activity.model';
+import { DetectionMatches, MatchDetection, MatchDecisionRequest, MatchLink } from '../models/face-match';
 import { UniqueFace } from '../models/UniqueFace';
 import { PresignedUploadRequest, PresignedUploadResponse, VideoJobMetrics, VideoJobResponse, VideoUploadedRequest } from '../models/uploadVideo';
 export interface Guard { id?: string; name: string; shift: string; schedule: string; }
@@ -71,6 +72,27 @@ getUniqueFaces(
       `${this.base}/face-appearances/by-ids`,
       { params: { faceIds: faceIds.join(',') } }
     );
+  }
+
+  getCandidates(faceId: string, limit?: number) {
+    return this.http.get<MatchDetection[]>(
+      `${this.base}/face-appearances/${encodeURIComponent(faceId)}/candidates`,
+      limit === undefined ? {} : { params: { limit: String(limit) } }
+    );
+  }
+
+  getDetectionMatches(faceId: string) {
+    return this.http.get<DetectionMatches>(
+      `${this.base}/face-appearances/${encodeURIComponent(faceId)}/matches`
+    );
+  }
+
+  decideMatch(body: MatchDecisionRequest) {
+    return this.http.post<MatchLink>(`${this.base}/face-matches`, body);
+  }
+
+  undoMatch(id: string) {
+    return this.http.delete<void>(`${this.base}/face-matches/${encodeURIComponent(id)}`);
   }
 
   getReports() { return this.http.get<ReportItem[]>(`${this.base}/reports`); }

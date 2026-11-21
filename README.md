@@ -101,6 +101,15 @@ Cuando el trabajo está en `COMPLETED`, la vista carga sus rostros con
 `GET /api/video-jobs/{jobId}/faces` y muestra la imagen de cada uno. Como las URL
 prefirmadas expiran, vuelve a pedir los rostros de un video cuya carga tiene más de 10 minutos.
 
+## Coincidencias entre detecciones
+
+El detalle de una detección (Monitor y "Rostros detectados") incluye el bloque de coincidencias:
+
+- "Coincidencias confirmadas (N)" se carga junto con el detalle y lista, en orden cronológico, las detecciones de otros videos que un vigilante confirmó como el mismo rostro. "Quitar" elimina el vínculo de esa detección.
+- "Posibles coincidencias en otras cámaras" solo se consulta al pulsar "Buscar". Cada candidato muestra su similitud (por ejemplo "similitud 0,82") y se puede confirmar o descartar; una vez decidido sale de la lista. Si la detección no tiene embedding, se muestra el mensaje del backend en lugar de la lista.
+- Al pulsar la imagen de una coincidencia se abre esa detección en el mismo detalle.
+- Cada decisión se guarda con el vigilante activo de la sesión.
+
 ## Imágenes de rostros
 
 Las imágenes llegan como URL prefirmadas de S3 que expiran y pueden borrarse del bucket. Los textos usan los términos Rostros detectados, Marcados, detecciones y las etiquetas MARCADO y SIN MARCAR. Toda la interfaz usa una sola fuente del sistema.

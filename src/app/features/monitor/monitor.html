@@ -194,8 +194,9 @@
     </header>
 
     <app-detection-detail
-      [appearance]="selected.cluster.appearances[0]"
+      [appearance]="openedMatch() ?? selected.cluster.appearances[0]"
       [cameras]="cameras()"
+      (openDetection)="openMatch($event)"
     />
   </aside>
 </section>

@@ -6,4 +6,5 @@ export interface FaceAppearance {
   cameraId: string;
   frameUrl?: string;
   capturedAt?: string;
+  matchCount?: number;
 }

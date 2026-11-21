@@ -26,6 +26,7 @@ describe('DetectionDetailComponent', () => {
     getMarked: ReturnType<typeof vi.fn>;
     createMarked: ReturnType<typeof vi.fn>;
     deleteMarked: ReturnType<typeof vi.fn>;
+    getDetectionMatches: ReturnType<typeof vi.fn>;
   };
   let navigate: ReturnType<typeof vi.fn>;
 
@@ -59,6 +60,7 @@ describe('DetectionDetailComponent', () => {
     api = {
       getVideoJob: vi.fn(() => of({ jobId: 'job-1', originalFileName: 'Camera_ch6.mp4' })),
       getMarked: vi.fn(() => of([])),
+      getDetectionMatches: vi.fn(() => of({ faceId: '', links: [], detections: [] })),
       createMarked: vi.fn(),
       deleteMarked: vi.fn()
     };
@@ -215,5 +217,24 @@ describe('DetectionDetailComponent', () => {
     await create();
 
     expect(api.getMarked).toHaveBeenCalledTimes(1);
+  });
+
+  it('re-emits openDetection', async () => {
+    api.getDetectionMatches.mockReturnValue(
+      of({
+        faceId: 'job-1_4',
+        links: [],
+        detections: [
+          { faceId: 'job-2_7', jobId: 'job-2', cameraId: 'CAM-02', cameraName: 'Garaje', videoName: 'g.mp4', timestamp: '00:00:01', score: null }
+        ]
+      })
+    );
+    await create();
+    const opened: string[] = [];
+    fixture.componentInstance.openDetection.subscribe(id => opened.push(id));
+
+    query('app-detection-matches .match-face').click();
+
+    expect(opened).toEqual(['job-2_7']);
   });
 });

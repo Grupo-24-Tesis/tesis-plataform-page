@@ -39,7 +39,16 @@ export class UniqueFaces implements OnInit, OnDestroy {
   selected = signal<UniqueFace | null>(null);
   detailClosing = signal(false);
 
+  openedMatch = signal<FaceAppearance | null>(null);
+  private openMatchToken = 0;
+
   selectedAppearance = computed<FaceAppearance | null>(() => {
+    const opened = this.openedMatch();
+
+    if (opened) {
+      return opened;
+    }
+
     const face = this.selected();
     return face ? { ...face.appearances[0], faceId: face.faceId } : null;
   });
@@ -226,6 +235,7 @@ export class UniqueFaces implements OnInit, OnDestroy {
 
   applyFilters(): void {
 
+    this.clearOpenedMatch();
     this.selected.set(null);
 
     this.loadFaces();
@@ -243,6 +253,7 @@ export class UniqueFaces implements OnInit, OnDestroy {
 
     this.suspect = '';
 
+    this.clearOpenedMatch();
     this.selected.set(null);
 
     this.loadFaces();
@@ -261,6 +272,7 @@ export class UniqueFaces implements OnInit, OnDestroy {
     } else {
 
       this.detailClosing.set(false);
+      this.clearOpenedMatch();
       this.selected.set(face);
 
     }
@@ -281,9 +293,32 @@ export class UniqueFaces implements OnInit, OnDestroy {
     window.setTimeout(() => {
 
       this.selected.set(null);
+      this.clearOpenedMatch();
       this.detailClosing.set(false);
 
     }, 160);
+
+  }
+
+  openMatch(faceId: string): void {
+
+    const token = ++this.openMatchToken;
+
+    this.api.getFaceAppearancesByIds([faceId]).subscribe({
+      next: appearances => {
+        if (token === this.openMatchToken && appearances.length > 0) {
+          this.openedMatch.set(appearances[0]);
+        }
+      },
+      error: error => console.error('No se pudo abrir la detección', error)
+    });
+
+  }
+
+  private clearOpenedMatch(): void {
+
+    this.openMatchToken++;
+    this.openedMatch.set(null);
 
   }
 

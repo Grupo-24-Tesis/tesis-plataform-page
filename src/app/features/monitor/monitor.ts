@@ -126,6 +126,8 @@ export class MonitorComponent implements OnInit, OnDestroy {
     ];
   });
   selectedCluster = signal<SelectedCluster | null>(null);
+  openedMatch = signal<FaceAppearance | null>(null);
+  private openMatchToken = 0;
   cameraVideoCounts = signal<Record<string, number>>({});
   retryingJobs = signal<ReadonlySet<string>>(new Set());
   retryErrors = signal<Record<string, string>>({});
@@ -210,6 +212,7 @@ export class MonitorComponent implements OnInit, OnDestroy {
     this.requestToken++;
     this.selectedCamera.set(camera);
     this.selectedCluster.set(null);
+    this.clearOpenedMatch();
     this.videos.set([]);
     this.metrics.set(null);
     this.metricsErrorMsg.set('');
@@ -550,9 +553,11 @@ export class MonitorComponent implements OnInit, OnDestroy {
       selected.cluster.clusterId === cluster.clusterId
     ) {
       this.selectedCluster.set(null);
+      this.clearOpenedMatch();
       return;
     }
 
+    this.clearOpenedMatch();
     this.selectedCluster.set({
       video,
       cluster
@@ -561,6 +566,25 @@ export class MonitorComponent implements OnInit, OnDestroy {
 
   closeClusterDetail(): void {
     this.selectedCluster.set(null);
+    this.clearOpenedMatch();
+  }
+
+  openMatch(faceId: string): void {
+    const token = ++this.openMatchToken;
+
+    this.api.getFaceAppearancesByIds([faceId]).subscribe({
+      next: appearances => {
+        if (token === this.openMatchToken && appearances.length > 0) {
+          this.openedMatch.set(appearances[0]);
+        }
+      },
+      error: error => console.error('No se pudo abrir la detección', error)
+    });
+  }
+
+  private clearOpenedMatch(): void {
+    this.openMatchToken++;
+    this.openedMatch.set(null);
   }
 
   getCameraVideos(): MonitorVideo[] {

@@ -1,0 +1,139 @@
+<section class="matches-block" aria-labelledby="confirmed-title">
+  <h3 id="confirmed-title">Coincidencias confirmadas ({{ others().length }})</h3>
+
+  @switch (confirmedState()) {
+    @case ('loading') {
+      <p class="matches-note">Cargando...</p>
+    }
+    @case ('error') {
+      <p class="matches-note error" role="alert">{{ confirmedError() }}</p>
+      <button type="button" class="link-button" (click)="retryConfirmed()">Reintentar</button>
+    }
+    @default {
+      @if (others().length === 0) {
+        <p class="matches-note">Sin coincidencias confirmadas</p>
+      } @else {
+        <ul class="confirmed-list">
+          @for (row of rows(); track row.item.faceId) {
+            <li [class.self]="row.self">
+              @if (row.self) {
+                <span class="match-image">
+                  @if (row.item.frameUrl; as image) {
+                    <img appImageFallback [src]="image" alt="Esta detección">
+                  }
+                </span>
+              } @else {
+                <button
+                  type="button"
+                  class="match-face"
+                  [attr.aria-label]="'Abrir detección ' + row.item.faceId"
+                  (click)="openDetection.emit(row.item.faceId)"
+                >
+                  <span class="match-image">
+                    @if (row.item.frameUrl; as image) {
+                      <img appImageFallback [src]="image" [alt]="'Detección ' + row.item.faceId">
+                    }
+                  </span>
+                </button>
+              }
+
+              <div class="match-info">
+                <strong>{{ row.self ? 'Esta detección' : row.item.cameraName }}</strong>
+                <span>{{ row.item.videoName }}</span>
+                <span class="match-time">{{ row.item.timestamp }}</span>
+                @if (row.item.capturedAt) {
+                  <span>{{ row.item.capturedAt | date:'yyyy-MM-dd HH:mm:ss' }}</span>
+                }
+              </div>
+
+              @if (!row.self && row.link; as link) {
+                <button
+                  type="button"
+                  class="undo-button"
+                  [disabled]="busyKey() !== ''"
+                  (click)="undo(link)"
+                >
+                  {{ isBusy('quitar:' + link.id) ? 'Quitando...' : 'Quitar' }}
+                </button>
+              }
+            </li>
+          }
+        </ul>
+      }
+    }
+  }
+</section>
+
+<section class="matches-block" aria-labelledby="candidates-title">
+  <div class="matches-header">
+    <h3 id="candidates-title">Posibles coincidencias en otras cámaras</h3>
+    <button
+      type="button"
+      class="search-button"
+      [disabled]="candidatesState() === 'loading'"
+      (click)="search()"
+    >
+      {{ candidatesState() === 'loading' ? 'Buscando...' : 'Buscar' }}
+    </button>
+  </div>
+
+  @switch (candidatesState()) {
+    @case ('error') {
+      <p class="matches-note error" role="alert">{{ candidatesError() }}</p>
+    }
+    @case ('ready') {
+      @if (candidates().length === 0) {
+        <p class="matches-note">No hay detecciones de otros videos con embedding</p>
+      } @else {
+        <ul class="candidate-list">
+          @for (candidate of candidates(); track candidate.faceId) {
+            <li>
+              <button
+                type="button"
+                class="match-face"
+                [attr.aria-label]="'Abrir detección ' + candidate.faceId"
+                (click)="openDetection.emit(candidate.faceId)"
+              >
+                <span class="match-image">
+                  @if (candidate.frameUrl; as image) {
+                    <img appImageFallback [src]="image" [alt]="'Detección ' + candidate.faceId">
+                  }
+                </span>
+              </button>
+
+              <div class="match-info">
+                <strong>{{ candidate.cameraName }}</strong>
+                <span>{{ candidate.videoName }}</span>
+                <span class="match-time">{{ candidate.timestamp }}</span>
+                <span class="match-score">{{ score(candidate) }}</span>
+              </div>
+
+              <div class="match-actions">
+                <button
+                  type="button"
+                  class="confirm-button"
+                  [disabled]="busyKey() !== ''"
+                  (click)="decide(candidate, 'confirmada')"
+                >
+                  {{ isBusy('confirmada:' + candidate.faceId) ? 'Confirmando...' : 'Confirmar' }}
+                </button>
+                <button
+                  type="button"
+                  class="discard-button"
+                  [disabled]="busyKey() !== ''"
+                  (click)="decide(candidate, 'descartada')"
+                >
+                  {{ isBusy('descartada:' + candidate.faceId) ? 'Descartando...' : 'Descartar' }}
+                </button>
+              </div>
+            </li>
+          }
+        </ul>
+      }
+    }
+  }
+
+  @if (actionError()) {
+    <p class="matches-note error" role="alert">{{ actionError() }}</p>
+  }
+</section>

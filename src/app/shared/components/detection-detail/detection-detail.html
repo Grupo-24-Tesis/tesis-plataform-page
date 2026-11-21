@@ -46,6 +46,12 @@
       <dd class="fact-position">{{ appearance().timestamp }}</dd>
     </div>
   </dl>
+
+  <app-detection-matches
+    [faceId]="appearance().faceId"
+    (openDetection)="openDetection.emit($event)"
+    (changed)="matchesChanged.emit()"
+  />
 </div>
 
 <footer class="detail-actions">

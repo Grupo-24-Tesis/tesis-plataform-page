@@ -4,6 +4,7 @@ import {
   effect,
   inject,
   input,
+  output,
   signal,
   untracked
 } from '@angular/core';
@@ -13,6 +14,7 @@ import { Router } from '@angular/router';
 
 import { Camera } from '../../../core/services/api.service';
 import { FaceAppearance } from '../../../core/models/face.model';
+import { DetectionMatchesComponent } from '../detection-matches/detection-matches';
 import { ImageFallbackDirective } from '../../directives/image-fallback.directive';
 import { MarkOutcome, MarksService } from '../../services/marks.service';
 import { VideoNamesService } from '../../services/video-names.service';
@@ -30,7 +32,7 @@ export function jobIdOf(appearance: FaceAppearance): string {
 @Component({
   selector: 'app-detection-detail',
   standalone: true,
-  imports: [DatePipe, FormsModule, ImageFallbackDirective],
+  imports: [DatePipe, FormsModule, ImageFallbackDirective, DetectionMatchesComponent],
   templateUrl: './detection-detail.html',
   styleUrl: './detection-detail.css'
 })
@@ -41,6 +43,8 @@ export class DetectionDetailComponent {
 
   readonly appearance = input.required<FaceAppearance>();
   readonly cameras = input<Camera[]>([]);
+  readonly openDetection = output<string>();
+  readonly matchesChanged = output<void>();
 
   readonly marks = this.marksService.marks;
   readonly markBusy = this.marksService.busy;

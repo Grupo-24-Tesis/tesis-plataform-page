@@ -24,6 +24,8 @@ describe('UniqueFaces', () => {
     getCameras: ReturnType<typeof vi.fn>;
     getVideoJob: ReturnType<typeof vi.fn>;
     getMarked: ReturnType<typeof vi.fn>;
+    getDetectionMatches: ReturnType<typeof vi.fn>;
+    getFaceAppearancesByIds: ReturnType<typeof vi.fn>;
     createMarked: ReturnType<typeof vi.fn>;
     deleteMarked: ReturnType<typeof vi.fn>;
   };
@@ -49,6 +51,8 @@ describe('UniqueFaces', () => {
       getCameras: vi.fn(() => of([{ id: 'CAM-01', name: 'Entrada', active: true }])),
       getVideoJob: vi.fn(() => of({ jobId: 'job-1', originalFileName: 'Camera_ch6.mp4' })),
       getMarked: vi.fn(() => of([])),
+      getDetectionMatches: vi.fn(() => of({ faceId: '', links: [], detections: [] })),
+      getFaceAppearancesByIds: vi.fn(() => of([])),
       createMarked: vi.fn(),
       deleteMarked: vi.fn()
     };
@@ -150,6 +154,33 @@ describe('UniqueFaces', () => {
       .toContain('Fallo al listar las cámaras');
     expect(fixture.nativeElement.querySelectorAll('.card').length).toBe(1);
     expect(component.getCameraName('CAM-01')).toBe('Cámara no identificada');
+  });
+
+  it('opening a match shows that detection in the detail', async () => {
+    api.getDetectionMatches.mockReturnValue(
+      of({
+        faceId: 'job-1_1',
+        links: [],
+        detections: [
+          { faceId: 'job-9_3', jobId: 'job-9', cameraId: 'CAM-02', cameraName: 'Garaje', videoName: 'g.mp4', timestamp: '00:00:07', score: null }
+        ]
+      })
+    );
+    api.getFaceAppearancesByIds.mockReturnValue(
+      of([{ faceId: 'job-9_3', jobId: 'job-9', timestamp: '00:00:07', cameraId: 'CAM-02' }])
+    );
+    await create();
+    component.selectFace(FACE as UniqueFace);
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    fixture.nativeElement.querySelector('app-detection-matches .match-face').click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(api.getFaceAppearancesByIds).toHaveBeenCalledWith(['job-9_3']);
+    const detail: HTMLElement = fixture.nativeElement.querySelector('.detail app-detection-detail');
+    expect(detail.querySelector('.fact-position')?.textContent).toContain('00:00:07');
   });
 
   it('shows the shared detection detail when a card is selected', async () => {
