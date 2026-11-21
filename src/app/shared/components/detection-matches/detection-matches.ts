@@ -11,6 +11,8 @@ import {
   untracked
 } from '@angular/core';
 
+import { catchError, forkJoin, map, of } from 'rxjs';
+
 import { ApiService } from '../../../core/services/api.service';
 import { apiErrorMessage } from '../../../core/services/api-error';
 import { SessionService } from '../../../core/services/session.service';
@@ -28,14 +30,8 @@ export function similarityLabel(score: number | null): string {
   return score === null ? '' : `similitud ${score.toFixed(2).replace('.', ',')}`;
 }
 
-export function linkToDetection(links: MatchLink[], faceId: string): MatchLink | undefined {
-  return links
-    .filter(link => link.faceIdA === faceId || link.faceIdB === faceId)
-    .reduce<MatchLink | undefined>(
-      (latest, link) =>
-        !latest || (link.createdAt ?? '') >= (latest.createdAt ?? '') ? link : latest,
-      undefined
-    );
+export function linksOfDetection(links: MatchLink[], faceId: string): MatchLink[] {
+  return links.filter(link => link.faceIdA === faceId || link.faceIdB === faceId);
 }
 
 @Component({
@@ -74,7 +70,7 @@ export class DetectionMatchesComponent {
     return (matches?.detections ?? []).map(item => ({
       item,
       self: item.faceId === this.faceId(),
-      link: linkToDetection(matches?.links ?? [], item.faceId)
+      links: linksOfDetection(matches?.links ?? [], item.faceId)
     }));
   });
 
@@ -169,26 +165,37 @@ export class DetectionMatchesComponent {
       });
   }
 
-  undo(link: MatchLink): void {
-    if (this.busyKey()) {
+  undo(faceId: string, links: MatchLink[]): void {
+    if (this.busyKey() || links.length === 0) {
       return;
     }
 
-    const faceId = this.faceId();
-    this.busyKey.set(`quitar:${link.id}`);
+    const viewed = this.faceId();
+    this.busyKey.set(`quitar:${faceId}`);
     this.actionError.set('');
 
-    this.api.undoMatch(link.id).subscribe({
-      next: () => {
-        if (faceId !== this.faceId()) {
-          return;
-        }
+    forkJoin(
+      links.map(link =>
+        this.api.undoMatch(link.id).pipe(
+          map(() => null),
+          catchError(error => of(error))
+        )
+      )
+    ).subscribe(results => {
+      if (viewed !== this.faceId()) {
+        return;
+      }
 
-        this.busyKey.set('');
-        this.loadConfirmed(faceId);
-        this.changed.emit();
-      },
-      error: error => this.failAction(faceId, error, 'No se pudo quitar la coincidencia.')
+      const failure = results.find(result => result !== null);
+      this.busyKey.set('');
+
+      if (failure) {
+        this.session.endIfGuardMissing(failure);
+        this.actionError.set(apiErrorMessage(failure, 'No se pudo quitar la coincidencia.'));
+      }
+
+      this.loadConfirmed(viewed);
+      this.changed.emit();
     });
   }
 

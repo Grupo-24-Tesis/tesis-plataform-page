@@ -46,14 +46,14 @@
                 }
               </div>
 
-              @if (!row.self && row.link; as link) {
+              @if (!row.self && row.links.length > 0) {
                 <button
                   type="button"
                   class="undo-button"
                   [disabled]="busyKey() !== ''"
-                  (click)="undo(link)"
+                  (click)="undo(row.item.faceId, row.links)"
                 >
-                  {{ isBusy('quitar:' + link.id) ? 'Quitando...' : 'Quitar' }}
+                  {{ isBusy('quitar:' + row.item.faceId) ? 'Quitando...' : 'Quitar' }}
                 </button>
               }
             </li>

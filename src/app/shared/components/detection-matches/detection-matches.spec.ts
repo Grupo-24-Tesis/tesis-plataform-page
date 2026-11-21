@@ -195,18 +195,65 @@ describe('DetectionMatchesComponent', () => {
     expect(changed).toBe(1);
   });
 
-  it('quitar deletes the most recent link of that detection and reloads', async () => {
+  const CHAIN: DetectionMatches = {
+    faceId: 'job-1_4',
+    links: [
+      { id: 'l1', faceIdA: 'job-0_1', faceIdB: 'job-1_4', createdAt: '2026-10-16T09:00:00' },
+      { id: 'l2', faceIdA: 'job-0_1', faceIdB: 'job-2_7', createdAt: '2026-10-16T10:00:00' }
+    ],
+    detections: [
+      detection('job-0_1', '00:00:10'),
+      detection('job-1_4', '00:01:23'),
+      detection('job-2_7', '00:02:00')
+    ]
+  };
+
+  it('quitar on a middle detection of a chain removes all its links', async () => {
+    api.getDetectionMatches.mockReturnValue(of(CHAIN));
     await create();
     api.getDetectionMatches.mockClear();
 
-    const buttons = root().querySelectorAll('.confirmed-list button.undo-button');
-    expect(buttons.length).toBe(2);
-    (buttons[1] as HTMLButtonElement).click();
+    root().querySelectorAll<HTMLButtonElement>('.confirmed-list button.undo-button')[0].click();
     await settle();
 
-    expect(api.undoMatch).toHaveBeenCalledWith('m2');
+    expect(api.undoMatch).toHaveBeenCalledTimes(2);
+    expect(api.undoMatch).toHaveBeenCalledWith('l1');
+    expect(api.undoMatch).toHaveBeenCalledWith('l2');
     expect(api.getDetectionMatches).toHaveBeenCalledTimes(1);
     expect(changed).toBe(1);
+  });
+
+  it('quitar on an end detection removes only its link', async () => {
+    api.getDetectionMatches.mockReturnValue(of(CHAIN));
+    await create();
+    api.getDetectionMatches.mockClear();
+
+    root().querySelectorAll<HTMLButtonElement>('.confirmed-list button.undo-button')[1].click();
+    await settle();
+
+    expect(api.undoMatch).toHaveBeenCalledTimes(1);
+    expect(api.undoMatch).toHaveBeenCalledWith('l2');
+    expect(api.getDetectionMatches).toHaveBeenCalledTimes(1);
+    expect(changed).toBe(1);
+  });
+
+  it('quitar failure shows the error and reloads', async () => {
+    api.getDetectionMatches.mockReturnValue(of(CHAIN));
+    api.undoMatch.mockImplementation((id: string) =>
+      id === 'l2'
+        ? throwError(() => new HttpErrorResponse({ status: 500, error: { message: 'Falla al quitar' } }))
+        : of(undefined)
+    );
+    await create();
+    api.getDetectionMatches.mockClear();
+
+    root().querySelectorAll<HTMLButtonElement>('.confirmed-list button.undo-button')[0].click();
+    await settle();
+
+    expect(text()).toContain('Falla al quitar');
+    expect(api.getDetectionMatches).toHaveBeenCalledTimes(1);
+    expect(button('Quitando...')).toBeUndefined();
+    expect(root().querySelector<HTMLButtonElement>('button.undo-button')!.disabled).toBe(false);
   });
 
   it('shows the 409 message inline', async () => {
