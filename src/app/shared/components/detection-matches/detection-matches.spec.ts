@@ -198,17 +198,27 @@ describe('DetectionMatchesComponent', () => {
   const CHAIN: DetectionMatches = {
     faceId: 'job-1_4',
     links: [
-      { id: 'l1', faceIdA: 'job-0_1', faceIdB: 'job-1_4', createdAt: '2026-10-16T09:00:00' },
-      { id: 'l2', faceIdA: 'job-0_1', faceIdB: 'job-2_7', createdAt: '2026-10-16T10:00:00' }
+      { id: 'lAB', faceIdA: 'job-1_4', faceIdB: 'job-2_7', createdAt: '2026-10-16T09:00:00' },
+      { id: 'lBC', faceIdA: 'job-2_7', faceIdB: 'job-3_3', createdAt: '2026-10-16T10:00:00' }
     ],
     detections: [
-      detection('job-0_1', '00:00:10'),
-      detection('job-1_4', '00:01:23'),
-      detection('job-2_7', '00:02:00')
+      detection('job-1_4', '00:00:10'),
+      detection('job-2_7', '00:01:23'),
+      detection('job-3_3', '00:02:00')
     ]
   };
 
-  it('quitar on a middle detection of a chain removes all its links', async () => {
+  const TRIANGLE: DetectionMatches = {
+    faceId: 'job-1_4',
+    links: [
+      { id: 'lAB', faceIdA: 'job-1_4', faceIdB: 'job-2_7', createdAt: '2026-10-16T09:00:00' },
+      { id: 'lAC', faceIdA: 'job-1_4', faceIdB: 'job-3_3', createdAt: '2026-10-16T09:30:00' },
+      { id: 'lBC', faceIdA: 'job-2_7', faceIdB: 'job-3_3', createdAt: '2026-10-16T10:00:00' }
+    ],
+    detections: CHAIN.detections
+  };
+
+  it('quitar in a chain A=B=C viewed from A on B deletes only A-B', async () => {
     api.getDetectionMatches.mockReturnValue(of(CHAIN));
     await create();
     api.getDetectionMatches.mockClear();
@@ -216,14 +226,13 @@ describe('DetectionMatchesComponent', () => {
     root().querySelectorAll<HTMLButtonElement>('.confirmed-list button.undo-button')[0].click();
     await settle();
 
-    expect(api.undoMatch).toHaveBeenCalledTimes(2);
-    expect(api.undoMatch).toHaveBeenCalledWith('l1');
-    expect(api.undoMatch).toHaveBeenCalledWith('l2');
+    expect(api.undoMatch).toHaveBeenCalledTimes(1);
+    expect(api.undoMatch).toHaveBeenCalledWith('lAB');
     expect(api.getDetectionMatches).toHaveBeenCalledTimes(1);
     expect(changed).toBe(1);
   });
 
-  it('quitar on an end detection removes only its link', async () => {
+  it('quitar on C in a chain A=B=C viewed from A deletes only B-C', async () => {
     api.getDetectionMatches.mockReturnValue(of(CHAIN));
     await create();
     api.getDetectionMatches.mockClear();
@@ -232,15 +241,30 @@ describe('DetectionMatchesComponent', () => {
     await settle();
 
     expect(api.undoMatch).toHaveBeenCalledTimes(1);
-    expect(api.undoMatch).toHaveBeenCalledWith('l2');
+    expect(api.undoMatch).toHaveBeenCalledWith('lBC');
+    expect(api.getDetectionMatches).toHaveBeenCalledTimes(1);
+    expect(changed).toBe(1);
+  });
+
+  it('quitar on B in a triangle A=B, A=C, B=C viewed from A deletes A-B and B-C', async () => {
+    api.getDetectionMatches.mockReturnValue(of(TRIANGLE));
+    await create();
+    api.getDetectionMatches.mockClear();
+
+    root().querySelectorAll<HTMLButtonElement>('.confirmed-list button.undo-button')[0].click();
+    await settle();
+
+    expect(api.undoMatch).toHaveBeenCalledTimes(2);
+    expect(api.undoMatch).toHaveBeenCalledWith('lAB');
+    expect(api.undoMatch).toHaveBeenCalledWith('lBC');
     expect(api.getDetectionMatches).toHaveBeenCalledTimes(1);
     expect(changed).toBe(1);
   });
 
   it('quitar failure shows the error and reloads', async () => {
-    api.getDetectionMatches.mockReturnValue(of(CHAIN));
+    api.getDetectionMatches.mockReturnValue(of(TRIANGLE));
     api.undoMatch.mockImplementation((id: string) =>
-      id === 'l2'
+      id === 'lBC'
         ? throwError(() => new HttpErrorResponse({ status: 500, error: { message: 'Falla al quitar' } }))
         : of(undefined)
     );
@@ -254,6 +278,70 @@ describe('DetectionMatchesComponent', () => {
     expect(api.getDetectionMatches).toHaveBeenCalledTimes(1);
     expect(button('Quitando...')).toBeUndefined();
     expect(root().querySelector<HTMLButtonElement>('button.undo-button')!.disabled).toBe(false);
+  });
+
+  const DISCARDED: DetectionMatches = {
+    faceId: 'job-1_4',
+    links: [],
+    detections: [detection('job-1_4', '00:01:23')],
+    discarded: [
+      { id: 'd1', detection: detection('job-5_1', '00:00:30') },
+      { id: 'd2', detection: detection('job-6_2', '00:00:40') }
+    ]
+  };
+
+  it('shows the discarded count and toggles the list', async () => {
+    api.getDetectionMatches.mockReturnValue(of(DISCARDED));
+    await create();
+
+    expect(button('Ver descartadas (2)')).toBeDefined();
+    expect(root().querySelector('.discarded-list')).toBeNull();
+
+    button('Ver descartadas (2)')!.click();
+    await settle();
+
+    expect(root().querySelectorAll('.discarded-list li').length).toBe(2);
+    expect(text()).toContain('00:00:30');
+    expect(button('Ocultar descartadas')).toBeDefined();
+
+    button('Ocultar descartadas')!.click();
+    await settle();
+
+    expect(root().querySelector('.discarded-list')).toBeNull();
+  });
+
+  it('restaurar deletes the discard and reloads', async () => {
+    api.getDetectionMatches.mockReturnValue(of(DISCARDED));
+    await create();
+    api.getDetectionMatches.mockClear();
+    button('Ver descartadas (2)')!.click();
+    await settle();
+
+    button('Restaurar')!.click();
+    await settle();
+
+    expect(api.undoMatch).toHaveBeenCalledWith('d1');
+    expect(api.getDetectionMatches).toHaveBeenCalledTimes(1);
+    expect(changed).toBe(1);
+  });
+
+  it('shows Restaurando while pending', async () => {
+    api.getDetectionMatches.mockReturnValue(of(DISCARDED));
+    api.undoMatch.mockReturnValue(new Subject<unknown>());
+    await create();
+    button('Ver descartadas (2)')!.click();
+    await settle();
+
+    button('Restaurar')!.click();
+    await settle();
+
+    expect(button('Restaurando...')).toBeDefined();
+  });
+
+  it('no discarded button when there are none', async () => {
+    await create();
+
+    expect(text()).not.toContain('Ver descartadas');
   });
 
   it('shows the 409 message inline', async () => {

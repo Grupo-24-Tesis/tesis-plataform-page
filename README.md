@@ -105,7 +105,8 @@ prefirmadas expiran, vuelve a pedir los rostros de un video cuya carga tiene má
 
 El detalle de una detección (Monitor y "Rostros detectados") incluye el bloque de coincidencias:
 
-- "Coincidencias confirmadas (N)" se carga junto con el detalle y lista, en orden cronológico, las detecciones de otros videos que un vigilante confirmó como el mismo rostro. "Quitar" elimina el vínculo de esa detección.
+- "Coincidencias confirmadas (N)" se carga junto con el detalle y lista, en orden cronológico, las detecciones de otros videos que un vigilante confirmó como el mismo rostro. "Quitar" elimina los vínculos de esa detección con las que siguen conectadas a la detección abierta una vez excluida; los vínculos hacia detecciones que quedarían desconectadas se conservan.
+- "Ver descartadas (N)" aparece solo si hay descartes de la detección y despliega la lista (cámara, video, instantes). "Restaurar" deshace el descarte, de modo que la detección vuelve a poder proponerse como candidata. "Ocultar descartadas" cierra la lista.
 - "Posibles coincidencias en otras cámaras" solo se consulta al pulsar "Buscar". Cada candidato muestra su similitud (por ejemplo "similitud 0,82") y se puede confirmar o descartar; una vez decidido sale de la lista. Si la detección no tiene embedding, se muestra el mensaje del backend en lugar de la lista.
 - Al pulsar la imagen de una coincidencia se abre esa detección en el mismo detalle.
 - Las tarjetas de Monitor y de "Rostros detectados" muestran "N coincidencias" cuando la detección tiene vínculos confirmados; tras confirmar o quitar una coincidencia la lista se recarga para actualizar el contador.

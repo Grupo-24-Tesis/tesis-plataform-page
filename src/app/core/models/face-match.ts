@@ -20,10 +20,16 @@ export interface MatchLink {
   createdAt?: string;
 }
 
+export interface DiscardedMatch {
+  id: string;
+  detection: MatchDetection;
+}
+
 export interface DetectionMatches {
   faceId: string;
   links: MatchLink[];
   detections: MatchDetection[];
+  discarded?: DiscardedMatch[];
 }
 
 export interface MatchDecisionRequest {

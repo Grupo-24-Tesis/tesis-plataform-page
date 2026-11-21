@@ -116,3 +116,7 @@ button:disabled {
   text-decoration: underline;
   cursor: pointer;
 }
+
+.discarded-toggle {
+  margin-top: 8px;
+}

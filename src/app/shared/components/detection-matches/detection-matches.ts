@@ -18,6 +18,7 @@ import { apiErrorMessage } from '../../../core/services/api-error';
 import { SessionService } from '../../../core/services/session.service';
 import {
   DetectionMatches,
+  DiscardedMatch,
   MatchDecision,
   MatchDetection,
   MatchLink
@@ -32,6 +33,35 @@ export function similarityLabel(score: number | null): string {
 
 export function linksOfDetection(links: MatchLink[], faceId: string): MatchLink[] {
   return links.filter(link => link.faceIdA === faceId || link.faceIdB === faceId);
+}
+
+export function linksToRemove(links: MatchLink[], viewed: string, removed: string): MatchLink[] {
+  const adjacency = new Map<string, string[]>();
+
+  for (const link of links) {
+    if (link.faceIdA === removed || link.faceIdB === removed) {
+      continue;
+    }
+
+    adjacency.set(link.faceIdA, [...(adjacency.get(link.faceIdA) ?? []), link.faceIdB]);
+    adjacency.set(link.faceIdB, [...(adjacency.get(link.faceIdB) ?? []), link.faceIdA]);
+  }
+
+  const reachable = new Set<string>([viewed]);
+  const queue = [viewed];
+
+  while (queue.length > 0) {
+    for (const next of adjacency.get(queue.shift()!) ?? []) {
+      if (!reachable.has(next)) {
+        reachable.add(next);
+        queue.push(next);
+      }
+    }
+  }
+
+  return linksOfDetection(links, removed).filter(link =>
+    reachable.has(link.faceIdA === removed ? link.faceIdB : link.faceIdA)
+  );
 }
 
 @Component({
@@ -58,12 +88,16 @@ export class DetectionMatchesComponent {
   readonly candidatesState = signal<LoadState>('idle');
   readonly candidatesError = signal('');
 
+  readonly discardedOpen = signal(false);
+
   readonly busyKey = signal('');
   readonly actionError = signal('');
 
   readonly others = computed(() =>
     (this.confirmed()?.detections ?? []).filter(item => item.faceId !== this.faceId())
   );
+
+  readonly discarded = computed(() => this.confirmed()?.discarded ?? []);
 
   readonly rows = computed(() => {
     const matches = this.confirmed();
@@ -87,6 +121,7 @@ export class DetectionMatchesComponent {
         this.candidatesError.set('');
         this.actionError.set('');
         this.busyKey.set('');
+        this.discardedOpen.set(false);
         this.loadConfirmed(faceId);
       });
     });
@@ -165,12 +200,41 @@ export class DetectionMatchesComponent {
       });
   }
 
-  undo(faceId: string, links: MatchLink[]): void {
-    if (this.busyKey() || links.length === 0) {
+  toggleDiscarded(): void {
+    this.discardedOpen.update(open => !open);
+  }
+
+  restore(discard: DiscardedMatch): void {
+    if (this.busyKey()) {
       return;
     }
 
     const viewed = this.faceId();
+    this.busyKey.set(`restaurar:${discard.id}`);
+    this.actionError.set('');
+
+    this.api.undoMatch(discard.id).subscribe({
+      next: () => {
+        if (viewed !== this.faceId()) {
+          return;
+        }
+
+        this.busyKey.set('');
+        this.loadConfirmed(viewed);
+        this.changed.emit();
+      },
+      error: error => this.failAction(viewed, error, 'No se pudo restaurar la detección.')
+    });
+  }
+
+  undo(faceId: string): void {
+    const viewed = this.faceId();
+    const links = linksToRemove(this.confirmed()?.links ?? [], viewed, faceId);
+
+    if (this.busyKey() || links.length === 0) {
+      return;
+    }
+
     this.busyKey.set(`quitar:${faceId}`);
     this.actionError.set('');
 

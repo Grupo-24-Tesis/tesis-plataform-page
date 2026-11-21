@@ -51,7 +51,7 @@
                   type="button"
                   class="undo-button"
                   [disabled]="busyKey() !== ''"
-                  (click)="undo(row.item.faceId, row.links)"
+                  (click)="undo(row.item.faceId)"
                 >
                   {{ isBusy('quitar:' + row.item.faceId) ? 'Quitando...' : 'Quitar' }}
                 </button>
@@ -60,6 +60,51 @@
           }
         </ul>
       }
+    }
+  }
+
+  @if (discarded().length > 0) {
+    <button type="button" class="link-button discarded-toggle" (click)="toggleDiscarded()">
+      {{ discardedOpen() ? 'Ocultar descartadas' : 'Ver descartadas (' + discarded().length + ')' }}
+    </button>
+
+    @if (discardedOpen()) {
+      <ul class="discarded-list">
+        @for (discard of discarded(); track discard.id) {
+          <li>
+            <button
+              type="button"
+              class="match-face"
+              [attr.aria-label]="'Abrir detección ' + discard.detection.faceId"
+              (click)="openDetection.emit(discard.detection.faceId)"
+            >
+              <span class="match-image">
+                @if (discard.detection.frameUrl; as image) {
+                  <img appImageFallback [src]="image" [alt]="'Detección ' + discard.detection.faceId">
+                }
+              </span>
+            </button>
+
+            <div class="match-info">
+              <strong>{{ discard.detection.cameraName }}</strong>
+              <span>{{ discard.detection.videoName }}</span>
+              <span class="match-time">{{ discard.detection.timestamp }}</span>
+              @if (discard.detection.capturedAt) {
+                <span>{{ discard.detection.capturedAt | date:'yyyy-MM-dd HH:mm:ss' }}</span>
+              }
+            </div>
+
+            <button
+              type="button"
+              class="undo-button"
+              [disabled]="busyKey() !== ''"
+              (click)="restore(discard)"
+            >
+              {{ isBusy('restaurar:' + discard.id) ? 'Restaurando...' : 'Restaurar' }}
+            </button>
+          </li>
+        }
+      </ul>
     }
   }
 </section>
