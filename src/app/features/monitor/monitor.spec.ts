@@ -1,3 +1,4 @@
+import { By } from '@angular/platform-browser';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpErrorResponse, HttpEventType } from '@angular/common/http';
 import { Subject, of, throwError } from 'rxjs';
@@ -458,6 +459,22 @@ describe('MonitorComponent', () => {
     input.value = value;
     input.dispatchEvent(new Event('input'));
   }
+
+  it('reloads the video faces after a match change and shows the new badge', async () => {
+    await openDetail();
+    expect(fixture.nativeElement.querySelector('.face-tile .match-count')).toBeNull();
+    api.getVideoJobFaces.mockReturnValue(of([{ ...FACE, matchCount: 2 }]));
+
+    fixture.debugElement
+      .query(By.css('app-detection-detail'))
+      .triggerEventHandler('matchesChanged');
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(api.getVideoJobFaces).toHaveBeenCalledTimes(2);
+    expect(fixture.nativeElement.querySelector('.face-tile .match-count').textContent.trim())
+      .toBe('2 coincidencias');
+  });
 
   it('opening a match shows that detection in the detail', async () => {
     api.getDetectionMatches.mockReturnValue(
