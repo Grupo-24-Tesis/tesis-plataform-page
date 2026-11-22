@@ -60,8 +60,8 @@ peticiones desde `http://localhost:4200`.
 | Ruta | Contenido |
 | --- | --- |
 | `/guards` | Selección del vigilante activo. Es la ruta inicial |
-| `/monitor` | Cámaras, carga de videos, franja de métricas de procesamiento, videos procesados con el botón `Reintentar` en los fallidos y rostros de cada video, con opción de marcarlos |
-| `/activity` | Actividad por hora: detecciones por hora del día y por cámara, con filtros de cámara y fechas |
+| `/monitor` | Cámaras, carga de videos, franja de métricas de procesamiento, videos procesados con el botón `Reintentar` en los fallidos y rostros de cada video. Cada rostro abre el detalle de la detección, con marcas, creación de reporte y coincidencias |
+| `/activity` | Actividad: detecciones por cámara (circular o barras) o, con una cámara filtrada, por video; seguimiento según marcas y reportes, y detecciones por hora del día. Filtros de cámara y fechas |
 | `/unique-faces` | Rostros detectados, con filtros por fecha, reportes y detecciones marcadas |
 | `/reports` | Reportes de incidentes: creación, filtros y cambio de estado. Cada tarjeta abre su detalle |
 | `/reports/:id` | Detalle de un reporte: autor, fechas, descripción, solución y detecciones involucradas con imagen, cámara, hora y posición. El botón `Imprimir` abre el diálogo de impresión con una hoja de estilos propia |
@@ -136,5 +136,5 @@ encapsulación que la imagen para que le aplique el CSS del componente.
 ## Limitaciones conocidas
 
 - No hay autenticación. La selección del vigilante no es un inicio de sesión, y cualquier cliente que llegue al puerto del backend puede usar la API. El backend publica sus puertos solo en `127.0.0.1`.
-- La identidad es por video. El sistema no reconoce a la misma persona en videos distintos y no identifica a las personas.
+- La identidad es por video y el sistema no identifica a las personas. Entre videos solo se proponen candidatos por similitud; la unión la confirma un vigilante (ver "Coincidencias entre detecciones").
 - La URL del backend (`http://localhost:8080/api`) está fija en `ApiService`.
